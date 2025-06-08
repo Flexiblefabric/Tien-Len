@@ -102,13 +102,13 @@ class Game:
     def is_valid(self, player, cards, current):
         # Prevent pass on first turn for starter
         if not cards:
-            if player.is_human and self.first_turn and self.current_idx==self.start_idx:
+            if self.first_turn and self.current_idx==self.start_idx:
                 return False, 'Must include 3♠ first'
             return True, ''
         combo = detect_combo(cards)
         if not combo:
             return False, 'Invalid combo'
-        if self.first_turn and self.current_idx==self.start_idx and player.is_human:
+        if self.first_turn and self.current_idx==self.start_idx:
             if not any(c.rank=='3' and c.suit=='Spades' for c in cards):
                 return False, 'Must include 3♠ first'
         if not current:
