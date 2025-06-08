@@ -102,13 +102,13 @@ class Game:
     def is_valid(self, player, cards, current):
         # Prevent pass on first turn for starter
         if not cards:
-            if player.is_human and self.first_turn and self.current_idx==self.start_idx:
+            if self.first_turn and self.current_idx==self.start_idx:
                 return False, 'Must include 3♠ first'
             return True, ''
         combo = detect_combo(cards)
         if not combo:
             return False, 'Invalid combo'
-        if self.first_turn and self.current_idx==self.start_idx and player.is_human:
+        if self.first_turn and self.current_idx==self.start_idx:
             if not any(c.rank=='3' and c.suit=='Spades' for c in cards):
                 return False, 'Must include 3♠ first'
         if not current:
@@ -134,11 +134,17 @@ class Game:
                 found = [c for c in hand if c.rank == rank and c.suit == suit]
                 if not found:
                     return 'error', f"Card {p} not in hand"
-                cards.append(found[0])
+                card = found[0]
+                if card in cards:
+                    return 'error', 'Duplicate card specified'
+                cards.append(card)
             else:
                 try:
                     idx = int(p) - 1
-                    cards.append(hand[idx])
+                    card = hand[idx]
+                    if card in cards:
+                        return 'error', 'Duplicate card index'
+                    cards.append(card)
                 except:
                     return 'error', 'Invalid index'
         return 'play', cards
@@ -264,7 +270,7 @@ class Game:
             if not p.is_human:
                 print('Invalid AI move, passing')
         if cards:
-            if p.is_human and self.first_turn and self.current_idx == self.start_idx:
+            if self.first_turn and self.current_idx == self.start_idx:
                 self.first_turn = False
             self.pass_count = 0
             for c in cards:
