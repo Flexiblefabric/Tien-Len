@@ -138,6 +138,8 @@ class Game:
             else:
                 try:
                     idx = int(p) - 1
+                    if idx < 0 or idx >= len(hand):
+                        return 'error', 'Invalid index'
                     cards.append(hand[idx])
                 except:
                     return 'error', 'Invalid index'
