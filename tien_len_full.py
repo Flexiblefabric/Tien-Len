@@ -138,9 +138,11 @@ class Game:
             else:
                 try:
                     idx = int(p) - 1
-                    cards.append(hand[idx])
-                except:
+                except ValueError:
                     return 'error', 'Invalid index'
+                if not 0 <= idx < len(hand):
+                    return 'error', 'Invalid index'
+                cards.append(hand[idx])
         return 'play', cards
 
     def hint(self, current):
