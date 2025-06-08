@@ -224,7 +224,7 @@ class Game:
             print(f" {i}:{c}")
 
     def display_overview(self):
-        print('Opponents cards:')
+        print("Opponents' cards:")
         for p in self.players[1:]:
             print(f" {p.name}: {len(p.hand)}")
 
