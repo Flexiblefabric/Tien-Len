@@ -1,7 +1,9 @@
 # tien_len_full.py
 """
 Tiến Lên full game with refactored AI, modular play loop, and full CLI utilities.
-Fixed first-turn pass rule: player cannot pass on first turn if holding 3♠.
+
+Only the human player is forbidden from passing on their initial turn when they
+hold the 3♠, matching the current implementation.
 """
 import random
 import datetime
