@@ -136,15 +136,18 @@ class Game:
                 found = [c for c in hand if c.rank == rank and c.suit == suit]
                 if not found:
                     return 'error', f"Card {p} not in hand"
-                cards.append(found[0])
+                card = found[0]
             else:
                 try:
                     idx = int(p) - 1
                     if idx < 0 or idx >= len(hand):
                         return 'error', 'Invalid index'
-                    cards.append(hand[idx])
-                except:
+                    card = hand[idx]
+                except ValueError:
                     return 'error', 'Invalid index'
+            if card in cards:
+                return 'error', 'Duplicate card'
+            cards.append(card)
         return 'play', cards
 
     def hint(self, current):
