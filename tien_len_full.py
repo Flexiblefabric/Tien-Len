@@ -268,7 +268,10 @@ class Game:
             if not p.is_human:
                 print('Invalid AI move, passing')
         if cards:
-            if p.is_human and self.first_turn and self.current_idx == self.start_idx:
+            if self.first_turn and self.current_idx == self.start_idx:
+                # Clear the first_turn flag once the starting player has made
+                # their opening play. This must apply to AI and human players
+                # alike so that subsequent moves are validated normally.
                 self.first_turn = False
             self.pass_count = 0
             for c in cards:
