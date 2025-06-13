@@ -31,6 +31,16 @@ Select cards by clicking them and then press **Play Selected**. Press
 **Pass** to skip your turn (subject to the first‑turn rule). AI turns
 are handled automatically.
 
+## Pygame prototype
+
+An experimental interface built with **pygame** is available in
+`pygame_gui.py`. It currently draws your hand as rectangles on a green
+table background. Launch it with:
+
+```bash
+python3 pygame_gui.py
+```
+
 ## Running tests
 
 Install requirements first:
