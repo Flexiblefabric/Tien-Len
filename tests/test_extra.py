@@ -1,0 +1,78 @@
+import os
+import sys
+from unittest.mock import patch
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from tien_len_full import Game, Card
+
+
+def setup_hand():
+    return [
+        Card('Spades', '3'),
+        Card('Hearts', '4'),
+        Card('Diamonds', '5'),
+    ]
+
+
+def test_parse_notation_not_in_hand():
+    game = Game()
+    hand = setup_hand()
+    cmd, msg = game.parse_input('6\u2665', hand)
+    assert (cmd, msg) == ('error', 'Card 6\u2665 not in hand')
+
+
+def test_parse_invalid_notation():
+    game = Game()
+    hand = setup_hand()
+    cmd, msg = game.parse_input('foo', hand)
+    assert (cmd, msg) == ('error', 'Invalid index')
+
+
+def test_parse_duplicate_card():
+    game = Game()
+    hand = setup_hand()
+    cmd, msg = game.parse_input('1 1', hand)
+    assert (cmd, msg) == ('error', 'Duplicate card')
+
+
+def test_ai_plays_bomb_when_only_bomb_left():
+    game = Game()
+    ai = game.players[1]
+    ai.hand = [
+        Card('Spades', '7'),
+        Card('Hearts', '7'),
+        Card('Diamonds', '7'),
+        Card('Clubs', '7'),
+    ]
+    game.current_idx = 1
+    move = game.ai_play(None)
+    assert set(move) == set(ai.hand)
+
+
+def test_reset_pile_after_consecutive_passes():
+    game = Game()
+    # Only three players have one card each
+    game.players[0].hand = [Card('Spades', '3')]
+    game.players[1].hand = [Card('Hearts', '4')]
+    game.players[2].hand = [Card('Clubs', '5')]
+    game.players[3].hand = []
+
+    game.current_combo = [Card('Diamonds', '6')]
+    game.pile = [(game.players[3], [Card('Diamonds', '6')])]
+    game.first_turn = False
+    game.current_idx = 0
+
+    # Player 0 passes
+    with patch('builtins.input', lambda *args: 'pass'):
+        game.handle_turn()
+
+    assert game.pass_count == 1
+    assert game.current_combo is not None
+
+    # Player 1 also passes
+    with patch.object(Game, 'ai_play', return_value=[]):
+        game.handle_turn()
+
+    assert game.current_combo is None
+    assert game.pass_count == 0
+    assert game.pile == []
