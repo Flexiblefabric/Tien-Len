@@ -30,3 +30,18 @@ python3 gui.py
 Select cards by clicking them and then press **Play Selected**. Press
 **Pass** to skip your turn (subject to the first‑turn rule). AI turns
 are handled automatically.
+
+## Running tests
+
+Install requirements first:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the test suite with coverage enabled:
+
+```bash
+coverage run -m pytest
+coverage xml
+```
