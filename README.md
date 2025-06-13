@@ -1,4 +1,6 @@
 # Tiến Lên
+[![CI](https://github.com/YOUR_GITHUB_USERNAME/Tien-Len/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/Tien-Len/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/YOUR_GITHUB_USERNAME/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_GITHUB_USERNAME/Tien-Len)
 
 This repository contains a simple command line implementation of the 
 Vietnamese card game **Tiến Lên** and a small GUI prototype.
@@ -28,3 +30,18 @@ python3 gui.py
 Select cards by clicking them and then press **Play Selected**. Press
 **Pass** to skip your turn (subject to the first‑turn rule). AI turns
 are handled automatically.
+
+## Running tests
+
+Install requirements first:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the test suite with coverage enabled:
+
+```bash
+coverage run -m pytest
+coverage xml
+```

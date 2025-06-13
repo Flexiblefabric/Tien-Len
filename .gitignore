@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+coverage.xml
+.coverage
+tien_len_game.log
