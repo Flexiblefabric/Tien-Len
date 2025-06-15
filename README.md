@@ -51,6 +51,10 @@ Run the GUI from the project root so it can locate `assets/`. If any
 images are missing, the program will fall back to text and print a list
 of missing files.
 
+Optionally place a small image `table_bg.png` in the `assets` directory
+to serve as the background of the playing area. The GUI will tile and
+resize this image when the window is resized.
+
 ## Optional sound effects
 
 Simple sound support is provided via the `pygame` mixer. Install
