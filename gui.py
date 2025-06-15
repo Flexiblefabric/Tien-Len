@@ -182,18 +182,24 @@ class GameGUI:
                     font=self.card_font,
                     command=lambda c=card: self.toggle_card(c),
                 )
-            # Apply a highlight border to indicate selection rather than only
-            # changing the relief. Using ``highlightthickness`` provides a
-            # simple "glow" effect around the button.
+            # Apply a highlight border to indicate selection instead of only
+            # changing the relief. ``highlightthickness`` along with a custom
+            # color provides a subtle "glow" effect around the button.
             if card in self.selected:
                 btn.config(
                     relief=tk.SUNKEN,
                     bd=3,
                     highlightthickness=2,
                     highlightbackground="gold",
+                    highlightcolor="gold",
                 )
             else:
-                btn.config(relief=tk.RAISED, highlightthickness=0)
+                btn.config(
+                    relief=tk.RAISED,
+                    bd=2,
+                    highlightthickness=0,
+                    highlightbackground=self.hand_frame.cget("bg"),
+                )
             btn.pack(side=tk.LEFT, padx=2)
             self.hand_buttons.append(btn)
             self.card_buttons[card] = btn
