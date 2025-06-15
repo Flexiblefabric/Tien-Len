@@ -6,6 +6,8 @@ from PIL import Image, ImageTk
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
 from views import TableView, HandView
+import sound
+import pygame
 
 
 class GameGUI:
@@ -20,6 +22,22 @@ class GameGUI:
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
+
+        # Load sound effects and background music
+        sdir = Path(__file__).with_name("assets") / "sound"
+        sound.load("click", sdir / "card-play.wav")
+        sound.load("pass", sdir / "pass.wav")
+        sound.load("bomb", sdir / "bomb.wav")
+        sound.load("shuffle", sdir / "shuffle.wav")
+        sound.load("win", sdir / "win.wav")
+        sound.set_volume(1.0)
+        music = sdir / "Ambush in Rattlesnake Gulch.mp3"
+        if pygame:
+            try:
+                pygame.mixer.music.load(str(music))
+                pygame.mixer.music.play(-1)
+            except Exception:
+                pass
         self.base_images = {}
         self.scaled_images = {}
         self.card_images = {}
@@ -77,6 +95,21 @@ class GameGUI:
         tk.Label(self.sidebar, textvariable=self.ranking_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
         tk.Label(self.sidebar, text="Scores", font=("Arial", 12, "bold")).pack(anchor="w", pady=(10, 0))
         tk.Label(self.sidebar, textvariable=self.score_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
+
+        ctrl = tk.Frame(self.sidebar)
+        ctrl.pack(anchor="w", pady=(10, 0))
+        self.music_btn = tk.Button(ctrl, text="Pause Music", command=self.toggle_music)
+        self.music_btn.pack(anchor="w")
+        tk.Label(ctrl, text="Music Vol").pack(anchor="w")
+        self.music_volume = tk.DoubleVar(value=pygame.mixer.music.get_volume() if pygame else 1.0)
+        tk.Scale(ctrl, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1,
+                 variable=self.music_volume,
+                 command=lambda v: pygame.mixer.music.set_volume(float(v)) if pygame else None).pack(anchor="w")
+        tk.Label(ctrl, text="SFX Vol").pack(anchor="w")
+        self.sfx_volume = tk.DoubleVar(value=1.0)
+        tk.Scale(ctrl, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1,
+                 variable=self.sfx_volume,
+                 command=lambda v: sound.set_volume(float(v))).pack(anchor="w")
 
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
@@ -239,6 +272,16 @@ class GameGUI:
         score_lines = [f"{n}: {self.scores.get(n,0)}" for n in self.scores]
         self.score_var.set("\n".join(score_lines))
 
+    def toggle_music(self):
+        if not pygame:
+            return
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.pause()
+            self.music_btn.config(text="Play Music")
+        else:
+            pygame.mixer.music.unpause()
+            self.music_btn.config(text="Pause Music")
+
     def toggle_card(self, card):
         if card in self.selected:
             self.selected.remove(card)
@@ -307,6 +350,7 @@ class GameGUI:
 
     def animate_play(self, cards):
         self.root.bell()
+        sound.play("click")
         labels = []
         root_x = self.root.winfo_rootx()
         root_y = self.root.winfo_rooty()
@@ -339,6 +383,7 @@ class GameGUI:
         for lbl, _, _ in labels:
             lbl.destroy()
         if detect_combo(cards) == "bomb":
+            sound.play("bomb")
             bomb = tk.Label(
                 self.root, text="\U0001f4a5 Bomb!", font=("Arial", 20), fg="red"
             )
@@ -347,6 +392,7 @@ class GameGUI:
 
     def animate_pass(self, player):
         """Show a short sliding label indicating a pass."""
+        sound.play("pass")
         lbl = tk.Label(self.root, text=f"{player.name} passes", bg="yellow")
         lbl.place(relx=0.5, rely=0.4, anchor="center")
         for i in range(10):
@@ -357,6 +403,7 @@ class GameGUI:
 
     def show_game_over(self, winner: str):
         """Display a semi-transparent overlay with winner message."""
+        sound.play("win")
         self.overlay_active = True
         overlay = tk.Frame(self.root, bg="#00000080")
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)

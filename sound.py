@@ -13,6 +13,7 @@ except Exception:  # pragma: no cover - if mixer init fails
     _ENABLED = False
 
 _SOUNDS: dict[str, "pygame.mixer.Sound"] = {}
+_VOLUME = 1.0
 
 
 def load(name: str, path: str | Path) -> bool:
@@ -29,6 +30,7 @@ def load(name: str, path: str | Path) -> bool:
         return False
     try:
         snd = pygame.mixer.Sound(str(p))
+        snd.set_volume(_VOLUME)
     except Exception:
         return False
     _SOUNDS[name] = snd
@@ -46,3 +48,16 @@ def play(name: str) -> None:
         snd.play()
     except Exception:
         pass
+
+
+def set_volume(vol: float) -> None:
+    """Set volume for all loaded sound effects."""
+    global _VOLUME
+    _VOLUME = max(0.0, min(1.0, vol))
+    if not _ENABLED:
+        return
+    for snd in _SOUNDS.values():
+        try:
+            snd.set_volume(_VOLUME)
+        except Exception:
+            pass

@@ -16,6 +16,7 @@ decisions:
 import random
 import datetime
 import sys
+import sound
 from collections import Counter
 from itertools import combinations
 
@@ -177,6 +178,7 @@ class Game:
         self.current_round = 1
 
         self.deck.shuffle()
+        sound.play("shuffle")
         hands = self.deck.deal(len(self.players))
         for p, h in zip(self.players, hands):
             # Assign and sort each player's hand
