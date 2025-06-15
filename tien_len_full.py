@@ -393,6 +393,62 @@ class Game:
         print('--')
         log_action(f"Round summary: {self.pile}")
 
+    # New helper methods -------------------------------------------------
+    def process_play(self, player: Player, cards: list[Card]) -> bool:
+        """Apply ``cards`` as ``player``'s move.
+
+        Parameters
+        ----------
+        player : Player
+            The player making the move. ``cards`` must already be validated.
+        cards : list[Card]
+            The cards being played.
+
+        Returns
+        -------
+        bool
+            ``True`` if the player has emptied their hand and therefore won.
+        """
+
+        if self.first_turn and self.current_idx == self.start_idx:
+            # Opening player has now made their initial move
+            self.first_turn = False
+
+        self.pass_count = 0
+        for c in cards:
+            player.hand.remove(c)
+        self.pile.append((player, cards))
+        self.current_combo = cards
+        print(f"{player.name} plays {cards}\n")
+
+        if not player.hand:
+            print(f"{player.name} wins!")
+            log_action(f"Winner: {player.name}")
+            return True
+        return False
+
+    def process_pass(self, player: Player) -> None:
+        """Handle ``player`` passing their turn."""
+
+        self.pass_count += 1
+        print(f"{player.name} passes\n")
+        active = sum(1 for x in self.players if x.hand)
+        if self.current_combo and self.pass_count >= active - 1:
+            self.reset_pile()
+
+    def handle_pass(self) -> bool:
+        """Validate and process a pass for the current player."""
+
+        player = self.players[self.current_idx]
+        ok, msg = self.is_valid(player, [], self.current_combo)
+        if not ok:
+            print(f"Invalid pass: {msg}")
+            return False
+
+        self.process_pass(player)
+        self.next_turn()
+        return False
+
     def handle_turn(self):
         """Process the current player's turn.
 
@@ -423,26 +479,10 @@ class Game:
                 print('Invalid AI move, passing')
 
         if cards:
-            if self.first_turn and self.current_idx == self.start_idx:
-                # Clear the flag once the opening player has played their first
-                # valid combo.
-                self.first_turn = False
-            self.pass_count = 0
-            for c in cards:
-                p.hand.remove(c)
-            self.pile.append((p, cards))
-            self.current_combo = cards
-            print(f"{p.name} plays {cards}\n")
-            if not p.hand:
-                print(f"{p.name} wins!")
-                log_action(f"Winner: {p.name}")
+            if self.process_play(p, cards):
                 return True
         else:
-            self.pass_count += 1
-            print(f"{p.name} passes\n")
-            active = sum(1 for x in self.players if x.hand)
-            if self.current_combo and self.pass_count >= active - 1:
-                self.reset_pile()
+            self.process_pass(p)
 
         self.next_turn()
         return False
