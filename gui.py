@@ -33,11 +33,14 @@ class GameGUI:
         self.hand_buttons = []
         self.pile_var = tk.StringVar()
         self.info_var = tk.StringVar()
+        self.turn_var = tk.StringVar()
 
         self.pile_frame = tk.Frame(root, width=200, height=120, bd=2, relief=tk.SUNKEN)
         self.pile_frame.pack(pady=5)
         tk.Label(self.pile_frame, textvariable=self.pile_var, font=("Arial", 14)).pack()
         tk.Label(root, textvariable=self.info_var).pack(pady=5)
+        self.turn_label = tk.Label(root, textvariable=self.turn_var, font=("Arial", 12, "bold"))
+        self.turn_label.pack(pady=2)
 
         self.hand_frame = tk.Frame(root)
         self.hand_frame.pack(pady=10)
@@ -204,8 +207,11 @@ class GameGUI:
         cur = self.game.players[self.game.current_idx]
         if cur.is_human:
             self.info_var.set("Your turn")
+            self.turn_label.config(bg="lightgreen")
         else:
             self.info_var.set(f"Waiting for {cur.name}...")
+            self.turn_label.config(bg="lightblue")
+        self.turn_var.set(f"Turn: {cur.name}")
 
     def toggle_card(self, card):
         if card in self.selected:
@@ -336,6 +342,16 @@ class GameGUI:
             bomb.place(relx=0.5, rely=0.1, anchor="n")
             self.root.after(1000, bomb.destroy)
 
+    def animate_pass(self, player):
+        """Show a short sliding label indicating a pass."""
+        lbl = tk.Label(self.root, text=f"{player.name} passes", bg="yellow")
+        lbl.place(relx=0.5, rely=0.4, anchor="center")
+        for i in range(10):
+            lbl.place_configure(rely=0.4 - i * 0.03)
+            self.root.update_idletasks()
+            self.root.after(20)
+        lbl.destroy()
+
     def restart_game(self):
         self.game = Game()
         self.game.setup()
@@ -373,6 +389,7 @@ class GameGUI:
             messagebox.showinfo("Invalid move", msg)
             return
         self.root.bell()
+        self.animate_pass(self.game.players[0])
         self.game.pass_count += 1
         active = sum(1 for x in self.game.players if x.hand)
         if self.game.current_combo and self.game.pass_count >= active - 1:
@@ -407,6 +424,7 @@ class GameGUI:
                         self.root.destroy()
                         return
             else:
+                self.animate_pass(p)
                 self.game.pass_count += 1
                 active = sum(1 for x in self.game.players if x.hand)
                 if self.game.current_combo and self.game.pass_count >= active - 1:
