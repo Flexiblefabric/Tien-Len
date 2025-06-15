@@ -1,6 +1,7 @@
 import sys
+import os
 import pygame
-from tien_len_full import Game
+from tien_len_full import Game, RANKS, SUITS
 
 # Basic constants for card layout
 CARD_WIDTH = 60
@@ -8,6 +9,28 @@ CARD_HEIGHT = 90
 CARD_GAP = 10
 SCREEN_SIZE = (800, 600)
 FELT_GREEN = (0, 128, 0)
+
+def load_card_images():
+    """Return a {(suit, rank): Surface} mapping for all 52 cards."""
+
+    rank_map = {'J': 'jack', 'Q': 'queen', 'K': 'king', 'A': 'ace', '2': '2'}
+    for r in '3 4 5 6 7 8 9 10 J Q K A 2'.split():
+        rank_map.setdefault(r, r)
+
+    suit_map = {
+        'Spades': 'spades',
+        'Hearts': 'hearts',
+        'Diamonds': 'diamonds',
+        'Clubs': 'clubs',
+    }
+
+    images = {}
+    for suit, suit_name in suit_map.items():
+        for rank in RANKS:
+            filename = f"{rank_map[rank]}_of_{suit_name}.png"
+            path = os.path.join('assets', filename)
+            images[(suit, rank)] = pygame.image.load(path).convert_alpha()
+    return images
 
 
 def draw_hand(screen, font, hand):
