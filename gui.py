@@ -25,6 +25,8 @@ class GameGUI:
         self.root.config(menu=menubar)
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="New Game", command=self.restart_game)
+        file_menu.add_command(label="Save Game", command=self.save_game)
+        file_menu.add_command(label="Load Game", command=self.load_game)
         file_menu.add_command(label="Quit", command=self.root.destroy)
         menubar.add_cascade(label="File", menu=file_menu)
 
@@ -79,7 +81,6 @@ class GameGUI:
         self.history_var = tk.StringVar()
         self.ranking_var = tk.StringVar()
         self.score_var = tk.StringVar()
-        self.scores = {p.name: 0 for p in self.game.players}
         self.overlay_active = False
         self.table_cloth_color = "darkgreen"
 
@@ -161,6 +162,7 @@ class GameGUI:
         tk.Scale(ctrl, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1,
                  variable=self.sfx_volume,
                  command=lambda v: sound.set_volume(float(v))).pack(anchor="w")
+        tk.Button(ctrl, text="Replay Last Round", command=self.replay_last_round).pack(anchor="w", pady=(5, 0))
 
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
@@ -371,7 +373,7 @@ class GameGUI:
         ranks = self.game.get_rankings()
         lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(ranks)]
         self.ranking_var.set("\n".join(lines))
-        score_lines = [f"{n}: {self.scores.get(n,0)}" for n in self.scores]
+        score_lines = [f"{n}: {self.game.scores.get(n,0)}" for n in self.game.scores]
         self.score_var.set("\n".join(score_lines))
 
     def toggle_music(self):
@@ -388,6 +390,43 @@ class GameGUI:
         from settings_dialog import SettingsDialog
         SettingsDialog(self.root, self)
 
+    def save_game(self):
+        """Prompt for a file and save the current game state."""
+        from tkinter import filedialog
+
+        path = filedialog.asksaveasfilename(
+            defaultextension=".json", filetypes=[("JSON", "*.json")]
+        )
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(self.game.to_json())
+        except Exception as exc:
+            messagebox.showerror("Save Failed", str(exc))
+
+    def load_game(self):
+        """Load game state from a JSON file."""
+        from tkinter import filedialog
+
+        path = filedialog.askopenfilename(filetypes=[("JSON", "*.json")])
+        if not path:
+            return
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = f.read()
+            new_game = Game()
+            new_game.from_json(data)
+            new_game.ai_difficulty = self.ai_difficulty
+            self.game = new_game
+            self.table_view.game = self.game
+            self.hand_view.game = self.game
+            self.selected.clear()
+            self.update_display()
+            self.update_sidebar()
+        except Exception as exc:
+            messagebox.showerror("Load Failed", str(exc))
+
     def show_rules(self):
         """Display a modal window with basic rules."""
         win = tk.Toplevel(self.root)
@@ -402,6 +441,49 @@ class GameGUI:
         )
         tk.Label(win, text=text, justify=tk.LEFT, wraplength=400).pack(padx=20, pady=20)
         tk.Button(win, text="Close", command=win.destroy).pack(pady=(0, 10))
+
+    def replay_last_round(self):
+        """Replay the most recently completed round using animations."""
+        round_no = self.game.current_round - 1
+        actions = self.game.move_log.get(round_no)
+        state = self.game.round_states.get(round_no)
+        if not actions or not state:
+            messagebox.showinfo("Replay", "No round to replay yet")
+            return
+
+        orig_game = self.game
+        replay_game = Game()
+        replay_game.from_json(state)
+        replay_game.ai_difficulty = self.ai_difficulty
+        self.game = replay_game
+        self.table_view.game = self.game
+        self.hand_view.game = self.game
+        self.selected.clear()
+        self.update_display()
+
+        def step(i=0):
+            if i >= len(actions):
+                self.game = orig_game
+                self.table_view.game = self.game
+                self.hand_view.game = self.game
+                self.update_display()
+                self.update_sidebar()
+                return
+            typ, idx, cards = actions[i]
+            self.game.current_idx = idx
+            p = self.game.players[idx]
+            if typ == "play":
+                self.animate_play(cards)
+                self.game.process_play(p, list(cards))
+            else:
+                self.animate_pass(p)
+                self.game.process_pass(p)
+            self.update_sidebar()
+            self.game.next_turn()
+            self.update_display()
+            self.root.after(600, lambda: step(i + 1))
+
+        self.root.after(100, step)
 
     def toggle_card(self, card):
         if card in self.selected:
@@ -565,8 +647,8 @@ class GameGUI:
         self.restart_game()
 
     def menu_load_game(self):
-        messagebox.showinfo("Load", "Load game not implemented yet")
         self.hide_menu()
+        self.load_game()
 
     def play_again(self, overlay):
         overlay.destroy()
@@ -574,7 +656,10 @@ class GameGUI:
         self.restart_game()
 
     def restart_game(self):
+        scores = self.game.scores if hasattr(self, "game") else None
         self.game = Game()
+        if scores:
+            self.game.scores = scores
         self.game.setup()
         self.selected.clear()
         self.update_display()
@@ -594,7 +679,7 @@ class GameGUI:
             self.update_sidebar()
             self.game.next_turn()
             if winner:
-                self.scores[self.game.players[0].name] += 1
+                self.game.scores[self.game.players[0].name] += 1
                 self.update_sidebar()
                 self.show_game_over(self.game.players[0].name)
                 return
@@ -644,7 +729,7 @@ class GameGUI:
                 winner = self.game.process_play(p, cards)
                 self.update_sidebar()
                 if winner:
-                    self.scores[p.name] += 1
+                    self.game.scores[p.name] += 1
                     self.update_sidebar()
                     self.show_game_over(p.name)
                     return
