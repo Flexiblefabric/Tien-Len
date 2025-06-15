@@ -48,6 +48,11 @@ class SettingsDialog(tk.Toplevel):
         self.no2_var = tk.BooleanVar(value=not rules.ALLOW_2_IN_SEQUENCE)
         tk.Checkbutton(frame, text="Disallow 2 in sequences", variable=self.no2_var).pack(anchor="w")
 
+        # AI difficulty slider
+        tk.Label(frame, text="AI difficulty").pack(anchor="w")
+        self.diff_var = tk.DoubleVar(value=self.gui.ai_difficulty)
+        tk.Scale(frame, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.diff_var).pack(anchor="w")
+
         tk.Button(frame, text="OK", command=self.on_ok).pack(pady=(5,0))
 
     def choose_colour(self) -> None:
@@ -78,4 +83,7 @@ class SettingsDialog(tk.Toplevel):
                 self.gui.root.iconphoto(False, img)
             except Exception:
                 pass
+        diff = float(self.diff_var.get())
+        self.gui.ai_difficulty = diff
+        self.gui.game.ai_difficulty = diff
         self.destroy()
