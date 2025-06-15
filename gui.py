@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image, ImageTk
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
+from views import TableView, HandView
 
 
 class GameGUI:
@@ -30,8 +31,7 @@ class GameGUI:
                 self.root.iconphoto(False, self.card_back)
             except Exception:
                 pass
-        self.selected = []
-        self.hand_buttons = []
+        self.selected: set = set()
         self.pile_var = tk.StringVar()
         self.info_var = tk.StringVar()
         self.turn_var = tk.StringVar()
@@ -46,15 +46,23 @@ class GameGUI:
         self.sidebar = tk.Frame(root, bd=1, relief=tk.SUNKEN)
         self.sidebar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
-        self.pile_frame = tk.Frame(self.main_area, width=200, height=120, bd=2, relief=tk.SUNKEN)
-        self.pile_frame.pack(pady=5)
-        tk.Label(self.pile_frame, textvariable=self.pile_var, font=("Arial", 14)).pack()
+        self.table_view = TableView(
+            self.main_area, self.game, self.base_images, self.scaled_images, self.CARD_WIDTH
+        )
+        self.table_view.pack(pady=5)
         tk.Label(self.main_area, textvariable=self.info_var).pack(pady=5)
         self.turn_label = tk.Label(self.main_area, textvariable=self.turn_var, font=("Arial", 12, "bold"))
         self.turn_label.pack(pady=2)
 
-        self.hand_frame = tk.Frame(self.main_area)
-        self.hand_frame.pack(pady=10)
+        self.hand_view = HandView(
+            self.main_area,
+            self.game,
+            self.base_images,
+            self.scaled_images,
+            lambda sel: self.on_selection(sel),
+            self.CARD_WIDTH,
+        )
+        self.hand_view.pack(pady=10)
 
         action_frame = tk.Frame(self.main_area)
         action_frame.pack(pady=5)
@@ -79,6 +87,11 @@ class GameGUI:
 
         self.update_display()
         self.root.after(100, self.game_loop)
+
+    def on_selection(self, selection: set) -> None:
+        """Callback from :class:`HandView` when the selection changes."""
+        self.selected = set(selection)
+        self.update_display()
 
     # Image loading -------------------------------------------------
     def load_images(self):
@@ -156,77 +169,35 @@ class GameGUI:
 
     # GUI helpers -------------------------------------------------
     def update_display(self):
-        for w in self.pile_frame.pack_slaves()[1:]:
-            w.destroy()
+        self.table_view.refresh()
+        self.hand_view.selected = set(self.selected)
+        self.hand_view.refresh()
 
-        if not self.game.pile:
-            self.pile_var.set("Pile: empty")
+        cur = self.game.players[self.game.current_idx]
+        if cur.is_human:
+            self.info_var.set("Your turn")
+            self.turn_label.config(bg="lightgreen")
         else:
-            p, c = self.game.pile[-1]
-            self.pile_var.set(f"Pile: {p.name} -> {c} ({detect_combo(c)})")
-            for card in c:
-                key = self._image_key(card)
-                img = self._scaled_image(key, self.card_width)
-                if img:
-                    lbl = tk.Label(self.pile_frame, image=img)
-                    lbl.image = img
-                    lbl.pack(side=tk.LEFT, padx=2)
+            self.info_var.set(f"Waiting for {cur.name}...")
+            self.turn_label.config(bg="lightblue")
+        self.turn_var.set(f"Turn: {cur.name}")
 
-        for b in self.hand_buttons:
-            b.destroy()
-        self.hand_buttons.clear()
-        self.card_buttons = {}
-        player = self.game.players[0]
-        if player.hand:
-            card_width = min(
-                self.CARD_WIDTH, self.root.winfo_width() // max(1, len(player.hand))
-            )
-        else:
-            card_width = self.CARD_WIDTH
-        self.card_width = card_width
-        for card in player.hand:
-            key = self._image_key(card)
-            img = self._scaled_image(key, card_width)
-            if img:
-                btn = tk.Button(
-                    self.hand_frame,
-                    image=img,
-                    command=lambda c=card: self.toggle_card(c),
-                    borderwidth=2,
-                )
-                btn.image = img
-            else:
-                btn = tk.Button(
-                    self.hand_frame,
-                    text=str(card),
-                    width=card_width,
-                    font=self.card_font,
-                    command=lambda c=card: self.toggle_card(c),
-                )
-            # Apply a highlight border to indicate selection instead of only
-            # changing the relief. ``highlightthickness`` along with a custom
-            # color provides a subtle "glow" effect around the button.
-            if card in self.selected:
-                btn.config(
-                    relief=tk.SUNKEN,
-                    bd=3,
-                    highlightthickness=2,
-                    highlightbackground="gold",
-                    highlightcolor="gold",
-                )
-            else:
-                btn.config(
-                    relief=tk.RAISED,
-                    bd=2,
-                    highlightthickness=0,
-                    highlightbackground=self.hand_frame.cget("bg"),
-                )
-            btn.pack(side=tk.LEFT, padx=2)
-            self.hand_buttons.append(btn)
-            self.card_buttons[card] = btn
-            btn.bind("<ButtonPress-1>", lambda e, c=card: self.start_drag(e, c))
-            btn.bind("<B1-Motion>", self.drag_motion)
-            btn.bind("<ButtonRelease-1>", lambda e, c=card: self.end_drag(e))
+        # Enable or disable action buttons
+        is_human_turn = cur.is_human
+        play_ok, _ = self.game.is_valid(
+            self.game.players[0], list(self.selected), self.game.current_combo
+        )
+        pass_ok, _ = self.game.is_valid(
+            self.game.players[0], [], self.game.current_combo
+        )
+        self.play_btn.config(
+            state=tk.NORMAL if is_human_turn and play_ok else tk.DISABLED
+        )
+        self.pass_btn.config(
+            state=tk.NORMAL if is_human_turn and pass_ok else tk.DISABLED
+        )
+
+        self.update_sidebar()
 
         cur = self.game.players[self.game.current_idx]
         if cur.is_human:
@@ -272,7 +243,7 @@ class GameGUI:
         if card in self.selected:
             self.selected.remove(card)
         else:
-            self.selected.append(card)
+            self.selected.add(card)
         self.update_display()
 
     # Drag and drop helpers --------------------------------------
@@ -282,10 +253,10 @@ class GameGUI:
         # Save the pile frame's original style the first time we start a drag
         if not hasattr(self, "_pile_style"):
             self._pile_style = {
-                "highlightthickness": self.pile_frame.cget("highlightthickness"),
-                "highlightbackground": self.pile_frame.cget("highlightbackground"),
+                "highlightthickness": self.table_view.cget("highlightthickness"),
+                "highlightbackground": self.table_view.cget("highlightbackground"),
             }
-        self.pile_frame.config(highlightthickness=2, highlightbackground="gold")
+        self.table_view.config(highlightthickness=2, highlightbackground="gold")
 
         drag_cards = list(self.selected) if self.selected and card in self.selected else [card]
         self.drag_data = {
@@ -307,7 +278,7 @@ class GameGUI:
             return
         self.drag_data["dragged"] = True
         # Keep the drop target highlighted during drag motion
-        self.pile_frame.config(highlightthickness=2, highlightbackground="gold")
+        self.table_view.config(highlightthickness=2, highlightbackground="gold")
         if hasattr(self, "drag_label"):
             self.drag_label.place(x=event.x_root, y=event.y_root)
 
@@ -319,45 +290,20 @@ class GameGUI:
             self.drag_label.destroy()
         x, y = event.x_root, event.y_root
         self.drag_data = None
-        px1 = self.pile_frame.winfo_rootx()
-        py1 = self.pile_frame.winfo_rooty()
-        px2 = px1 + self.pile_frame.winfo_width()
-        py2 = py1 + self.pile_frame.winfo_height()
+        px1 = self.table_view.winfo_rootx()
+        py1 = self.table_view.winfo_rooty()
+        px2 = px1 + self.table_view.winfo_width()
+        py2 = py1 + self.table_view.winfo_height()
         if px1 <= x <= px2 and py1 <= y <= py2 and data["dragged"]:
-            self.selected = list(data.get("cards", [data["card"]]))
+            self.selected = set(data.get("cards", [data["card"]]))
             self.play_selected()
         else:
             self.toggle_card(data["card"])
         # Restore the pile frame's original style after dropping
         if hasattr(self, "_pile_style"):
-            self.pile_frame.config(**self._pile_style)
+            self.table_view.config(**self._pile_style)
             delattr(self, "_pile_style")
 
-    def _image_key(self, card):
-        """Return the asset key for a card image."""
-        rank_map = {
-            "J": "jack",
-            "Q": "queen",
-            "K": "king",
-            "A": "ace",
-        }
-        rank = rank_map.get(card.rank, card.rank.lower())
-        suit = card.suit.lower()
-        return f"{rank}_of_{suit}"
-
-    def _scaled_image(self, key: str, width: int):
-        """Return a ``PhotoImage`` for ``key`` scaled to ``width``."""
-
-        base = self.base_images.get(key)
-        if not base:
-            return self.card_images.get(key)
-
-        cache_key = (key, width)
-        if cache_key not in self.scaled_images:
-            ratio = width / base.width
-            img = base.resize((width, int(base.height * ratio)), Image.LANCZOS)
-            self.scaled_images[cache_key] = ImageTk.PhotoImage(img)
-        return self.scaled_images[cache_key]
 
     def animate_play(self, cards):
         self.root.bell()
@@ -365,13 +311,13 @@ class GameGUI:
         root_x = self.root.winfo_rootx()
         root_y = self.root.winfo_rooty()
         target_x = (
-            self.pile_frame.winfo_rootx() - root_x + self.pile_frame.winfo_width() // 2
+            self.table_view.winfo_rootx() - root_x + self.table_view.winfo_width() // 2
         )
         target_y = (
-            self.pile_frame.winfo_rooty() - root_y + self.pile_frame.winfo_height() // 2
+            self.table_view.winfo_rooty() - root_y + self.table_view.winfo_height() // 2
         )
         for c in cards:
-            btn = self.card_buttons.get(c)
+            btn = self.hand_view.widgets.get(c)
             if not btn:
                 continue
             x = btn.winfo_rootx() - root_x
