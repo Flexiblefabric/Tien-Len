@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import warnings
 
 try:
     import pygame
@@ -24,6 +25,7 @@ def load(name: str, path: str | Path) -> bool:
         return False
     p = Path(path)
     if not p.is_file():
+        warnings.warn(f"Sound file '{p}' not found", RuntimeWarning)
         return False
     try:
         snd = pygame.mixer.Sound(str(p))
