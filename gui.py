@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import font as tkfont
 
 from tien_len_full import Game, detect_combo
 
@@ -8,6 +9,8 @@ class GameGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Tiến Lên GUI Prototype")
+        self.fullscreen = False
+        self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
         self.selected = []
@@ -26,8 +29,29 @@ class GameGUI:
         tk.Button(action_frame, text="Play Selected", command=self.play_selected).pack(side=tk.LEFT)
         tk.Button(action_frame, text="Pass", command=self.pass_turn).pack(side=tk.LEFT)
 
+        # Keyboard shortcuts
+        self.root.bind('<Return>', lambda e: self.play_selected())
+        self.root.bind('<space>', lambda e: self.pass_turn())
+        self.root.bind('<F11>', lambda e: self.toggle_fullscreen())
+        self.root.bind('<Escape>', lambda e: self.end_fullscreen())
+        self.root.bind('<Configure>', self.on_resize)
+
         self.update_display()
         self.root.after(100, self.game_loop)
+
+    def toggle_fullscreen(self):
+        self.fullscreen = not self.fullscreen
+        self.root.attributes('-fullscreen', self.fullscreen)
+
+    def end_fullscreen(self):
+        if self.fullscreen:
+            self.fullscreen = False
+            self.root.attributes('-fullscreen', False)
+
+    def on_resize(self, event):
+        size = max(8, int(event.width / 50))
+        if size != self.card_font['size']:
+            self.card_font.configure(size=size)
 
     # GUI helpers -------------------------------------------------
     def update_display(self):
@@ -41,9 +65,18 @@ class GameGUI:
             b.destroy()
         self.hand_buttons.clear()
         player = self.game.players[0]
+        if player.hand:
+            card_width = max(4, int(self.root.winfo_width() / (len(player.hand) * 15)))
+        else:
+            card_width = 4
         for card in player.hand:
-            btn = tk.Button(self.hand_frame, text=str(card), width=4,
-                            command=lambda c=card: self.toggle_card(c))
+            btn = tk.Button(
+                self.hand_frame,
+                text=str(card),
+                width=card_width,
+                font=self.card_font,
+                command=lambda c=card: self.toggle_card(c),
+            )
             if card in self.selected:
                 btn.config(relief=tk.SUNKEN)
             btn.pack(side=tk.LEFT, padx=2)
