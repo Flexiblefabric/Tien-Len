@@ -43,6 +43,12 @@ SUIT_SYMBOLS = {'♠': 'Spades', '♥': 'Hearts', '♦': 'Diamonds', '♣': 'Clu
 SUITS = list(SUIT_SYMBOLS.values())
 RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
 
+# Global rule toggles
+# ``ALLOW_2_IN_SEQUENCE`` controls whether suited sequences may contain a 2.
+# The default preserves the house rule used by the tests which forbids 2s
+# in sequences.
+ALLOW_2_IN_SEQUENCE = False
+
 # Rough ranking used by the very simple AI to choose which move to play.  Higher
 # values are better.
 TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
@@ -112,8 +118,8 @@ def is_sequence(cards) -> bool:
 
     if len(cards) < 3:
         return False
-    # Sequences cannot contain a 2 under the house rules used here
-    if any(c.rank == '2' for c in cards):
+    # Optionally disallow sequences containing a 2
+    if not ALLOW_2_IN_SEQUENCE and any(c.rank == '2' for c in cards):
         return False
     # All cards must share the same suit
     if len({c.suit for c in cards}) != 1:
