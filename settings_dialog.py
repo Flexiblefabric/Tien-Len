@@ -51,7 +51,13 @@ class SettingsDialog(tk.Toplevel):
         # AI difficulty slider
         tk.Label(frame, text="AI difficulty").pack(anchor="w")
         self.diff_var = tk.DoubleVar(value=self.gui.ai_difficulty)
-        tk.Scale(frame, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL, variable=self.diff_var).pack(anchor="w")
+        tk.Scale(frame, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL,
+                 variable=self.diff_var).pack(anchor="w")
+
+        # Accessibility
+        self.hc_var = tk.BooleanVar(value=self.gui.high_contrast)
+        tk.Checkbutton(frame, text="High contrast mode",
+                       variable=self.hc_var).pack(anchor="w", pady=(5, 0))
 
         tk.Button(frame, text="OK", command=self.on_ok).pack(pady=(5,0))
 
@@ -86,4 +92,5 @@ class SettingsDialog(tk.Toplevel):
         diff = float(self.diff_var.get())
         self.gui.ai_difficulty = diff
         self.gui.game.ai_difficulty = diff
+        self.gui.set_high_contrast(self.hc_var.get())
         self.destroy()

@@ -33,7 +33,7 @@ class GameGUI:
         menubar.add_cascade(label="Options", menu=opt_menu)
 
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="About/Rules...", command=self.show_about)
+        help_menu.add_command(label="Rules...", command=self.show_rules)
         menubar.add_cascade(label="Help", menu=help_menu)
 
         self.fullscreen = False
@@ -44,6 +44,7 @@ class GameGUI:
         # Difficulty multiplier affecting AI aggressiveness
         self.ai_difficulty = 1.0
         self.game.ai_difficulty = self.ai_difficulty
+        self.high_contrast = False
 
         # Load sound effects and background music
         sdir = Path(__file__).with_name("assets") / "sound"
@@ -168,6 +169,7 @@ class GameGUI:
         self.root.bind("<Escape>", lambda e: self.end_fullscreen())
         self.root.bind("<Configure>", self.on_resize)
 
+        self.set_high_contrast(False)
         self.update_display()
         self.root.after(100, self.game_loop)
 
@@ -243,6 +245,22 @@ class GameGUI:
         if self.fullscreen:
             self.fullscreen = False
             self.root.attributes("-fullscreen", False)
+
+    def set_high_contrast(self, enable: bool):
+        """Toggle high contrast mode for better visibility."""
+        self.high_contrast = enable
+        default_font = tkfont.nametofont("TkDefaultFont")
+        size = 12 if enable else 10
+        default_font.configure(size=size)
+        self.card_font.configure(size=16 if enable else 12)
+        if enable:
+            self.root.tk_setPalette(background="black", foreground="white",
+                                   activeBackground="#333",
+                                   activeForeground="white")
+        else:
+            # Empty call resets to defaults
+            self.root.tk_setPalette("")
+        self.update_display()
 
     def on_resize(self, event):
         size = max(8, int(event.width / 50))
@@ -369,13 +387,20 @@ class GameGUI:
         from settings_dialog import SettingsDialog
         SettingsDialog(self.root, self)
 
-    def show_about(self):
-        msg = (
-            "This GUI demonstrates the Vietnamese card game Tiến Lên.\n"
-            "Select cards and press Play to beat the pile.\n"
-            "Sequences cannot contain the 2 by default."
+    def show_rules(self):
+        """Display a modal window with basic rules."""
+        win = tk.Toplevel(self.root)
+        win.title("Game Rules")
+        win.transient(self.root)
+        win.grab_set()
+        text = (
+            "Each player is dealt 13 cards.\n"
+            "On your turn play a higher combo or pass.\n"
+            "The first player to shed all cards wins.\n\n"
+            "Example: play a pair of 7s over a pair of 5s."
         )
-        messagebox.showinfo("About", msg)
+        tk.Label(win, text=text, justify=tk.LEFT, wraplength=400).pack(padx=20, pady=20)
+        tk.Button(win, text="Close", command=win.destroy).pack(pady=(0, 10))
 
     def toggle_card(self, card):
         if card in self.selected:
