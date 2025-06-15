@@ -39,6 +39,9 @@ class GameGUI:
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
+        # Difficulty multiplier affecting AI aggressiveness
+        self.ai_difficulty = 1.0
+        self.game.ai_difficulty = self.ai_difficulty
 
         # Load sound effects and background music
         sdir = Path(__file__).with_name("assets") / "sound"

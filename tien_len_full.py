@@ -176,6 +176,8 @@ class Game:
         self.current_combo: list[Card] | None = None
         self.history: list[tuple[int, str]] = []
         self.current_round = 1
+        # Multiplier influencing how aggressively the AI plays
+        self.ai_difficulty = 1.0
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
@@ -351,7 +353,8 @@ class Game:
         rank_val = max(RANKS.index(c.rank) for c in move)
         remaining = [c for c in player.hand if c not in move]
         finish = 1 if not remaining else 0
-        return (base, finish, rank_val)
+        diff = getattr(self, "ai_difficulty", 1.0)
+        return (base, finish * diff, rank_val * diff)
 
     def ai_play(self, current):
         """Choose a move for the current AI player."""
