@@ -51,6 +51,14 @@ Run the GUI from the project root so it can locate `assets/`. If any
 images are missing, the program will fall back to text and print a list
 of missing files.
 
+## Optional sound effects
+
+Simple sound support is provided via the `pygame` mixer. Install
+`pygame` to enable it. If the mixer fails to initialise, the game
+silently skips all audio. Set the environment variable
+`SDL_AUDIODRIVER=dummy` (or any invalid driver) before launching to
+disable sound explicitly.
+
 
 ## Running tests
 
