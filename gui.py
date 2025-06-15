@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font as tkfont
+from pathlib import Path
 
 from tien_len_full import Game, detect_combo
 
@@ -13,6 +14,14 @@ class GameGUI:
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
+        self.card_images = {}
+        self.card_back = None
+        self.load_images()
+        if self.card_back is not None:
+            try:
+                self.root.iconphoto(False, self.card_back)
+            except Exception:
+                pass
         self.selected = []
         self.hand_buttons = []
         self.pile_var = tk.StringVar()
@@ -38,6 +47,19 @@ class GameGUI:
 
         self.update_display()
         self.root.after(100, self.game_loop)
+
+    # Image loading -------------------------------------------------
+    def load_images(self):
+        """Load card face and back images if available."""
+        assets = Path(__file__).with_name("assets")
+        if not assets.exists():
+            return
+        for img_path in assets.glob("*.png"):
+            try:
+                self.card_images[img_path.stem] = tk.PhotoImage(file=img_path)
+            except Exception:
+                continue
+        self.card_back = self.card_images.get("card_back")
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -70,13 +92,24 @@ class GameGUI:
         else:
             card_width = 4
         for card in player.hand:
-            btn = tk.Button(
-                self.hand_frame,
-                text=str(card),
-                width=card_width,
-                font=self.card_font,
-                command=lambda c=card: self.toggle_card(c),
-            )
+            key = self._image_key(card)
+            img = self.card_images.get(key)
+            if img:
+                btn = tk.Button(
+                    self.hand_frame,
+                    image=img,
+                    command=lambda c=card: self.toggle_card(c),
+                    borderwidth=2,
+                )
+                btn.image = img
+            else:
+                btn = tk.Button(
+                    self.hand_frame,
+                    text=str(card),
+                    width=card_width,
+                    font=self.card_font,
+                    command=lambda c=card: self.toggle_card(c),
+                )
             if card in self.selected:
                 btn.config(relief=tk.SUNKEN)
             btn.pack(side=tk.LEFT, padx=2)
@@ -94,6 +127,18 @@ class GameGUI:
         else:
             self.selected.append(card)
         self.update_display()
+
+    def _image_key(self, card):
+        """Return the asset key for a card image."""
+        rank_map = {
+            'J': 'jack',
+            'Q': 'queen',
+            'K': 'king',
+            'A': 'ace',
+        }
+        rank = rank_map.get(card.rank, card.rank.lower())
+        suit = card.suit.lower()
+        return f"{rank}_of_{suit}"
 
     # Action handlers ---------------------------------------------
     def play_selected(self):
