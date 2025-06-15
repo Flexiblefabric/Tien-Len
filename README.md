@@ -37,6 +37,20 @@ The GUI supports a few convenience features:
 - Resize the window or press **F11** to toggle full‑screen mode and the
   card buttons will scale accordingly.
 
+### Showing card images
+
+If an `assets` directory containing PNG card images is present next to
+`gui.py`, the interface will show graphical cards instead of simple
+text buttons. The repository ships with the required files:
+
+- `card_back.png` for the back of a card
+- `red_joker.png` and `black_joker.png` for jokers (optional)
+- 52 images named like `ace_of_spades.png` or `10_of_hearts.png`
+
+Run the GUI from the project root so it can locate `assets/`. If any
+images are missing, the program will fall back to text and print a list
+of missing files.
+
 
 ## Running tests
 
