@@ -76,3 +76,35 @@ def test_reset_pile_after_consecutive_passes():
     assert game.current_combo is None
     assert game.pass_count == 0
     assert game.pile == []
+
+
+def test_ai_plays_long_sequence():
+    game = Game()
+    ai = game.players[1]
+    ai.hand = [
+        Card('Spades', '7'),
+        Card('Spades', '8'),
+        Card('Spades', '9'),
+        Card('Spades', '10'),
+        Card('Spades', 'J'),
+    ]
+    game.current_idx = 1
+    move = game.ai_play(None)
+    assert set(move) == set(ai.hand)
+
+
+def test_generate_moves_calls_is_valid_for_long_sequence():
+    game = Game()
+    ai = game.players[1]
+    ai.hand = [
+        Card('Hearts', '4'),
+        Card('Hearts', '5'),
+        Card('Hearts', '6'),
+        Card('Hearts', '7'),
+        Card('Hearts', '8'),
+    ]
+    game.current_idx = 1
+    with patch.object(Game, 'is_valid', wraps=game.is_valid) as mock_valid:
+        moves = game.generate_valid_moves(ai, None)
+        assert any(len(m) == 5 for m in moves)
+        assert any(len(args[1]) == 5 for args, _ in mock_valid.call_args_list)
