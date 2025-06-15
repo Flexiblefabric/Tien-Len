@@ -58,10 +58,10 @@ class GameGUI:
 
         action_frame = tk.Frame(self.main_area)
         action_frame.pack(pady=5)
-        tk.Button(action_frame, text="Play", command=self.play_selected).pack(
-            side=tk.LEFT
-        )
-        tk.Button(action_frame, text="Pass", command=self.pass_turn).pack(side=tk.LEFT)
+        self.play_btn = tk.Button(action_frame, text="Play", command=self.play_selected)
+        self.play_btn.pack(side=tk.LEFT)
+        self.pass_btn = tk.Button(action_frame, text="Pass", command=self.pass_turn)
+        self.pass_btn.pack(side=tk.LEFT)
 
         tk.Label(self.sidebar, text="History", font=("Arial", 12, "bold")).pack(anchor="w")
         tk.Label(self.sidebar, textvariable=self.history_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
@@ -236,6 +236,22 @@ class GameGUI:
             self.info_var.set(f"Waiting for {cur.name}...")
             self.turn_label.config(bg="lightblue")
         self.turn_var.set(f"Turn: {cur.name}")
+
+        # Enable or disable action buttons
+        is_human_turn = cur.is_human
+        play_ok, _ = self.game.is_valid(
+            self.game.players[0], list(self.selected), self.game.current_combo
+        )
+        pass_ok, _ = self.game.is_valid(
+            self.game.players[0], [], self.game.current_combo
+        )
+        self.play_btn.config(
+            state=tk.NORMAL if is_human_turn and play_ok else tk.DISABLED
+        )
+        self.pass_btn.config(
+            state=tk.NORMAL if is_human_turn and pass_ok else tk.DISABLED
+        )
+
         self.update_sidebar()
 
     def update_sidebar(self):
@@ -271,7 +287,9 @@ class GameGUI:
             }
         self.pile_frame.config(highlightthickness=2, highlightbackground="gold")
 
+        drag_cards = list(self.selected) if self.selected and card in self.selected else [card]
         self.drag_data = {
+            "cards": drag_cards,
             "card": card,
             "widget": event.widget,
             "start_x": event.x_root,
@@ -306,7 +324,7 @@ class GameGUI:
         px2 = px1 + self.pile_frame.winfo_width()
         py2 = py1 + self.pile_frame.winfo_height()
         if px1 <= x <= px2 and py1 <= y <= py2 and data["dragged"]:
-            self.selected = [data["card"]]
+            self.selected = list(data.get("cards", [data["card"]]))
             self.play_selected()
         else:
             self.toggle_card(data["card"])
