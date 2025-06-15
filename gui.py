@@ -3,7 +3,7 @@ from tkinter import messagebox
 from tkinter import font as tkfont
 from pathlib import Path
 
-from tien_len_full import Game, detect_combo
+from tien_len_full import Game, detect_combo, SUITS, RANKS
 
 
 class GameGUI:
@@ -54,12 +54,50 @@ class GameGUI:
         assets = Path(__file__).with_name("assets")
         if not assets.exists():
             return
-        for img_path in assets.glob("*.png"):
-            try:
-                self.card_images[img_path.stem] = tk.PhotoImage(file=img_path)
-            except Exception:
-                continue
+
+        # Map face card ranks to the full filename prefix used by the assets.
+        rank_map = {
+            "J": "jack",
+            "Q": "queen",
+            "K": "king",
+            "A": "ace",
+        }
+
+        missing = []
+
+        # Load the 52 card faces using ``SUITS`` and ``RANKS`` from the game
+        # module so that every possible card is verified against the assets
+        # directory.  Face card filenames use the long form like
+        # ``jack_of_hearts.png``.
+        for suit in SUITS:
+            for rank in RANKS:
+                rank_name = rank_map.get(rank, rank.lower())
+                suit_name = suit.lower()
+                stem = f"{rank_name}_of_{suit_name}"
+                img_path = assets / f"{stem}.png"
+                if img_path.exists():
+                    try:
+                        self.card_images[stem] = tk.PhotoImage(file=img_path)
+                    except Exception:
+                        continue
+                else:
+                    missing.append(img_path.name)
+
+        # Load joker and card back images if present.
+        for extra in ("card_back.png", "red_joker.png", "black_joker.png"):
+            img_path = assets / extra
+            if img_path.exists():
+                try:
+                    self.card_images[img_path.stem] = tk.PhotoImage(file=img_path)
+                except Exception:
+                    continue
+            else:
+                missing.append(img_path.name)
+
         self.card_back = self.card_images.get("card_back")
+
+        if missing:
+            print("Missing card images:", ", ".join(sorted(missing)))
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
