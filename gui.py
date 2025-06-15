@@ -11,6 +11,7 @@ class GameGUI:
         self.root = root
         self.root.title("Tiến Lên GUI Prototype")
         self.fullscreen = False
+        # Base font for text fallback buttons when images are missing
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
