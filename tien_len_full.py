@@ -327,7 +327,7 @@ class Game:
         """Return every playable move for ``player`` given ``current``."""
 
         moves = []
-        for n in range(1, 5):
+        for n in range(1, len(player.hand) + 1):
             for combo_cards in combinations(player.hand, n):
                 lst = list(combo_cards)
                 ok, _ = self.is_valid(player, lst, current)
