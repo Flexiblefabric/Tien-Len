@@ -336,32 +336,6 @@ class GameGUI:
 
         self.update_sidebar()
 
-        cur = self.game.players[self.game.current_idx]
-        if cur.is_human:
-            self.info_var.set("Your turn")
-            self.turn_label.config(bg="lightgreen")
-        else:
-            self.info_var.set(f"Waiting for {cur.name}...")
-            self.turn_label.config(bg="lightblue")
-        self.turn_var.set(f"Turn: {cur.name}")
-
-        # Enable or disable action buttons
-        is_human_turn = cur.is_human
-        play_ok, _ = self.game.is_valid(
-            self.game.players[0], list(self.selected), self.game.current_combo
-        )
-        pass_ok, _ = self.game.is_valid(
-            self.game.players[0], [], self.game.current_combo
-        )
-        self.play_btn.config(
-            state=tk.NORMAL if is_human_turn and play_ok else tk.DISABLED
-        )
-        self.pass_btn.config(
-            state=tk.NORMAL if is_human_turn and pass_ok else tk.DISABLED
-        )
-
-        self.update_sidebar()
-
     def update_sidebar(self):
         """Refresh the history and ranking display."""
 
