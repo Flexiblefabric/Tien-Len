@@ -2,8 +2,8 @@
 [![CI](https://github.com/YOUR_GITHUB_USERNAME/Tien-Len/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/Tien-Len/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/YOUR_GITHUB_USERNAME/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_GITHUB_USERNAME/Tien-Len)
 
-This repository contains a simple command line implementation of the 
-Vietnamese card game **Tiến Lên** and a small GUI prototype.
+This repository contains a simple command line implementation of the
+Vietnamese card game **Tiến Lên** and a small Tkinter-based GUI.
 
 ## CLI version
 
