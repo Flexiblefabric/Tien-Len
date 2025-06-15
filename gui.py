@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font as tkfont
+import time
 from pathlib import Path
 from PIL import Image, ImageTk
 
@@ -106,6 +107,13 @@ class GameGUI:
         self.play_btn.pack(side=tk.LEFT)
         self.pass_btn = tk.Button(action_frame, text="Pass", command=self.pass_turn)
         self.pass_btn.pack(side=tk.LEFT)
+
+        # Indicator shown when AI players are thinking
+        self.thinking = tk.Label(
+            self.main_area, text="Thinking...", font=("Arial", 12, "italic")
+        )
+        self.thinking.pack(pady=5)
+        self.thinking.pack_forget()
 
         tk.Label(self.sidebar, text="History", font=("Arial", 12, "bold")).pack(anchor="w")
         tk.Label(self.sidebar, textvariable=self.history_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
@@ -502,7 +510,12 @@ class GameGUI:
             return
         p = self.game.players[self.game.current_idx]
         if not p.is_human:
+            # Show thinking indicator for AI
+            self.thinking.pack()
+            self.root.update_idletasks()
+            time.sleep(0.3)
             cards = self.game.ai_play(self.game.current_combo)
+            self.thinking.pack_forget()
             ok, _ = self.game.is_valid(p, cards, self.game.current_combo)
             if not ok:
                 cards = []
