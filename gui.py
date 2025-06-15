@@ -17,6 +17,22 @@ class GameGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Tiến Lên GUI Prototype")
+        # Setup menu bar
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        file_menu = tk.Menu(menubar, tearoff=0)
+        file_menu.add_command(label="New Game", command=self.restart_game)
+        file_menu.add_command(label="Quit", command=self.root.destroy)
+        menubar.add_cascade(label="File", menu=file_menu)
+
+        opt_menu = tk.Menu(menubar, tearoff=0)
+        opt_menu.add_command(label="Settings...", command=self.open_settings)
+        menubar.add_cascade(label="Options", menu=opt_menu)
+
+        help_menu = tk.Menu(menubar, tearoff=0)
+        help_menu.add_command(label="About/Rules...", command=self.show_about)
+        menubar.add_cascade(label="Help", menu=help_menu)
+
         self.fullscreen = False
         # Base font for text fallback buttons when images are missing
         self.card_font = tkfont.Font(size=12)
@@ -58,6 +74,7 @@ class GameGUI:
         self.score_var = tk.StringVar()
         self.scores = {p.name: 0 for p in self.game.players}
         self.overlay_active = False
+        self.table_cloth_color = "darkgreen"
 
         self.main_area = tk.Frame(root)
         self.main_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -67,6 +84,7 @@ class GameGUI:
         self.table_view = TableView(
             self.main_area, self.game, self.base_images, self.scaled_images, self.CARD_WIDTH
         )
+        self.table_view.config(bg=self.table_cloth_color)
         self.table_view.pack(pady=5)
         tk.Label(self.main_area, textvariable=self.info_var).pack(pady=5)
         self.turn_label = tk.Label(self.main_area, textvariable=self.turn_var, font=("Arial", 12, "bold"))
@@ -281,6 +299,18 @@ class GameGUI:
         else:
             pygame.mixer.music.unpause()
             self.music_btn.config(text="Pause Music")
+
+    def open_settings(self):
+        from settings_dialog import SettingsDialog
+        SettingsDialog(self.root, self)
+
+    def show_about(self):
+        msg = (
+            "This GUI demonstrates the Vietnamese card game Tiến Lên.\n"
+            "Select cards and press Play to beat the pile.\n"
+            "Sequences cannot contain the 2 by default."
+        )
+        messagebox.showinfo("About", msg)
 
     def toggle_card(self, card):
         if card in self.selected:
