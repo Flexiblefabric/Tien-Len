@@ -208,6 +208,14 @@ class GameGUI:
     def start_drag(self, event, card):
         if not self.game.players[self.game.current_idx].is_human:
             return
+        # Save the pile frame's original style the first time we start a drag
+        if not hasattr(self, "_pile_style"):
+            self._pile_style = {
+                "highlightthickness": self.pile_frame.cget("highlightthickness"),
+                "highlightbackground": self.pile_frame.cget("highlightbackground"),
+            }
+        self.pile_frame.config(highlightthickness=2, highlightbackground="gold")
+
         self.drag_data = {
             "card": card,
             "widget": event.widget,
@@ -225,6 +233,8 @@ class GameGUI:
         if not getattr(self, "drag_data", None):
             return
         self.drag_data["dragged"] = True
+        # Keep the drop target highlighted during drag motion
+        self.pile_frame.config(highlightthickness=2, highlightbackground="gold")
         if hasattr(self, "drag_label"):
             self.drag_label.place(x=event.x_root, y=event.y_root)
 
@@ -245,6 +255,10 @@ class GameGUI:
             self.play_selected()
         else:
             self.toggle_card(data["card"])
+        # Restore the pile frame's original style after dropping
+        if hasattr(self, "_pile_style"):
+            self.pile_frame.config(**self._pile_style)
+            delattr(self, "_pile_style")
 
     def _image_key(self, card):
         """Return the asset key for a card image."""
