@@ -167,9 +167,14 @@ class Game:
         self.start_idx = 0
         self.pass_count = 0
         self.current_combo: list[Card] | None = None
+        self.history: list[tuple[int, str]] = []
+        self.current_round = 1
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
+
+        self.history.clear()
+        self.current_round = 1
 
         self.deck.shuffle()
         hands = self.deck.deal(len(self.players))
@@ -382,6 +387,7 @@ class Game:
         self.pile.clear()
         self.current_combo = None
         self.pass_count = 0
+        self.current_round += 1
 
     def summary_round(self):
         """Print a short summary of the round that just ended."""
@@ -392,6 +398,13 @@ class Game:
         self.display_overview()
         print('--')
         log_action(f"Round summary: {self.pile}")
+
+    def get_rankings(self) -> list[tuple[str, int]]:
+        """Return players sorted by fewest cards remaining."""
+
+        return sorted(
+            [(p.name, len(p.hand)) for p in self.players], key=lambda x: x[1]
+        )
 
     # New helper methods -------------------------------------------------
     def process_play(self, player: Player, cards: list[Card]) -> bool:
@@ -415,6 +428,7 @@ class Game:
             self.first_turn = False
 
         self.pass_count = 0
+        self.history.append((self.current_round, f"{player.name} plays {cards}"))
         for c in cards:
             player.hand.remove(c)
         self.pile.append((player, cards))
@@ -431,6 +445,7 @@ class Game:
         """Handle ``player`` passing their turn."""
 
         self.pass_count += 1
+        self.history.append((self.current_round, f"{player.name} passes"))
         print(f"{player.name} passes\n")
         active = sum(1 for x in self.players if x.hand)
         if self.current_combo and self.pass_count >= active - 1:

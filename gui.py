@@ -9,6 +9,7 @@ from tien_len_full import Game, detect_combo, SUITS, RANKS
 
 class GameGUI:
     CARD_WIDTH = 80
+    HISTORY_LIMIT = 8
 
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -34,23 +35,35 @@ class GameGUI:
         self.pile_var = tk.StringVar()
         self.info_var = tk.StringVar()
         self.turn_var = tk.StringVar()
+        self.history_var = tk.StringVar()
+        self.ranking_var = tk.StringVar()
 
-        self.pile_frame = tk.Frame(root, width=200, height=120, bd=2, relief=tk.SUNKEN)
+        self.main_area = tk.Frame(root)
+        self.main_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.sidebar = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+        self.sidebar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
+
+        self.pile_frame = tk.Frame(self.main_area, width=200, height=120, bd=2, relief=tk.SUNKEN)
         self.pile_frame.pack(pady=5)
         tk.Label(self.pile_frame, textvariable=self.pile_var, font=("Arial", 14)).pack()
-        tk.Label(root, textvariable=self.info_var).pack(pady=5)
-        self.turn_label = tk.Label(root, textvariable=self.turn_var, font=("Arial", 12, "bold"))
+        tk.Label(self.main_area, textvariable=self.info_var).pack(pady=5)
+        self.turn_label = tk.Label(self.main_area, textvariable=self.turn_var, font=("Arial", 12, "bold"))
         self.turn_label.pack(pady=2)
 
-        self.hand_frame = tk.Frame(root)
+        self.hand_frame = tk.Frame(self.main_area)
         self.hand_frame.pack(pady=10)
 
-        action_frame = tk.Frame(root)
+        action_frame = tk.Frame(self.main_area)
         action_frame.pack(pady=5)
         tk.Button(action_frame, text="Play", command=self.play_selected).pack(
             side=tk.LEFT
         )
         tk.Button(action_frame, text="Pass", command=self.pass_turn).pack(side=tk.LEFT)
+
+        tk.Label(self.sidebar, text="History", font=("Arial", 12, "bold")).pack(anchor="w")
+        tk.Label(self.sidebar, textvariable=self.history_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
+        tk.Label(self.sidebar, text="Rankings", font=("Arial", 12, "bold")).pack(anchor="w", pady=(10, 0))
+        tk.Label(self.sidebar, textvariable=self.ranking_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
 
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
@@ -218,6 +231,19 @@ class GameGUI:
             self.info_var.set(f"Waiting for {cur.name}...")
             self.turn_label.config(bg="lightblue")
         self.turn_var.set(f"Turn: {cur.name}")
+        self.update_sidebar()
+
+    def update_sidebar(self):
+        """Refresh the history and ranking display."""
+
+        hist = [
+            f"R{r}: {msg}" for r, msg in self.game.history[-self.HISTORY_LIMIT :]
+        ]
+        self.history_var.set("\n".join(hist))
+
+        ranks = self.game.get_rankings()
+        lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(ranks)]
+        self.ranking_var.set("\n".join(lines))
 
     def toggle_card(self, card):
         if card in self.selected:
@@ -363,6 +389,7 @@ class GameGUI:
         self.game.setup()
         self.selected.clear()
         self.update_display()
+        self.update_sidebar()
 
     # Action handlers ---------------------------------------------
     def play_selected(self):
@@ -375,6 +402,7 @@ class GameGUI:
         if ok:
             self.animate_play(cards)
             winner = self.game.process_play(self.game.players[0], cards)
+            self.update_sidebar()
             self.game.next_turn()
             if winner:
                 if messagebox.askyesno("Game Over", "You win! Play again?"):
@@ -396,10 +424,8 @@ class GameGUI:
             return
         self.root.bell()
         self.animate_pass(self.game.players[0])
-        self.game.pass_count += 1
-        active = sum(1 for x in self.game.players if x.hand)
-        if self.game.current_combo and self.game.pass_count >= active - 1:
-            self.game.reset_pile()
+        self.game.process_pass(self.game.players[0])
+        self.update_sidebar()
         self.game.next_turn()
         self.selected.clear()
         self.update_display()
@@ -413,17 +439,10 @@ class GameGUI:
             if not ok:
                 cards = []
             if cards:
-                if (
-                    self.game.first_turn
-                    and self.game.current_idx == self.game.start_idx
-                ):
-                    self.game.first_turn = False
-                self.game.pass_count = 0
-                for c in cards:
-                    p.hand.remove(c)
-                self.game.pile.append((p, cards))
-                self.game.current_combo = cards
-                if not p.hand:
+                self.animate_play(cards)
+                winner = self.game.process_play(p, cards)
+                self.update_sidebar()
+                if winner:
                     if messagebox.askyesno("Game Over", f"{p.name} wins! Play again?"):
                         self.restart_game()
                     else:
@@ -431,10 +450,8 @@ class GameGUI:
                         return
             else:
                 self.animate_pass(p)
-                self.game.pass_count += 1
-                active = sum(1 for x in self.game.players if x.hand)
-                if self.game.current_combo and self.game.pass_count >= active - 1:
-                    self.game.reset_pile()
+                self.game.process_pass(p)
+                self.update_sidebar()
             self.game.next_turn()
             self.update_display()
         self.root.after(100, self.game_loop)
