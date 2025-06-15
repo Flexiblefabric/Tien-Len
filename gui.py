@@ -171,6 +171,7 @@ class GameGUI:
 
         self.set_high_contrast(False)
         self.update_display()
+        self.show_menu()
         self.root.after(100, self.game_loop)
 
     def on_selection(self, selection: set) -> None:
@@ -539,6 +540,33 @@ class GameGUI:
         tk.Button(btn_frame, text="Play Again", command=lambda: self.play_again(overlay)).pack(side=tk.LEFT, padx=5)
         tk.Button(btn_frame, text="Quit", command=self.root.destroy).pack(side=tk.LEFT, padx=5)
         self._sparkle(self.root.winfo_width() // 2, self.root.winfo_height() // 2)
+
+    def show_menu(self):
+        """Display the start menu with basic actions."""
+        self.overlay_active = True
+        self.menu_overlay = tk.Frame(self.root, bg="#00000080")
+        self.menu_overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        box = tk.Frame(self.menu_overlay, bg="white", bd=2, relief=tk.RIDGE)
+        box.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(box, text="Tiến Lên", font=("Arial", 16, "bold")).pack(padx=20, pady=(10, 5))
+        tk.Button(box, text="New Game", command=self.menu_new_game).pack(fill="x", padx=20, pady=5)
+        tk.Button(box, text="Load Game", command=self.menu_load_game).pack(fill="x", padx=20, pady=5)
+        tk.Button(box, text="Options", command=self.open_settings).pack(fill="x", padx=20, pady=5)
+        tk.Button(box, text="Quit", command=self.root.destroy).pack(fill="x", padx=20, pady=(5, 10))
+
+    def hide_menu(self):
+        if hasattr(self, 'menu_overlay') and self.menu_overlay:
+            self.menu_overlay.destroy()
+            self.menu_overlay = None
+        self.overlay_active = False
+
+    def menu_new_game(self):
+        self.hide_menu()
+        self.restart_game()
+
+    def menu_load_game(self):
+        messagebox.showinfo("Load", "Load game not implemented yet")
+        self.hide_menu()
 
     def play_again(self, overlay):
         overlay.destroy()
