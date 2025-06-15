@@ -37,6 +37,9 @@ class GameGUI:
         self.turn_var = tk.StringVar()
         self.history_var = tk.StringVar()
         self.ranking_var = tk.StringVar()
+        self.score_var = tk.StringVar()
+        self.scores = {p.name: 0 for p in self.game.players}
+        self.overlay_active = False
 
         self.main_area = tk.Frame(root)
         self.main_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -64,6 +67,8 @@ class GameGUI:
         tk.Label(self.sidebar, textvariable=self.history_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
         tk.Label(self.sidebar, text="Rankings", font=("Arial", 12, "bold")).pack(anchor="w", pady=(10, 0))
         tk.Label(self.sidebar, textvariable=self.ranking_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
+        tk.Label(self.sidebar, text="Scores", font=("Arial", 12, "bold")).pack(anchor="w", pady=(10, 0))
+        tk.Label(self.sidebar, textvariable=self.score_var, justify=tk.LEFT, anchor="nw").pack(anchor="w")
 
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
@@ -244,6 +249,8 @@ class GameGUI:
         ranks = self.game.get_rankings()
         lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(ranks)]
         self.ranking_var.set("\n".join(lines))
+        score_lines = [f"{n}: {self.scores.get(n,0)}" for n in self.scores]
+        self.score_var.set("\n".join(score_lines))
 
     def toggle_card(self, card):
         if card in self.selected:
@@ -384,6 +391,24 @@ class GameGUI:
             self.root.after(20)
         lbl.destroy()
 
+    def show_game_over(self, winner: str):
+        """Display a semi-transparent overlay with winner message."""
+        self.overlay_active = True
+        overlay = tk.Frame(self.root, bg="#00000080")
+        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        box = tk.Frame(overlay, bg="white", bd=2, relief=tk.RIDGE)
+        box.place(relx=0.5, rely=0.5, anchor="center")
+        tk.Label(box, text=f"\U0001f389 {winner} wins!", font=("Arial", 16)).pack(padx=20, pady=(10, 5))
+        btn_frame = tk.Frame(box, bg="white")
+        btn_frame.pack(pady=(0, 10))
+        tk.Button(btn_frame, text="Play Again", command=lambda: self.play_again(overlay)).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_frame, text="Quit", command=self.root.destroy).pack(side=tk.LEFT, padx=5)
+
+    def play_again(self, overlay):
+        overlay.destroy()
+        self.overlay_active = False
+        self.restart_game()
+
     def restart_game(self):
         self.game = Game()
         self.game.setup()
@@ -405,11 +430,10 @@ class GameGUI:
             self.update_sidebar()
             self.game.next_turn()
             if winner:
-                if messagebox.askyesno("Game Over", "You win! Play again?"):
-                    self.restart_game()
-                else:
-                    self.root.destroy()
-                    return
+                self.scores[self.game.players[0].name] += 1
+                self.update_sidebar()
+                self.show_game_over(self.game.players[0].name)
+                return
         else:
             messagebox.showwarning("Invalid", msg)
         self.selected.clear()
@@ -432,6 +456,9 @@ class GameGUI:
 
     # Main game loop ---------------------------------------------
     def game_loop(self):
+        if self.overlay_active:
+            self.root.after(100, self.game_loop)
+            return
         p = self.game.players[self.game.current_idx]
         if not p.is_human:
             cards = self.game.ai_play(self.game.current_combo)
@@ -443,11 +470,10 @@ class GameGUI:
                 winner = self.game.process_play(p, cards)
                 self.update_sidebar()
                 if winner:
-                    if messagebox.askyesno("Game Over", f"{p.name} wins! Play again?"):
-                        self.restart_game()
-                    else:
-                        self.root.destroy()
-                        return
+                    self.scores[p.name] += 1
+                    self.update_sidebar()
+                    self.show_game_over(p.name)
+                    return
             else:
                 self.animate_pass(p)
                 self.game.process_pass(p)
