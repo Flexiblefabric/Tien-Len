@@ -4,6 +4,7 @@ from tkinter import font as tkfont
 import time
 from pathlib import Path
 from PIL import Image, ImageTk
+import random
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
 from views import TableView, HandView
@@ -83,6 +84,20 @@ class GameGUI:
 
         self.main_area = tk.Frame(root)
         self.main_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Optional table cloth background image
+        bg_path = Path(__file__).with_name("assets") / "table_bg.png"
+        self._bg_base = None
+        if bg_path.exists():
+            try:
+                self._bg_base = Image.open(bg_path)
+                self._bg_img = ImageTk.PhotoImage(self._bg_base)
+                self._bg_label = tk.Label(self.main_area, image=self._bg_img)
+                self._bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+                self._bg_label.lower()
+                self.main_area.bind("<Configure>", self._resize_bg)
+            except Exception:
+                self._bg_base = None
         self.sidebar = tk.Frame(root, bd=1, relief=tk.SUNKEN)
         self.sidebar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
@@ -234,6 +249,39 @@ class GameGUI:
         if size != self.card_font["size"]:
             self.card_font.configure(size=size)
         self.update_display()
+        
+    def _ease_out_quad(self, t: float) -> float:
+        """Quadratic easing for smoother animations."""
+        return 1 - (1 - t) ** 2
+
+    def _sparkle(self, x: int, y: int, count: int = 8) -> None:
+        """Create a simple sparkle effect at (x, y)."""
+        for _ in range(count):
+            dx = random.randint(-30, 30)
+            dy = random.randint(-30, 30)
+            lbl = tk.Label(self.root, text="\u2728", fg="gold", font=("Arial", 16), bd=0)
+            lbl.place(x=x + dx, y=y + dy)
+
+            def animate(step=0, lbl=lbl):
+                if step >= 8:
+                    lbl.destroy()
+                    return
+                size = 16 - step
+                lbl.config(font=("Arial", size))
+                self.root.after(60, lambda: animate(step + 1, lbl))
+
+            animate()
+
+    def _resize_bg(self, event):
+        if not getattr(self, "_bg_base", None):
+            return
+        try:
+            img = self._bg_base.resize((event.width, event.height), Image.LANCZOS)
+            self._bg_img = ImageTk.PhotoImage(img)
+            self._bg_label.config(image=self._bg_img)
+            self._bg_label.image = self._bg_img
+        except Exception:
+            pass
 
     # GUI helpers -------------------------------------------------
     def update_display(self):
@@ -420,10 +468,11 @@ class GameGUI:
                 lbl.place(x=x, y=y)
                 labels.append((lbl, x, y))
         steps = 10
-        for step in range(steps):
+        for step in range(steps + 1):
+            t = self._ease_out_quad(step / steps)
             for lbl, sx, sy in labels:
-                nx = sx + (target_x - sx) * step / steps
-                ny = sy + (target_y - sy) * step / steps
+                nx = sx + (target_x - sx) * t
+                ny = sy + (target_y - sy) * t
                 lbl.place(x=nx, y=ny)
             self.root.update_idletasks()
             self.root.after(20)
@@ -436,14 +485,17 @@ class GameGUI:
             )
             bomb.place(relx=0.5, rely=0.1, anchor="n")
             self.root.after(1000, bomb.destroy)
+            self._sparkle(target_x, target_y)
 
     def animate_pass(self, player):
         """Show a short sliding label indicating a pass."""
         sound.play("pass")
         lbl = tk.Label(self.root, text=f"{player.name} passes", bg="yellow")
         lbl.place(relx=0.5, rely=0.4, anchor="center")
-        for i in range(10):
-            lbl.place_configure(rely=0.4 - i * 0.03)
+        steps = 10
+        for step in range(steps + 1):
+            t = self._ease_out_quad(step / steps)
+            lbl.place_configure(rely=0.4 - 0.3 * t)
             self.root.update_idletasks()
             self.root.after(20)
         lbl.destroy()
@@ -461,6 +513,7 @@ class GameGUI:
         btn_frame.pack(pady=(0, 10))
         tk.Button(btn_frame, text="Play Again", command=lambda: self.play_again(overlay)).pack(side=tk.LEFT, padx=5)
         tk.Button(btn_frame, text="Quit", command=self.root.destroy).pack(side=tk.LEFT, padx=5)
+        self._sparkle(self.root.winfo_width() // 2, self.root.winfo_height() // 2)
 
     def play_again(self, overlay):
         overlay.destroy()
