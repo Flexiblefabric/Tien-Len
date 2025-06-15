@@ -165,6 +165,8 @@ class Game:
     """Encapsulates the rules and state of a single game."""
 
     def __init__(self) -> None:
+        """Initialise a new game instance."""
+
         # Create one human player followed by three AI opponents.
         self.players = [Player('Player', True)] + [Player(f'AI {i+1}') for i in range(3)]
         self.deck = Deck()
@@ -175,7 +177,10 @@ class Game:
         self.pass_count = 0
         self.current_combo: list[Card] | None = None
         self.history: list[tuple[int, str]] = []
+        self.move_log: dict[int, list[tuple[str, int, list[Card]]]] = {}
+        self.round_states: dict[int, str] = {}
         self.current_round = 1
+        self.scores: dict[str, int] = {p.name: 0 for p in self.players}
         # Multiplier influencing how aggressively the AI plays
         self.ai_difficulty = 1.0
 
@@ -183,6 +188,8 @@ class Game:
         """Shuffle, deal and determine the starting player."""
 
         self.history.clear()
+        self.move_log.clear()
+        self.round_states.clear()
         self.current_round = 1
 
         self.deck.shuffle()
@@ -206,6 +213,9 @@ class Game:
                 print(f"{p.name} starts (holds 3♠)")
                 log_action(f"Start: {p.name}")
                 break
+
+        # Save state for replay of round 1
+        self.round_states[self.current_round] = self.to_json()
 
     def is_valid(self, player, cards, current):
         """Validate ``cards`` against the current pile.
@@ -399,6 +409,9 @@ class Game:
         self.current_combo = None
         self.pass_count = 0
         self.current_round += 1
+        # Save state for the new round so it can be replayed later
+        self.round_states[self.current_round] = self.to_json()
+        self.move_log.setdefault(self.current_round, [])
 
     def summary_round(self):
         """Print a short summary of the round that just ended."""
@@ -416,6 +429,84 @@ class Game:
         return sorted(
             [(p.name, len(p.hand)) for p in self.players], key=lambda x: x[1]
         )
+
+    # ------------------------------------------------------------------
+    # Serialisation helpers
+    # ------------------------------------------------------------------
+    def _card_to_dict(self, c: Card) -> dict:
+        return {"suit": c.suit, "rank": c.rank}
+
+    def _card_from_dict(self, d: dict) -> Card:
+        return Card(d["suit"], d["rank"])
+
+    def to_json(self) -> str:
+        """Return a JSON string representing the current game state."""
+
+        import json
+
+        data = {
+            "players": [
+                {
+                    "name": p.name,
+                    "is_human": p.is_human,
+                    "hand": [self._card_to_dict(c) for c in p.hand],
+                }
+                for p in self.players
+            ],
+            "pile": [
+                {
+                    "player": self.players.index(pl),
+                    "cards": [self._card_to_dict(c) for c in cards],
+                }
+                for pl, cards in self.pile
+            ],
+            "current_idx": self.current_idx,
+            "start_idx": self.start_idx,
+            "first_turn": self.first_turn,
+            "pass_count": self.pass_count,
+            "current_combo": [
+                self._card_to_dict(c) for c in self.current_combo
+            ]
+            if self.current_combo
+            else None,
+            "history": self.history,
+            "current_round": self.current_round,
+            "scores": self.scores,
+        }
+        return json.dumps(data)
+
+    def from_json(self, s: str) -> None:
+        """Restore game state from ``s`` (a JSON string)."""
+
+        import json
+
+        data = json.loads(s)
+        self.players = [
+            Player(d["name"], d.get("is_human", False)) for d in data["players"]
+        ]
+        for p, d in zip(self.players, data["players"]):
+            p.hand = [self._card_from_dict(c) for c in d.get("hand", [])]
+        self.pile = []
+        for item in data.get("pile", []):
+            idx = item.get("player")
+            player = (
+                self.players[idx]
+                if isinstance(idx, int)
+                else next(p for p in self.players if p.name == idx)
+            )
+            cards = [self._card_from_dict(c) for c in item.get("cards", [])]
+            self.pile.append((player, cards))
+        self.current_idx = data.get("current_idx", 0)
+        self.start_idx = data.get("start_idx", 0)
+        self.first_turn = data.get("first_turn", True)
+        self.pass_count = data.get("pass_count", 0)
+        combo = data.get("current_combo")
+        self.current_combo = [self._card_from_dict(c) for c in combo] if combo else None
+        self.history = [tuple(h) for h in data.get("history", [])]
+        self.current_round = data.get("current_round", 1)
+        self.scores = data.get("scores", {p.name: 0 for p in self.players})
+        self.move_log.clear()
+        self.round_states.clear()
 
     # New helper methods -------------------------------------------------
     def process_play(self, player: Player, cards: list[Card]) -> bool:
@@ -440,6 +531,9 @@ class Game:
 
         self.pass_count = 0
         self.history.append((self.current_round, f"{player.name} plays {cards}"))
+        self.move_log.setdefault(self.current_round, []).append(
+            ("play", self.current_idx, list(cards))
+        )
         for c in cards:
             player.hand.remove(c)
         self.pile.append((player, cards))
@@ -457,6 +551,9 @@ class Game:
 
         self.pass_count += 1
         self.history.append((self.current_round, f"{player.name} passes"))
+        self.move_log.setdefault(self.current_round, []).append(
+            ("pass", self.current_idx, [])
+        )
         print(f"{player.name} passes\n")
         active = sum(1 for x in self.players if x.hand)
         if self.current_combo and self.pass_count >= active - 1:
