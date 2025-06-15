@@ -7,6 +7,8 @@ from typing import Callable
 import tkinter as tk
 from PIL import Image, ImageTk
 
+from tooltip import ToolTip
+
 from tien_len_full import Game, Card, detect_combo, SUITS, RANKS
 
 
@@ -104,6 +106,12 @@ class HandView(tk.Frame):
         self.selected: set[Card] = set()
         self.select_callback = select_callback
         self.widgets: dict[Card, CardSprite] = {}
+        self.order: list[Card] = []
+        self.last_idx: int | None = None
+        self.dragging = False
+        self.drag_sel: set[Card] = set()
+        self.start_x = 0
+        self.start_y = 0
 
     # ------------------------------------------------------------------
     def toggle_card(self, card: Card) -> None:
@@ -115,20 +123,75 @@ class HandView(tk.Frame):
             self.select_callback(self.selected)
         self.refresh()
 
+    def _on_press(self, event: tk.Event, card: Card, idx: int) -> None:
+        self.start_x = event.x_root
+        self.start_y = event.y_root
+        self.dragging = False
+        self.drag_sel.clear()
+        self.press_card = card
+        self.press_idx = idx
+
+    def _on_motion(self, event: tk.Event) -> None:
+        if not hasattr(self, "press_card"):
+            return
+        if abs(event.x_root - self.start_x) > 5 or abs(event.y_root - self.start_y) > 5:
+            self.dragging = True
+        if not self.dragging:
+            return
+        x1 = min(self.start_x, event.x_root)
+        y1 = min(self.start_y, event.y_root)
+        x2 = max(self.start_x, event.x_root)
+        y2 = max(self.start_y, event.y_root)
+        self.drag_sel = set()
+        for card, spr in self.widgets.items():
+            cx1 = spr.winfo_rootx()
+            cy1 = spr.winfo_rooty()
+            cx2 = cx1 + spr.winfo_width()
+            cy2 = cy1 + spr.winfo_height()
+            if x2 >= cx1 and x1 <= cx2 and y2 >= cy1 and y1 <= cy2:
+                self.drag_sel.add(card)
+        for card, spr in self.widgets.items():
+            spr.set_selected(card in self.selected or card in self.drag_sel)
+
+    def _on_release(self, event: tk.Event, card: Card, idx: int) -> None:
+        shift = event.state & 0x0001
+        if self.dragging:
+            self.selected.update(self.drag_sel)
+            self.drag_sel.clear()
+            self.dragging = False
+        elif shift and self.last_idx is not None:
+            start = min(self.last_idx, idx)
+            end = max(self.last_idx, idx)
+            for c in self.order[start : end + 1]:
+                self.selected.add(c)
+        else:
+            if card in self.selected:
+                self.selected.remove(card)
+            else:
+                self.selected.add(card)
+        self.last_idx = idx
+        if self.select_callback:
+            self.select_callback(self.selected)
+        self.refresh()
+
     def refresh(self) -> None:
         for w in self.pack_slaves():
             w.destroy()
         self.widgets.clear()
         player = self.game.players[0]
+        self.order = list(player.hand)
         count = len(player.hand)
         if count:
             width = min(self.card_width, max(40, self.winfo_width() // count))
         else:
             width = self.card_width
-        for c in player.hand:
+        for idx, c in enumerate(player.hand):
             spr = CardSprite(self, c, self.base_images, self.cache, width)
             spr.set_selected(c in self.selected)
-            spr.bind("<Button-1>", lambda e, card=c: self.toggle_card(card))
+            spr.bind("<ButtonPress-1>", lambda e, card=c, i=idx: self._on_press(e, card, i))
+            spr.bind("<B1-Motion>", self._on_motion)
+            spr.bind("<ButtonRelease-1>", lambda e, card=c, i=idx: self._on_release(e, card, i))
+            ToolTip(spr, "Click to select")
             spr.pack(side=tk.LEFT, padx=2)
             self.widgets[c] = spr
         self.update_idletasks()
