@@ -55,3 +55,8 @@ Run the test suite with coverage enabled:
 coverage run -m pytest
 coverage xml
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
