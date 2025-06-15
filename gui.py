@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
 from views import TableView, HandView
+from tooltip import ToolTip
 import sound
 import pygame
 
@@ -110,6 +111,11 @@ class GameGUI:
         self.play_btn.pack(side=tk.LEFT)
         self.pass_btn = tk.Button(action_frame, text="Pass", command=self.pass_turn)
         self.pass_btn.pack(side=tk.LEFT)
+        self.sort_btn = tk.Button(action_frame, text="Sort Hand", command=self.sort_hand)
+        self.sort_btn.pack(side=tk.LEFT)
+        ToolTip(self.play_btn, "Drag to play")
+        ToolTip(self.pass_btn, "Drag to play")
+        ToolTip(self.sort_btn, "Drag to play")
 
         # Indicator shown when AI players are thinking
         self.thinking = tk.Label(
@@ -503,6 +509,11 @@ class GameGUI:
         self.game.process_pass(self.game.players[0])
         self.update_sidebar()
         self.game.next_turn()
+        self.selected.clear()
+        self.update_display()
+
+    def sort_hand(self):
+        self.game.players[0].sort_hand()
         self.selected.clear()
         self.update_display()
 
