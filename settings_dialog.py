@@ -51,11 +51,11 @@ class SettingsDialog(tk.Toplevel):
         self.no2_var = tk.BooleanVar(value=not rules.ALLOW_2_IN_SEQUENCE)
         tk.Checkbutton(frame, text="Disallow 2 in sequences", variable=self.no2_var).pack(anchor="w")
 
-        # AI difficulty slider
+        # AI difficulty tier
         tk.Label(frame, text="AI difficulty").pack(anchor="w")
-        self.diff_var = tk.DoubleVar(value=self.gui.ai_difficulty)
-        tk.Scale(frame, from_=0.5, to=3.0, resolution=0.1, orient=tk.HORIZONTAL,
-                 variable=self.diff_var).pack(anchor="w")
+        levels = ["Easy", "Normal", "Hard"]
+        self.diff_var = tk.StringVar(value=self.gui.ai_level)
+        ttk.OptionMenu(frame, self.diff_var, self.gui.ai_level, *levels).pack(anchor="w")
 
         # Accessibility
         self.hc_var = tk.BooleanVar(value=self.gui.high_contrast)
@@ -92,8 +92,7 @@ class SettingsDialog(tk.Toplevel):
                 self.gui.root.iconphoto(False, img)
             except Exception:
                 pass
-        diff = float(self.diff_var.get())
-        self.gui.ai_difficulty = diff
-        self.gui.game.ai_difficulty = diff
+        level = self.diff_var.get()
+        self.gui.set_ai_level(level)
         self.gui.set_high_contrast(self.hc_var.get())
         self.destroy()

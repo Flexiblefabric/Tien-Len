@@ -48,9 +48,8 @@ class GameGUI:
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
-        # Difficulty multiplier affecting AI aggressiveness
-        self.ai_difficulty = 1.0
-        self.game.ai_difficulty = self.ai_difficulty
+        # AI difficulty tier
+        self.set_ai_level("Normal")
         self.high_contrast = False
 
         # Load sound effects and background music
@@ -180,6 +179,14 @@ class GameGUI:
         self.update_display()
         self.show_menu()
         self.root.after(100, self.game_loop)
+
+    def set_ai_level(self, level: str) -> None:
+        """Set difficulty tier for the AI opponents."""
+
+        mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0}
+        self.ai_level = level
+        self.ai_difficulty = mapping.get(level, 1.0)
+        self.game.set_ai_level(level)
 
     def on_selection(self, selection: set) -> None:
         """Callback from :class:`HandView` when the selection changes."""
@@ -396,7 +403,7 @@ class GameGUI:
                 data = f.read()
             new_game = Game()
             new_game.from_json(data)
-            new_game.ai_difficulty = self.ai_difficulty
+            new_game.set_ai_level(self.ai_level)
             self.game = new_game
             self.table_view.game = self.game
             self.hand_view.game = self.game
@@ -433,7 +440,7 @@ class GameGUI:
         orig_game = self.game
         replay_game = Game()
         replay_game.from_json(state)
-        replay_game.ai_difficulty = self.ai_difficulty
+        replay_game.set_ai_level(self.ai_level)
         self.game = replay_game
         self.table_view.game = self.game
         self.hand_view.game = self.game

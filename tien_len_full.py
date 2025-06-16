@@ -181,8 +181,16 @@ class Game:
         self.round_states: dict[int, str] = {}
         self.current_round = 1
         self.scores: dict[str, int] = {p.name: 0 for p in self.players}
-        # Multiplier influencing how aggressively the AI plays
+        # AI difficulty tier and numeric multiplier
+        self.ai_level = "Normal"
         self.ai_difficulty = 1.0
+
+    def set_ai_level(self, level: str) -> None:
+        """Set difficulty tier and adjust internal multiplier."""
+
+        mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0}
+        self.ai_level = level
+        self.ai_difficulty = mapping.get(level, 1.0)
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
@@ -364,6 +372,9 @@ class Game:
         remaining = [c for c in player.hand if c not in move]
         finish = 1 if not remaining else 0
         diff = getattr(self, "ai_difficulty", 1.0)
+        if self.ai_level == "Hard":
+            low_cards = -sum(RANKS.index(c.rank) for c in remaining)
+            return (base, finish * diff, rank_val * diff, low_cards)
         return (base, finish * diff, rank_val * diff)
 
     def ai_play(self, current):
@@ -373,6 +384,8 @@ class Game:
         moves = self.generate_valid_moves(p, current)
         if not moves:
             return []
+        if self.ai_level == "Easy":
+            return random.choice(moves)
         return max(moves, key=lambda m: self.score_move(p, m, current))
 
     # Display functions
