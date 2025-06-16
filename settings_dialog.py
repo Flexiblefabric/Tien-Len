@@ -63,6 +63,15 @@ class SettingsDialog(tk.Toplevel):
         self.diff_var = tk.StringVar(value=self.gui.ai_level)
         ttk.OptionMenu(frame, self.diff_var, self.gui.ai_level, *levels).pack(anchor="w")
 
+        # AI personality preset
+        tk.Label(frame, text="AI personality").pack(anchor="w")
+        personalities = ["Aggressive", "Defensive", "Random"]
+        cur_pers = getattr(self.gui, "ai_personality", "balanced").title()
+        self.pers_var = tk.StringVar(value=cur_pers)
+        ttk.OptionMenu(frame, self.pers_var, cur_pers, *personalities).pack(anchor="w")
+        self.lookahead_var = tk.BooleanVar(value=getattr(self.gui, "ai_lookahead", False))
+        tk.Checkbutton(frame, text="Enable lookahead (Hard)", variable=self.lookahead_var).pack(anchor="w")
+
         # Animation speed
         tk.Label(frame, text="Animation speed").pack(anchor="w")
         speeds = ["Slow", "Normal", "Fast"]
@@ -120,6 +129,8 @@ class SettingsDialog(tk.Toplevel):
         self.gui.player_name = self.name_var.get() or "Player"
         level = self.diff_var.get()
         self.gui.set_ai_level(level)
+        self.gui.ai_lookahead = self.lookahead_var.get()
+        self.gui.set_personality(self.pers_var.get().lower())
         self.gui.set_high_contrast(self.hc_var.get())
         self.gui.apply_options()
         self.gui.save_options()

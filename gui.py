@@ -38,6 +38,9 @@ class GameGUI:
             "card_back": self.card_back_name,
             "sort_mode": self.sort_mode,
             "player_name": self.player_name,
+            "ai_level": self.ai_level,
+            "ai_personality": getattr(self, "ai_personality", "balanced"),
+            "ai_lookahead": getattr(self, "ai_lookahead", False),
         }
         try:
             with open(self.OPTIONS_FILE, "w", encoding="utf-8") as f:
@@ -86,8 +89,11 @@ class GameGUI:
         self.card_back_name = opts.get("card_back", "card_back")
         self.player_name = opts.get("player_name", "Player")
         self.table_cloth_color = opts.get("table_color", "darkgreen")
-        # AI difficulty tier
-        self.set_ai_level("Normal")
+        # AI difficulty and personality
+        self.set_ai_level(opts.get("ai_level", "Normal"))
+        self.ai_lookahead = opts.get("ai_lookahead", False)
+        self.set_personality(opts.get("ai_personality", "balanced"))
+        self.game.ai_lookahead = self.ai_lookahead
         self.high_contrast = False
 
         # Load sound effects and background music
@@ -248,6 +254,9 @@ class GameGUI:
         if old != self.player_name:
             self.game.scores[self.player_name] = self.game.scores.pop(old, 0)
         self.game.players[0].sort_hand(self.sort_mode)
+        self.set_ai_level(self.ai_level)
+        self.set_personality(getattr(self, "ai_personality", "balanced"))
+        self.game.ai_lookahead = getattr(self, "ai_lookahead", False)
         self.update_display()
         self.update_sidebar()
 
@@ -258,6 +267,12 @@ class GameGUI:
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
         self.game.set_ai_level(level)
+
+    def set_personality(self, name: str) -> None:
+        """Set AI personality preset."""
+
+        self.ai_personality = name
+        self.game.set_personality(name)
 
     def on_selection(self, selection: set) -> None:
         """Callback from :class:`HandView` when the selection changes."""

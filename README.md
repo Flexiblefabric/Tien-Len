@@ -54,6 +54,8 @@ The GUI supports a few convenience features:
 - Resize the window or press **F11** to toggle full‑screen mode and the
   card buttons will scale accordingly.
 - Adjust AI difficulty (Easy/Normal/Hard) from the **Options > Settings** dialog.
+- Pick an AI personality (Aggressive/Defensive/Random) and toggle lookahead for
+  Hard difficulty from the same dialog.
 
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow
