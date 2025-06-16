@@ -199,6 +199,8 @@ class Game:
         # AI difficulty tier and numeric multiplier
         self.ai_level = "Normal"
         self.ai_difficulty = 1.0
+        # Snapshots of the game state for undo functionality
+        self.snapshots: list[str] = []
 
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier and adjust internal multiplier."""
@@ -239,6 +241,8 @@ class Game:
 
         # Save state for replay of round 1
         self.round_states[self.current_round] = self.to_json()
+        # Initialise undo history with the starting state
+        self.snapshots = [self.to_json()]
 
     def is_valid(self, player, cards, current):
         """Validate ``cards`` against the current pile.
@@ -580,11 +584,15 @@ class Game:
         self.current_combo = cards
         print(f"{player.name} plays {cards}\n")
 
+        winner = False
         if not player.hand:
             print(f"{player.name} wins!")
             log_action(f"Winner: {player.name}")
-            return True
-        return False
+            winner = True
+
+        # Record snapshot after the move
+        self.snapshots.append(self.to_json())
+        return winner
 
     def process_pass(self, player: Player) -> None:
         """Handle ``player`` passing their turn."""
@@ -598,6 +606,20 @@ class Game:
         active = sum(1 for x in self.players if x.hand)
         if self.current_combo and self.pass_count >= active - 1:
             self.reset_pile()
+
+        # Record snapshot after the pass (and any pile reset)
+        self.snapshots.append(self.to_json())
+
+    def undo_last(self) -> bool:
+        """Revert the game state to the previous snapshot."""
+
+        if len(self.snapshots) <= 1:
+            return False
+        # Discard current state
+        self.snapshots.pop()
+        prev = self.snapshots[-1]
+        self.from_json(prev)
+        return True
 
     def handle_pass(self) -> bool:
         """Validate and process a pass for the current player."""
