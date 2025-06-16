@@ -72,3 +72,41 @@ def test_show_menu_overlay():
         overlay.place.assert_called_with(relx=0, rely=0, relwidth=1, relheight=1)
         assert mock_button.call_count >= 4
 
+
+def test_show_hint_calls_game_and_displays():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.game = MagicMock()
+    gui_obj.game.current_combo = None
+    gui_obj.game.hint.return_value = ['A', 'B']
+    with patch('gui.messagebox.showinfo') as mock_info:
+        gui_obj.show_hint()
+        gui_obj.game.hint.assert_called_with(gui_obj.game.current_combo)
+        mock_info.assert_called_once()
+
+
+def test_update_display_disables_hint_for_ai_turn():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.update_display = gui.GameGUI.update_display.__get__(gui_obj)
+    gui_obj.table_view = MagicMock()
+    gui_obj.hand_view = MagicMock()
+    gui_obj.info_var = MagicMock()
+    gui_obj.turn_label = MagicMock()
+    gui_obj.turn_var = MagicMock()
+    gui_obj.play_btn = MagicMock()
+    gui_obj.pass_btn = MagicMock()
+    gui_obj.hint_btn = MagicMock()
+    gui_obj.update_sidebar = MagicMock()
+    human = MagicMock(is_human=True, name='Human')
+    ai = MagicMock(is_human=False, name='AI')
+    gui_obj.game = MagicMock()
+    gui_obj.game.players = [human, ai]
+    gui_obj.game.current_idx = 1  # AI's turn
+    gui_obj.game.current_combo = None
+    gui_obj.selected = set()
+    gui_obj.game.is_valid.return_value = (True, '')
+
+    gui_obj.update_display()
+    gui_obj.hint_btn.config.assert_called_with(state=gui.tk.DISABLED)
+

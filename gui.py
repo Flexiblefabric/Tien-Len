@@ -134,9 +134,12 @@ class GameGUI:
         self.pass_btn.pack(side=tk.LEFT)
         self.sort_btn = tk.Button(action_frame, text="Sort Hand", command=self.sort_hand)
         self.sort_btn.pack(side=tk.LEFT)
+        self.hint_btn = tk.Button(action_frame, text="Hint", command=self.show_hint)
+        self.hint_btn.pack(side=tk.LEFT)
         ToolTip(self.play_btn, "Drag to play")
         ToolTip(self.pass_btn, "Drag to play")
         ToolTip(self.sort_btn, "Drag to play")
+        ToolTip(self.hint_btn, "Suggest a move")
 
         # Indicator shown when AI players are thinking
         self.thinking = tk.Label(
@@ -171,6 +174,7 @@ class GameGUI:
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
         self.root.bind("<space>", lambda e: self.pass_turn())
+        self.root.bind("<h>", lambda e: self.show_hint())
         self.root.bind("<F11>", lambda e: self.toggle_fullscreen())
         self.root.bind("<Escape>", lambda e: self.end_fullscreen())
         self.root.bind("<Configure>", self.on_resize)
@@ -344,6 +348,9 @@ class GameGUI:
         )
         self.pass_btn.config(
             state=tk.NORMAL if is_human_turn and pass_ok else tk.DISABLED
+        )
+        self.hint_btn.config(
+            state=tk.NORMAL if is_human_turn else tk.DISABLED
         )
 
         self.update_sidebar()
@@ -693,6 +700,15 @@ class GameGUI:
         self.game.players[0].sort_hand()
         self.selected.clear()
         self.update_display()
+
+    def show_hint(self):
+        """Display a suggested move for the player."""
+        hint = self.game.hint(self.game.current_combo)
+        if hint:
+            msg = "Suggested move: " + ", ".join(map(str, hint))
+        else:
+            msg = "No valid moves available"
+        messagebox.showinfo("Hint", msg)
 
     # Main game loop ---------------------------------------------
     def game_loop(self):
