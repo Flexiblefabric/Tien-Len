@@ -264,8 +264,8 @@ class GameGUI:
                                    activeBackground="#333",
                                    activeForeground="white")
         else:
-            # Empty call resets to defaults
-            self.root.tk_setPalette("")
+            # Calling with no arguments resets Tk colors to defaults
+            self.root.tk_setPalette()
         self.update_display()
 
     def on_resize(self, event):
