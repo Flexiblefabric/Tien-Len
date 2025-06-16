@@ -2,7 +2,10 @@ import tkinter as tk
 from tkinter import colorchooser
 from tkinter import ttk
 import sound
-import pygame
+try:
+    import pygame
+except ImportError:  # pragma: no cover - pygame optional
+    pygame = None
 import tien_len_full as rules
 
 class SettingsDialog(tk.Toplevel):
