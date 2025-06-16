@@ -421,19 +421,78 @@ class GameGUI:
             messagebox.showerror("Load Failed", str(exc))
 
     def show_rules(self):
-        """Display a modal window with basic rules."""
+        """Display a multi-page tutorial explaining the rules."""
+
         win = tk.Toplevel(self.root)
-        win.title("Game Rules")
+        win.title("Game Tutorial")
         win.transient(self.root)
         win.grab_set()
-        text = (
-            "Each player is dealt 13 cards.\n"
-            "On your turn play a higher combo or pass.\n"
-            "The first player to shed all cards wins.\n\n"
-            "Example: play a pair of 7s over a pair of 5s."
-        )
-        tk.Label(win, text=text, justify=tk.LEFT, wraplength=400).pack(padx=20, pady=20)
-        tk.Button(win, text="Close", command=win.destroy).pack(pady=(0, 10))
+
+        pages: list[tk.Frame] = []
+
+        # Page 1: basic objective
+        p1 = tk.Frame(win)
+        tk.Label(
+            p1,
+            text=(
+                "Objective:\n"
+                "Be the first to shed all of your cards.\n"
+                "Beat the current combo or pass if you cannot."),
+            justify=tk.LEFT,
+            wraplength=400,
+        ).pack(padx=20, pady=20)
+        pages.append(p1)
+
+        # Page 2: combo examples
+        p2 = tk.Frame(win)
+        tk.Label(
+            p2,
+            text="Valid combinations include singles, pairs, triples, "
+                 "sequences and bombs.",
+            justify=tk.LEFT,
+            wraplength=400,
+        ).pack(padx=20, pady=(10, 5))
+        pages.append(p2)
+
+        # Page 3: controls
+        p3 = tk.Frame(win)
+        tk.Label(
+            p3,
+            text=(
+                "Controls:\n"
+                "Select cards with the mouse and press Play or Enter.\n"
+                "Press Pass or Space to skip your turn."),
+            justify=tk.LEFT,
+            wraplength=400,
+        ).pack(padx=20, pady=20)
+        pages.append(p3)
+
+        nav = tk.Frame(win)
+        nav.pack(side=tk.BOTTOM, pady=10)
+        prev_btn = tk.Button(nav, text="Prev")
+        prev_btn.pack(side=tk.LEFT, padx=5)
+        next_btn = tk.Button(nav, text="Next")
+        next_btn.pack(side=tk.LEFT, padx=5)
+        tk.Button(nav, text="Close", command=win.destroy).pack(side=tk.LEFT, padx=5)
+
+        def show(idx: int) -> None:
+            for f in pages:
+                f.pack_forget()
+            pages[idx].pack(fill=tk.BOTH, expand=True)
+            prev_btn.config(state=tk.NORMAL if idx > 0 else tk.DISABLED)
+            next_btn.config(state=tk.NORMAL if idx < len(pages) - 1 else tk.DISABLED)
+            win.current = idx
+
+        def next_page() -> None:
+            show(min(win.current + 1, len(pages) - 1))
+
+        def prev_page() -> None:
+            show(max(win.current - 1, 0))
+
+        prev_btn.config(command=prev_page)
+        next_btn.config(command=next_page)
+        win.current = 0
+        show(0)
 
     def replay_last_round(self):
         """Replay the most recently completed round using animations."""
@@ -629,6 +688,7 @@ class GameGUI:
         tk.Label(box, text="Tiến Lên", font=("Arial", 16, "bold")).pack(padx=20, pady=(10, 5))
         tk.Button(box, text="New Game", command=self.menu_new_game).pack(fill="x", padx=20, pady=5)
         tk.Button(box, text="Load Game", command=self.menu_load_game).pack(fill="x", padx=20, pady=5)
+        tk.Button(box, text="Start Tutorial", command=self.show_rules).pack(fill="x", padx=20, pady=5)
         tk.Button(box, text="Options", command=self.open_settings).pack(fill="x", padx=20, pady=5)
         tk.Button(box, text="Quit", command=self.root.destroy).pack(fill="x", padx=20, pady=(5, 10))
 

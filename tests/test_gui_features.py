@@ -14,6 +14,8 @@ def make_gui_stub(root):
     g._default_bg = "white"
     g.card_font = MagicMock()
     g.update_display = MagicMock()
+    g.base_images = {}
+    g.scaled_images = {}
     return g
 
 
@@ -48,15 +50,16 @@ def test_show_rules_creates_modal():
     gui_obj = make_gui_stub(root)
     win = MagicMock()
     with patch('gui.tk.Toplevel', return_value=win) as mock_top, \
+         patch('gui.tk.Frame') as mock_frame, \
          patch('gui.tk.Label') as mock_label, \
          patch('gui.tk.Button') as mock_button:
         gui_obj.show_rules()
         mock_top.assert_called_with(gui_obj.root)
-        win.title.assert_called_with('Game Rules')
+        win.title.assert_called_with('Game Tutorial')
         win.transient.assert_called_with(gui_obj.root)
         win.grab_set.assert_called_once()
-        mock_label.assert_called()
-        mock_button.assert_called()
+        assert mock_frame.call_count >= 1
+        assert mock_button.call_count >= 3
 
 
 def test_show_menu_overlay():
@@ -71,6 +74,19 @@ def test_show_menu_overlay():
         mock_frame.assert_any_call(gui_obj.root, bg='#00000080')
         overlay.place.assert_called_with(relx=0, rely=0, relwidth=1, relheight=1)
         assert mock_button.call_count >= 4
+
+
+def test_menu_includes_tutorial_button():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    overlay = MagicMock()
+    box = MagicMock()
+    with patch('gui.tk.Frame', side_effect=[overlay, box]) as mock_frame, \
+         patch('gui.tk.Label'), \
+         patch('gui.tk.Button') as mock_button:
+        gui_obj.show_menu()
+        texts = [kwargs.get('text', '') for _, kwargs in mock_button.call_args_list]
+        assert 'Start Tutorial' in texts
 
 
 def test_show_hint_calls_game_and_displays():
