@@ -23,6 +23,8 @@ class GameGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Tiến Lên GUI Prototype")
+        # Capture the window's default background color so we can restore it
+        self._default_bg = self.root.cget("background")
         # Setup menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -264,8 +266,8 @@ class GameGUI:
                                    activeBackground="#333",
                                    activeForeground="white")
         else:
-            # Calling with no arguments resets Tk colors to defaults
-            self.root.tk_setPalette()
+            # Restore the palette to the window's original background color
+            self.root.tk_setPalette(background=self._default_bg)
         self.update_display()
 
     def on_resize(self, event):
