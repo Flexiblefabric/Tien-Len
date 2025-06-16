@@ -151,10 +151,24 @@ class Player:
         self.hand: list[Card] = []
         self.is_human = is_human
 
-    def sort_hand(self) -> None:
-        """Sort the player's hand by rank then suit."""
+    def sort_hand(self, mode: str = "rank") -> None:
+        """Sort the player's hand.
 
-        self.hand.sort(key=lambda c: (RANKS.index(c.rank), SUITS.index(c.suit)))
+        Parameters
+        ----------
+        mode:
+            ``"rank"`` to sort by rank then suit (default) or ``"suit"``
+            to sort by suit then rank.
+        """
+
+        if mode == "suit":
+            self.hand.sort(
+                key=lambda c: (SUITS.index(c.suit), RANKS.index(c.rank))
+            )
+        else:
+            self.hand.sort(
+                key=lambda c: (RANKS.index(c.rank), SUITS.index(c.suit))
+            )
 
     def find_bombs(self):
         """Return all four-of-a-kind sets in the player's hand."""

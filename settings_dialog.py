@@ -32,13 +32,19 @@ class SettingsDialog(tk.Toplevel):
         self.vol_var = tk.DoubleVar(value=self.gui.sfx_volume.get())
         tk.Scale(frame, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1, variable=self.vol_var).pack(anchor="w")
 
-        # Card back selector (placeholder options)
+        # Card theme selector
         backs = [k for k in self.gui.card_images if k.startswith("card_back")]
         if not backs:
             backs = ["card_back"]
-        self.back_var = tk.StringVar(value=backs[0])
-        tk.Label(frame, text="Card back").pack(anchor="w")
-        ttk.OptionMenu(frame, self.back_var, backs[0], *backs).pack(anchor="w")
+        self.back_var = tk.StringVar(value=self.gui.card_back_name)
+        tk.Label(frame, text="Card theme").pack(anchor="w")
+        ttk.OptionMenu(frame, self.back_var, self.gui.card_back_name, *backs).pack(anchor="w")
+
+        # Table theme
+        themes = ["darkgreen", "saddlebrown", "navy", "darkred"]
+        self.theme_var = tk.StringVar(value=self.gui.table_cloth_color)
+        tk.Label(frame, text="Table theme").pack(anchor="w")
+        ttk.OptionMenu(frame, self.theme_var, self.gui.table_cloth_color, *themes).pack(anchor="w")
 
         # Table cloth colour
         tk.Label(frame, text="Table colour").pack(anchor="w")
@@ -57,6 +63,27 @@ class SettingsDialog(tk.Toplevel):
         self.diff_var = tk.StringVar(value=self.gui.ai_level)
         ttk.OptionMenu(frame, self.diff_var, self.gui.ai_level, *levels).pack(anchor="w")
 
+        # Animation speed
+        tk.Label(frame, text="Animation speed").pack(anchor="w")
+        speeds = ["Slow", "Normal", "Fast"]
+        speed_map = {0.5: "Slow", 1.0: "Normal", 2.0: "Fast"}
+        cur_speed = speed_map.get(self.gui.animation_speed, "Normal")
+        self.anim_var = tk.StringVar(value=cur_speed)
+        ttk.OptionMenu(frame, self.anim_var, cur_speed, *speeds).pack(anchor="w")
+
+        # Sort preference
+        tk.Label(frame, text="Sort hand by").pack(anchor="w")
+        sort_labels = ["Rank then Suit", "Suit then Rank"]
+        cur_sort = "Suit then Rank" if self.gui.sort_mode == "suit" else "Rank then Suit"
+        self.sort_var = tk.StringVar(value=cur_sort)
+        ttk.OptionMenu(frame, self.sort_var, cur_sort, *sort_labels).pack(anchor="w")
+
+        # Player name
+        tk.Label(frame, text="Player name").pack(anchor="w")
+        self.name_var = tk.Entry(frame)
+        self.name_var.insert(0, self.gui.player_name)
+        self.name_var.pack(anchor="w")
+
         # Accessibility
         self.hc_var = tk.BooleanVar(value=self.gui.high_contrast)
         tk.Checkbutton(frame, text="High contrast mode",
@@ -69,6 +96,7 @@ class SettingsDialog(tk.Toplevel):
         if col:
             self.colour = col
             self.colour_lbl.config(bg=col)
+            self.theme_var.set(col)
 
     def on_ok(self) -> None:
         sound._ENABLED = self.sound_var.get()
@@ -82,17 +110,17 @@ class SettingsDialog(tk.Toplevel):
                 pygame.mixer.music.unpause()
             else:
                 pygame.mixer.music.pause()
+        self.colour = self.theme_var.get()
         self.gui.table_cloth_color = self.colour
-        self.gui.table_view.config(bg=self.colour)
         back = self.back_var.get()
-        img = self.gui.card_images.get(back)
-        if img:
-            self.gui.card_back = img
-            try:
-                self.gui.root.iconphoto(False, img)
-            except Exception:
-                pass
+        self.gui.card_back_name = back
+        speed_map = {"Slow": 0.5, "Normal": 1.0, "Fast": 2.0}
+        self.gui.animation_speed = speed_map.get(self.anim_var.get(), 1.0)
+        self.gui.sort_mode = "suit" if self.sort_var.get() == "Suit then Rank" else "rank"
+        self.gui.player_name = self.name_var.get() or "Player"
         level = self.diff_var.get()
         self.gui.set_ai_level(level)
         self.gui.set_high_contrast(self.hc_var.get())
+        self.gui.apply_options()
+        self.gui.save_options()
         self.destroy()

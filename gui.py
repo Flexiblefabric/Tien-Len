@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from PIL import Image, ImageTk
 import random
+import json
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
 from views import TableView, HandView
@@ -19,6 +20,30 @@ except ImportError:  # pragma: no cover - pygame optional
 class GameGUI:
     CARD_WIDTH = 80
     HISTORY_LIMIT = 8
+    OPTIONS_FILE = Path(__file__).with_name("options.json")
+
+    def load_options(self) -> dict:
+        """Load persisted user options if available."""
+        try:
+            with open(self.OPTIONS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def save_options(self) -> None:
+        """Persist current user options to disk."""
+        data = {
+            "animation_speed": self.animation_speed,
+            "table_color": self.table_cloth_color,
+            "card_back": self.card_back_name,
+            "sort_mode": self.sort_mode,
+            "player_name": self.player_name,
+        }
+        try:
+            with open(self.OPTIONS_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+        except Exception:
+            pass
 
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -48,6 +73,19 @@ class GameGUI:
         self.card_font = tkfont.Font(size=12)
         self.game = Game()
         self.game.setup()
+        # default options
+        self.animation_speed = 1.0
+        self.sort_mode = "rank"
+        self.card_back_name = "card_back"
+        self.player_name = "Player"
+        self.table_cloth_color = "darkgreen"
+        # load persisted options
+        opts = self.load_options()
+        self.animation_speed = opts.get("animation_speed", 1.0)
+        self.sort_mode = opts.get("sort_mode", "rank")
+        self.card_back_name = opts.get("card_back", "card_back")
+        self.player_name = opts.get("player_name", "Player")
+        self.table_cloth_color = opts.get("table_color", "darkgreen")
         # AI difficulty tier
         self.set_ai_level("Normal")
         self.high_contrast = False
@@ -73,6 +111,9 @@ class GameGUI:
         self.card_back = None
         self.card_width = self.CARD_WIDTH
         self.load_images()
+        img = self.card_images.get(self.card_back_name)
+        if img:
+            self.card_back = img
         if self.card_back is not None:
             try:
                 self.root.iconphoto(False, self.card_back)
@@ -86,7 +127,6 @@ class GameGUI:
         self.ranking_var = tk.StringVar()
         self.score_var = tk.StringVar()
         self.overlay_active = False
-        self.table_cloth_color = "darkgreen"
 
         self.main_area = tk.Frame(root)
         self.main_area.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -171,6 +211,8 @@ class GameGUI:
                  command=lambda v: sound.set_volume(float(v))).pack(anchor="w")
         tk.Button(ctrl, text="Replay Last Round", command=self.replay_last_round).pack(anchor="w", pady=(5, 0))
 
+        self.apply_options()
+
         # Keyboard shortcuts
         self.root.bind("<Return>", lambda e: self.play_selected())
         self.root.bind("<space>", lambda e: self.pass_turn())
@@ -183,6 +225,28 @@ class GameGUI:
         self.update_display()
         self.show_menu()
         self.root.after(100, self.game_loop)
+
+    def apply_options(self) -> None:
+        """Apply stored options to the current GUI/game."""
+
+        # apply card back and table colour
+        img = self.card_images.get(self.card_back_name)
+        if img:
+            self.card_back = img
+            try:
+                self.root.iconphoto(False, img)
+            except Exception:
+                pass
+        self.table_view.config(bg=self.table_cloth_color)
+
+        # player name and sorting
+        old = self.game.players[0].name
+        self.game.players[0].name = self.player_name
+        if old != self.player_name:
+            self.game.scores[self.player_name] = self.game.scores.pop(old, 0)
+        self.game.players[0].sort_hand(self.sort_mode)
+        self.update_display()
+        self.update_sidebar()
 
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier for the AI opponents."""
@@ -305,7 +369,8 @@ class GameGUI:
                     return
                 size = 16 - step
                 lbl.config(font=("Arial", size))
-                self.root.after(60, lambda: animate(step + 1, lbl))
+                delay = max(1, int(60 / self.animation_speed))
+                self.root.after(delay, lambda: animate(step + 1, lbl))
 
             animate()
 
@@ -415,8 +480,7 @@ class GameGUI:
             self.table_view.game = self.game
             self.hand_view.game = self.game
             self.selected.clear()
-            self.update_display()
-            self.update_sidebar()
+            self.apply_options()
         except Exception as exc:
             messagebox.showerror("Load Failed", str(exc))
 
@@ -635,7 +699,8 @@ class GameGUI:
                 ny = sy + (target_y - sy) * t
                 lbl.place(x=nx, y=ny)
             self.root.update_idletasks()
-            self.root.after(20)
+            delay = max(1, int(20 / self.animation_speed))
+            self.root.after(delay)
         for lbl, _, _ in labels:
             lbl.destroy()
         if detect_combo(cards) == "bomb":
@@ -657,7 +722,8 @@ class GameGUI:
             t = self._ease_out_quad(step / steps)
             lbl.place_configure(rely=0.4 - 0.3 * t)
             self.root.update_idletasks()
-            self.root.after(20)
+            delay = max(1, int(20 / self.animation_speed))
+            self.root.after(delay)
         lbl.destroy()
 
     def show_game_over(self, winner: str):
@@ -718,8 +784,7 @@ class GameGUI:
             self.game.scores = scores
         self.game.setup()
         self.selected.clear()
-        self.update_display()
-        self.update_sidebar()
+        self.apply_options()
 
     # Action handlers ---------------------------------------------
     def play_selected(self):
@@ -760,7 +825,7 @@ class GameGUI:
         self.update_display()
 
     def sort_hand(self):
-        self.game.players[0].sort_hand()
+        self.game.players[0].sort_hand(self.sort_mode)
         self.selected.clear()
         self.update_display()
 
