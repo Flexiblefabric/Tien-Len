@@ -5,6 +5,22 @@
 This repository contains a simple command line implementation of the
 Vietnamese card game **Tiến Lên** and a small Tkinter-based GUI.
 
+## Installation
+
+Install the project with `pip` to make the GUI entry point available:
+
+```bash
+pip install .
+```
+
+For development you can use the editable mode instead:
+
+```bash
+pip install -e .
+```
+
+After installation launch the GUI simply by running `tien-len`.
+
 ## CLI version
 
 To play in the terminal run:

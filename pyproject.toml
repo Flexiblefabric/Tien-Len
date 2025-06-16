@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tien-len"
+version = "0.1.0"
+description = "Tiến Lên card game with CLI and Tkinter GUI"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["pillow"]
+
+[project.gui-scripts]
+tien-len = "gui:main"
+
+[tool.setuptools]
+py-modules = [
+    "tien_len_full",
+    "gui",
+    "settings_dialog",
+    "sound",
+    "tooltip",
+    "views",
+]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["assets/**/*"]
+
+
