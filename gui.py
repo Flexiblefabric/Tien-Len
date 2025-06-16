@@ -10,7 +10,10 @@ from tien_len_full import Game, detect_combo, SUITS, RANKS
 from views import TableView, HandView
 from tooltip import ToolTip
 import sound
-import pygame
+try:
+    import pygame
+except ImportError:  # pragma: no cover - pygame optional
+    pygame = None
 
 
 class GameGUI:
