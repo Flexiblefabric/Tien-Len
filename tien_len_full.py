@@ -307,13 +307,25 @@ class Game:
         return 'play', cards
 
     def hint(self, current):
-        """Return a simple hint for the human player."""
+        """Return a suggested move for the human player."""
 
-        for c in self.players[0].hand:
-            ok, _ = self.is_valid(self.players[0], [c], current)
-            if ok:
-                return [c]
-        return []
+        player = self.players[0]
+        moves = self.generate_valid_moves(player, current)
+        if not moves:
+            return []
+
+        # Evaluate moves using ``score_move`` but without any AI difficulty
+        # modifiers so the recommendation remains neutral regardless of the
+        # configured AI level.
+        orig_level = getattr(self, "ai_level", "Normal")
+        orig_diff = getattr(self, "ai_difficulty", 1.0)
+        self.ai_level = "Normal"
+        self.ai_difficulty = 1.0
+        try:
+            return max(moves, key=lambda m: self.score_move(player, m, current))
+        finally:
+            self.ai_level = orig_level
+            self.ai_difficulty = orig_diff
 
     def cli_input(self, current):
         """Prompt the human player for a move on the command line."""
