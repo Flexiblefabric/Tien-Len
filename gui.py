@@ -16,6 +16,9 @@ try:
 except ImportError:  # pragma: no cover - pygame optional
     pygame = None
 
+# Fallback color used if the root window returns an empty background value
+DEFAULT_BG_FALLBACK = "#d9d9d9"
+
 
 class GameGUI:
     CARD_WIDTH = 80
@@ -52,7 +55,8 @@ class GameGUI:
         self.root = root
         self.root.title("Tiến Lên GUI Prototype")
         # Capture the window's default background color so we can restore it
-        self._default_bg = self.root.cget("background")
+        bg = self.root.cget("background")
+        self._default_bg = bg or DEFAULT_BG_FALLBACK
         # Setup menu bar
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
@@ -360,7 +364,8 @@ class GameGUI:
                                    activeForeground="white")
         else:
             # Restore the palette to the window's original background color
-            self.root.tk_setPalette(background=self._default_bg)
+            bg = self._default_bg or DEFAULT_BG_FALLBACK
+            self.root.tk_setPalette(background=bg)
         self.update_display()
 
     def on_resize(self, event):

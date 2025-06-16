@@ -45,6 +45,20 @@ def test_set_high_contrast_toggle():
         root.tk_setPalette.assert_called_with(background="white")
         gui_obj.update_display.assert_called_once()
 
+        # Empty default background should fall back to constant
+        root.reset_mock()
+        default_font.configure.reset_mock()
+        gui_obj.card_font.configure.reset_mock()
+        gui_obj.update_display.reset_mock()
+
+        gui_obj._default_bg = ""
+        gui_obj.set_high_contrast(False)
+        assert gui_obj.high_contrast is False
+        default_font.configure.assert_called_with(size=10)
+        gui_obj.card_font.configure.assert_called_with(size=12)
+        root.tk_setPalette.assert_called_with(background=gui.DEFAULT_BG_FALLBACK)
+        gui_obj.update_display.assert_called_once()
+
 
 def test_show_rules_creates_modal():
     root = MagicMock()
