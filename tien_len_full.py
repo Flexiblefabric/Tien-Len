@@ -16,6 +16,7 @@ decisions:
 import random
 import datetime
 import sys
+import argparse
 import sound
 from collections import Counter
 from itertools import combinations
@@ -634,4 +635,11 @@ class Game:
         self.current_idx = (self.current_idx + 1) % len(self.players)
 
 if __name__ == '__main__':
-    Game().play()
+    parser = argparse.ArgumentParser(description='Play Tiến Lên in the terminal')
+    parser.add_argument('--ai', default='Normal', choices=['Easy', 'Normal', 'Hard'],
+                        help='AI difficulty level')
+    args = parser.parse_args()
+
+    game = Game()
+    game.set_ai_level(args.ai)
+    game.play()

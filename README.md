@@ -26,9 +26,10 @@ After installation launch the GUI simply by running `tien-len`.
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py
+python3 tien_len_full.py [--ai Easy|Normal|Hard]
 ```
 
+The optional `--ai` flag selects the AI difficulty (default is `Normal`).
 The game logs actions to `tien_len_game.log`.
 
 ## GUI prototype
