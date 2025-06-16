@@ -9,6 +9,9 @@ import gui
 def make_gui_stub(root):
     g = gui.GameGUI.__new__(gui.GameGUI)
     g.root = root
+    # Provide cget so set_high_contrast can read the default background
+    g.root.cget = MagicMock(return_value="white")
+    g._default_bg = "white"
     g.card_font = MagicMock()
     g.update_display = MagicMock()
     return g
@@ -23,7 +26,8 @@ def test_set_high_contrast_toggle():
         assert gui_obj.high_contrast is True
         default_font.configure.assert_called_with(size=12)
         gui_obj.card_font.configure.assert_called_with(size=16)
-        root.tk_setPalette.assert_called()
+        root.tk_setPalette.assert_called_with(background="black", foreground="white",
+                                             activeBackground="#333", activeForeground="white")
         gui_obj.update_display.assert_called_once()
 
         root.reset_mock()
@@ -35,7 +39,7 @@ def test_set_high_contrast_toggle():
         assert gui_obj.high_contrast is False
         default_font.configure.assert_called_with(size=10)
         gui_obj.card_font.configure.assert_called_with(size=12)
-        root.tk_setPalette.assert_called()
+        root.tk_setPalette.assert_called_with(background="white")
         gui_obj.update_display.assert_called_once()
 
 
