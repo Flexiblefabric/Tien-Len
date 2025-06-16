@@ -592,8 +592,6 @@ class Game:
             cards = self.cli_input(self.current_combo)
         else:
             cards = self.ai_play(self.current_combo)
-            print(f"{p.name} plays {cards}")
-            log_action(f"{p.name} plays {cards}")
 
         ok, _ = self.is_valid(p, cards, self.current_combo)
         if not ok:
