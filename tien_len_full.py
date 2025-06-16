@@ -385,10 +385,10 @@ class Game:
         remaining = [c for c in player.hand if c not in move]
         finish = 1 if not remaining else 0
         diff = getattr(self, "ai_difficulty", 1.0)
+        low_cards = 0
         if self.ai_level == "Hard":
             low_cards = -sum(RANKS.index(c.rank) for c in remaining)
-            return (base, finish * diff, rank_val * diff, low_cards)
-        return (base, finish * diff, rank_val * diff)
+        return (base, finish * diff, rank_val * diff, low_cards)
 
     def ai_play(self, current):
         """Choose a move for the current AI player."""
