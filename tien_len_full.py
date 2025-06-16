@@ -199,6 +199,9 @@ class Game:
         # AI difficulty tier and numeric multiplier
         self.ai_level = "Normal"
         self.ai_difficulty = 1.0
+        self.ai_personality = "Aggressive"
+        self.ai_lookahead = False
+        self.bluff_chance = 0.05
         # Snapshots of the game state for undo functionality
         self.snapshots: list[str] = []
 
@@ -208,6 +211,22 @@ class Game:
         mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0}
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
+
+    def set_ai_personality(self, personality: str) -> None:
+        """Set the behavioural style of AI opponents."""
+
+        mapping = {
+            "Aggressive": 0.05,
+            "Defensive": 0.2,
+            "Random": 0.33,
+        }
+        self.ai_personality = personality
+        self.bluff_chance = mapping.get(personality, 0.05)
+
+    def set_ai_lookahead(self, enable: bool) -> None:
+        """Toggle optional one-step lookahead for Hard AI."""
+
+        self.ai_lookahead = bool(enable)
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
@@ -415,9 +434,31 @@ class Game:
         moves = self.generate_valid_moves(p, current)
         if not moves:
             return []
-        if self.ai_level == "Easy":
+        # Occasional bluffing / tactical passing
+        if random.random() < getattr(self, "bluff_chance", 0):
+            ok, _ = self.is_valid(p, [], current)
+            if ok:
+                return []
+
+        def move_score(m):
+            score = self.score_move(p, m, current)
+            if self.ai_level == "Hard" and getattr(self, "ai_lookahead", False):
+                remaining = [c for c in p.hand if c not in m]
+                if remaining:
+                    temp = Player(p.name)
+                    temp.hand = remaining
+                    future = self.generate_valid_moves(temp, None)
+                    if future:
+                        best = max(future, key=lambda fm: self.score_move(temp, fm, None))
+                        fscore = self.score_move(temp, best, None)
+                        score = tuple(a + 0.1 * b for a, b in zip(score, fscore))
+            return score
+
+        if self.ai_level == "Easy" or self.ai_personality == "Random":
             return random.choice(moves)
-        return max(moves, key=lambda m: self.score_move(p, m, current))
+        if self.ai_personality == "Defensive":
+            return min(moves, key=move_score)
+        return max(moves, key=move_score)
 
     # Display functions
     def display_pile(self):
@@ -686,8 +727,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play Tiến Lên in the terminal')
     parser.add_argument('--ai', default='Normal', choices=['Easy', 'Normal', 'Hard'],
                         help='AI difficulty level')
+    parser.add_argument('--personality', default='Aggressive',
+                        choices=['Aggressive', 'Defensive', 'Random'],
+                        help='AI personality preset')
+    parser.add_argument('--lookahead', action='store_true',
+                        help='Enable Hard AI lookahead')
     args = parser.parse_args()
 
     game = Game()
     game.set_ai_level(args.ai)
+    game.set_ai_personality(args.personality)
+    game.set_ai_lookahead(args.lookahead)
     game.play()

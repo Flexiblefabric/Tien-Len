@@ -38,6 +38,8 @@ class GameGUI:
             "card_back": self.card_back_name,
             "sort_mode": self.sort_mode,
             "player_name": self.player_name,
+            "personality": getattr(self, "ai_personality", "Aggressive"),
+            "lookahead": getattr(self, "ai_lookahead", False),
         }
         try:
             with open(self.OPTIONS_FILE, "w", encoding="utf-8") as f:
@@ -86,8 +88,12 @@ class GameGUI:
         self.card_back_name = opts.get("card_back", "card_back")
         self.player_name = opts.get("player_name", "Player")
         self.table_cloth_color = opts.get("table_color", "darkgreen")
+        self.ai_personality = opts.get("personality", "Aggressive")
+        self.ai_lookahead = opts.get("lookahead", False)
         # AI difficulty tier
         self.set_ai_level("Normal")
+        self.set_ai_personality(self.ai_personality)
+        self.set_ai_lookahead(self.ai_lookahead)
         self.high_contrast = False
 
         # Load sound effects and background music
@@ -250,6 +256,8 @@ class GameGUI:
         self.game.players[0].sort_hand(self.sort_mode)
         self.update_display()
         self.update_sidebar()
+        self.set_ai_personality(self.ai_personality)
+        self.set_ai_lookahead(self.ai_lookahead)
 
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier for the AI opponents."""
@@ -258,6 +266,18 @@ class GameGUI:
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
         self.game.set_ai_level(level)
+
+    def set_ai_personality(self, personality: str) -> None:
+        """Set AI personality preset."""
+
+        self.ai_personality = personality
+        self.game.set_ai_personality(personality)
+
+    def set_ai_lookahead(self, enable: bool) -> None:
+        """Enable or disable lookahead for the AI."""
+
+        self.ai_lookahead = bool(enable)
+        self.game.set_ai_lookahead(enable)
 
     def on_selection(self, selection: set) -> None:
         """Callback from :class:`HandView` when the selection changes."""
@@ -482,6 +502,8 @@ class GameGUI:
             new_game = Game()
             new_game.from_json(data)
             new_game.set_ai_level(self.ai_level)
+            new_game.set_ai_personality(self.ai_personality)
+            new_game.set_ai_lookahead(self.ai_lookahead)
             new_game.snapshots = [new_game.to_json()]
             self.game = new_game
             self.table_view.game = self.game
@@ -578,6 +600,8 @@ class GameGUI:
         replay_game = Game()
         replay_game.from_json(state)
         replay_game.set_ai_level(self.ai_level)
+        replay_game.set_ai_personality(self.ai_personality)
+        replay_game.set_ai_lookahead(self.ai_lookahead)
         self.game = replay_game
         self.table_view.game = self.game
         self.hand_view.game = self.game
@@ -789,6 +813,9 @@ class GameGUI:
         self.game = Game()
         if scores:
             self.game.scores = scores
+        self.game.set_ai_level(self.ai_level)
+        self.game.set_ai_personality(self.ai_personality)
+        self.game.set_ai_lookahead(self.ai_lookahead)
         self.game.setup()
         self.selected.clear()
         self.apply_options()
