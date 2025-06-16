@@ -176,10 +176,13 @@ class GameGUI:
         self.sort_btn.pack(side=tk.LEFT)
         self.hint_btn = tk.Button(action_frame, text="Hint", command=self.show_hint)
         self.hint_btn.pack(side=tk.LEFT)
+        self.undo_btn = tk.Button(action_frame, text="Undo", command=self.undo_move)
+        self.undo_btn.pack(side=tk.LEFT)
         ToolTip(self.play_btn, "Drag to play")
         ToolTip(self.pass_btn, "Drag to play")
         ToolTip(self.sort_btn, "Drag to play")
         ToolTip(self.hint_btn, "Suggest a move")
+        ToolTip(self.undo_btn, "Undo last move")
 
         # Indicator shown when AI players are thinking
         self.thinking = tk.Label(
@@ -417,6 +420,9 @@ class GameGUI:
         self.hint_btn.config(
             state=tk.NORMAL if is_human_turn else tk.DISABLED
         )
+        self.undo_btn.config(
+            state=tk.NORMAL if len(self.game.snapshots) > 1 else tk.DISABLED
+        )
 
         self.update_sidebar()
 
@@ -476,6 +482,7 @@ class GameGUI:
             new_game = Game()
             new_game.from_json(data)
             new_game.set_ai_level(self.ai_level)
+            new_game.snapshots = [new_game.to_json()]
             self.game = new_game
             self.table_view.game = self.game
             self.hand_view.game = self.game
@@ -823,6 +830,14 @@ class GameGUI:
         self.game.next_turn()
         self.selected.clear()
         self.update_display()
+
+    def undo_move(self):
+        """Undo the most recent move if possible."""
+
+        if self.game.undo_last():
+            self.selected.clear()
+            self.update_sidebar()
+            self.update_display()
 
     def sort_hand(self):
         self.game.players[0].sort_hand(self.sort_mode)

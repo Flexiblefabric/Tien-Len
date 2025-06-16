@@ -13,6 +13,7 @@ def make_gui_stub(root):
     g.root.cget = MagicMock(return_value="white")
     g._default_bg = "white"
     g.card_font = MagicMock()
+    g.undo_btn = MagicMock()
     g.update_display = MagicMock()
     g.base_images = {}
     g.scaled_images = {}
@@ -150,4 +151,34 @@ def test_show_game_over_displays_rankings():
         texts = [kwargs.get('text', '') for _, kwargs in mock_label.call_args_list]
         assert any('Alice' in t and 'Bob' in t for t in texts)
         assert mock_button.call_count >= 2
+
+
+def test_update_display_sets_undo_state():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.update_display = gui.GameGUI.update_display.__get__(gui_obj)
+    gui_obj.table_view = MagicMock()
+    gui_obj.hand_view = MagicMock()
+    gui_obj.info_var = MagicMock()
+    gui_obj.turn_label = MagicMock()
+    gui_obj.turn_var = MagicMock()
+    gui_obj.play_btn = MagicMock()
+    gui_obj.pass_btn = MagicMock()
+    gui_obj.hint_btn = MagicMock()
+    gui_obj.update_sidebar = MagicMock()
+    player = MagicMock(is_human=True, name='Player')
+    gui_obj.game = MagicMock()
+    gui_obj.game.players = [player]
+    gui_obj.game.current_idx = 0
+    gui_obj.game.current_combo = None
+    gui_obj.game.is_valid.return_value = (True, '')
+    gui_obj.selected = set()
+
+    gui_obj.game.snapshots = ['s1']
+    gui_obj.update_display()
+    gui_obj.undo_btn.config.assert_called_with(state=gui.tk.DISABLED)
+
+    gui_obj.game.snapshots.append('s2')
+    gui_obj.update_display()
+    gui_obj.undo_btn.config.assert_called_with(state=gui.tk.NORMAL)
 
