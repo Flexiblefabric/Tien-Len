@@ -199,6 +199,10 @@ class Game:
         # AI difficulty tier and numeric multiplier
         self.ai_level = "Normal"
         self.ai_difficulty = 1.0
+        # Optional AI behaviour tweaks
+        self.ai_personality = "balanced"
+        self.ai_lookahead = False
+        self.bluff_chance = 0.0
         # Snapshots of the game state for undo functionality
         self.snapshots: list[str] = []
 
@@ -208,6 +212,21 @@ class Game:
         mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0}
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
+
+    def set_personality(self, name: str) -> None:
+        """Configure AI personality traits."""
+
+        name = name.lower()
+        if name not in {"aggressive", "defensive", "random", "balanced"}:
+            name = "balanced"
+        self.ai_personality = name
+        mapping = {
+            "aggressive": 0.05,
+            "defensive": 0.3,
+            "random": 0.1,
+            "balanced": 0.0,
+        }
+        self.bluff_chance = mapping.get(self.ai_personality, 0.0)
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
@@ -394,7 +413,7 @@ class Game:
                     moves.append(lst)
         return moves
 
-    def score_move(self, player, move, current):
+    def score_move(self, player, move, current, lookahead=True):
         """Heuristic scoring used by the AI when comparing moves."""
 
         t = detect_combo(move)
@@ -406,7 +425,24 @@ class Game:
         low_cards = 0
         if self.ai_level == "Hard":
             low_cards = -sum(RANKS.index(c.rank) for c in remaining)
-        return (base, finish * diff, rank_val * diff, low_cards)
+            if getattr(self, "ai_lookahead", False) and lookahead:
+                temp = Player(player.name)
+                temp.hand = remaining
+                next_moves = self.generate_valid_moves(temp, move)
+                if next_moves:
+                    best = max(
+                        next_moves,
+                        key=lambda m: self.score_move(temp, m, move, False)
+                    )
+                    look = sum(self.score_move(temp, best, move, False)) / 10.0
+                    low_cards += look
+
+        rank_weight = 1.0
+        if getattr(self, "ai_personality", "balanced") == "aggressive":
+            rank_weight = 1.5
+        elif getattr(self, "ai_personality", "balanced") == "defensive":
+            rank_weight = 0.5
+        return (base, finish * diff, rank_val * diff * rank_weight, low_cards)
 
     def ai_play(self, current):
         """Choose a move for the current AI player."""
@@ -415,8 +451,14 @@ class Game:
         moves = self.generate_valid_moves(p, current)
         if not moves:
             return []
-        if self.ai_level == "Easy":
+        # Bluff by occasionally passing even with valid moves
+        if random.random() < getattr(self, "bluff_chance", 0.0):
+            return []
+
+        personality = getattr(self, "ai_personality", "balanced")
+        if self.ai_level == "Easy" or personality == "random":
             return random.choice(moves)
+
         return max(moves, key=lambda m: self.score_move(p, m, current))
 
     # Display functions
