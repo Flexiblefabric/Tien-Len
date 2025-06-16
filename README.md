@@ -52,6 +52,7 @@ The GUI supports a few convenience features:
 - Press **Enter** to play the currently selected cards or **Space** to pass.
 - Resize the window or press **F11** to toggle full‑screen mode and the
   card buttons will scale accordingly.
+- Adjust AI difficulty (Easy/Normal/Hard) from the **Options > Settings** dialog.
 
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow
