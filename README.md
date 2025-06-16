@@ -37,6 +37,14 @@ The GUI supports a few convenience features:
 - Resize the window or press **F11** to toggle full‑screen mode and the
   card buttons will scale accordingly.
 
+Displaying card images requires the **Pillow** library, which is
+included in `requirements.txt`. Install dependencies (including Pillow
+for image support) with:
+
+```bash
+pip install -r requirements.txt
+```
+
 ### Showing card images
 
 If an `assets` directory containing PNG card images is present next to
