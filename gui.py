@@ -610,6 +610,9 @@ class GameGUI:
         box = tk.Frame(overlay, bg="white", bd=2, relief=tk.RIDGE)
         box.place(relx=0.5, rely=0.5, anchor="center")
         tk.Label(box, text=f"\U0001f389 {winner} wins!", font=("Arial", 16)).pack(padx=20, pady=(10, 5))
+        ranks = self.game.get_rankings()
+        rank_lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(ranks)]
+        tk.Label(box, text="\n".join(rank_lines), justify=tk.LEFT).pack(padx=20, pady=(0, 5))
         btn_frame = tk.Frame(box, bg="white")
         btn_frame.pack(pady=(0, 10))
         tk.Button(btn_frame, text="Play Again", command=lambda: self.play_again(overlay)).pack(side=tk.LEFT, padx=5)

@@ -110,3 +110,28 @@ def test_update_display_disables_hint_for_ai_turn():
     gui_obj.update_display()
     gui_obj.hint_btn.config.assert_called_with(state=gui.tk.DISABLED)
 
+
+def test_show_game_over_displays_rankings():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.game = MagicMock()
+    gui_obj.game.get_rankings.return_value = [('Alice', 0), ('Bob', 3)]
+
+    overlay = MagicMock()
+    box = MagicMock()
+    btn_frame = MagicMock()
+    with patch('gui.tk.Frame', side_effect=[overlay, box, btn_frame]) as mock_frame, \
+         patch('gui.tk.Label') as mock_label, \
+         patch('gui.tk.Button') as mock_button, \
+         patch('gui.sound.play'), \
+         patch.object(gui.GameGUI, '_sparkle'):
+        gui_obj.show_game_over('Alice')
+
+        mock_frame.assert_any_call(gui_obj.root, bg='#00000080')
+        overlay.place.assert_called_with(relx=0, rely=0, relwidth=1, relheight=1)
+        gui_obj.game.get_rankings.assert_called_once()
+
+        texts = [kwargs.get('text', '') for _, kwargs in mock_label.call_args_list]
+        assert any('Alice' in t and 'Bob' in t for t in texts)
+        assert mock_button.call_count >= 2
+
