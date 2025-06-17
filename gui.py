@@ -16,6 +16,11 @@ try:
 except ImportError:  # pragma: no cover - pygame optional
     pygame = None
 
+
+def _mixer_ready() -> bool:
+    """Return True if pygame and the mixer are initialized."""
+    return bool(pygame and pygame.mixer.get_init())
+
 # Fallback color used if the root window returns an empty background value
 DEFAULT_BG_FALLBACK = "#d9d9d9"
 
@@ -213,10 +218,17 @@ class GameGUI:
         self.music_btn = tk.Button(ctrl, text="Pause Music", command=self.toggle_music)
         self.music_btn.pack(anchor="w")
         tk.Label(ctrl, text="Music Vol").pack(anchor="w")
-        self.music_volume = tk.DoubleVar(value=pygame.mixer.music.get_volume() if pygame else 1.0)
-        tk.Scale(ctrl, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1,
-                 variable=self.music_volume,
-                 command=lambda v: pygame.mixer.music.set_volume(float(v)) if pygame else None).pack(anchor="w")
+        init_vol = pygame.mixer.music.get_volume() if _mixer_ready() else 1.0
+        self.music_volume = tk.DoubleVar(value=init_vol)
+        tk.Scale(
+            ctrl,
+            from_=0,
+            to=1,
+            orient=tk.HORIZONTAL,
+            resolution=0.1,
+            variable=self.music_volume,
+            command=lambda v: pygame.mixer.music.set_volume(float(v)) if _mixer_ready() else None,
+        ).pack(anchor="w")
         tk.Label(ctrl, text="SFX Vol").pack(anchor="w")
         self.sfx_volume = tk.DoubleVar(value=1.0)
         tk.Scale(ctrl, from_=0, to=1, orient=tk.HORIZONTAL, resolution=0.1,
@@ -461,7 +473,7 @@ class GameGUI:
         self.score_var.set("\n".join(score_lines))
 
     def toggle_music(self):
-        if not pygame:
+        if not _mixer_ready():
             return
         if pygame.mixer.music.get_busy():
             pygame.mixer.music.pause()
