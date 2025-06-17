@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Callable
 import tkinter as tk
 from PIL import Image, ImageTk
 
 from tooltip import ToolTip
 
-from tien_len_full import Game, Card, detect_combo, SUITS, RANKS
+from tien_len_full import Game, Card, detect_combo
 
 
 class CardSprite(tk.Label):
