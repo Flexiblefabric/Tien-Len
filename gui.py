@@ -757,7 +757,7 @@ class GameGUI:
         """Display a semi-transparent overlay with winner message."""
         sound.play("win")
         self.overlay_active = True
-        overlay = tk.Frame(self.root, bg="#00000080")
+        overlay = tk.Frame(self.root, bg="#000000")
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
         box = tk.Frame(overlay, bg="white", bd=2, relief=tk.RIDGE)
         box.place(relx=0.5, rely=0.5, anchor="center")
@@ -774,7 +774,7 @@ class GameGUI:
     def show_menu(self):
         """Display the start menu with basic actions."""
         self.overlay_active = True
-        self.menu_overlay = tk.Frame(self.root, bg="#00000080")
+        self.menu_overlay = tk.Frame(self.root, bg="#000000")
         self.menu_overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
         box = tk.Frame(self.menu_overlay, bg="white", bd=2, relief=tk.RIDGE)
         box.place(relx=0.5, rely=0.5, anchor="center")

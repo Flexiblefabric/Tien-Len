@@ -86,7 +86,7 @@ def test_show_menu_overlay():
          patch('gui.tk.Label') as mock_label, \
          patch('gui.tk.Button') as mock_button:
         gui_obj.show_menu()
-        mock_frame.assert_any_call(gui_obj.root, bg='#00000080')
+        mock_frame.assert_any_call(gui_obj.root, bg='#000000')
         overlay.place.assert_called_with(relx=0, rely=0, relwidth=1, relheight=1)
         assert mock_button.call_count >= 4
 
@@ -158,7 +158,7 @@ def test_show_game_over_displays_rankings():
          patch.object(gui.GameGUI, '_sparkle'):
         gui_obj.show_game_over('Alice')
 
-        mock_frame.assert_any_call(gui_obj.root, bg='#00000080')
+        mock_frame.assert_any_call(gui_obj.root, bg='#000000')
         overlay.place.assert_called_with(relx=0, rely=0, relwidth=1, relheight=1)
         gui_obj.game.get_rankings.assert_called_once()
 
