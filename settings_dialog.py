@@ -6,6 +6,11 @@ try:
     import pygame
 except ImportError:  # pragma: no cover - pygame optional
     pygame = None
+
+
+def _mixer_ready() -> bool:
+    """Return True if pygame and the mixer are initialized."""
+    return bool(pygame and pygame.mixer.get_init())
 import tien_len_full as rules
 
 class SettingsDialog(tk.Toplevel):
@@ -25,7 +30,8 @@ class SettingsDialog(tk.Toplevel):
         # Sound and music toggles
         self.sound_var = tk.BooleanVar(value=sound._ENABLED)
         tk.Checkbutton(frame, text="Enable sound effects", variable=self.sound_var).pack(anchor="w")
-        self.music_var = tk.BooleanVar(value=pygame.mixer.music.get_busy() if pygame else False)
+        busy = pygame.mixer.music.get_busy() if _mixer_ready() else False
+        self.music_var = tk.BooleanVar(value=busy)
         tk.Checkbutton(frame, text="Enable music", variable=self.music_var).pack(anchor="w")
 
         tk.Label(frame, text="Volume").pack(anchor="w")
@@ -113,7 +119,7 @@ class SettingsDialog(tk.Toplevel):
         val = float(self.vol_var.get())
         self.gui.sfx_volume.set(val)
         sound.set_volume(val)
-        if pygame:
+        if _mixer_ready():
             pygame.mixer.music.set_volume(val)
             if self.music_var.get():
                 pygame.mixer.music.unpause()
