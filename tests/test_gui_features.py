@@ -4,6 +4,7 @@ import sys
 sys.modules.setdefault('pygame', MagicMock())
 
 import gui
+from tien_len_full import Game, Card
 
 
 def make_gui_stub(root):
@@ -230,3 +231,40 @@ def test_gui_initializes_opponent_views():
         assert hasattr(gui_obj, 'right_opponent')
 
 
+
+def test_play_selected_updates_hand_and_refreshes():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.update_display = gui.GameGUI.update_display.__get__(gui_obj)
+    gui_obj.table_view = MagicMock()
+    gui_obj.hand_view = MagicMock()
+    gui_obj.hand_view.selected = set()
+    gui_obj.hand_view.refresh = MagicMock()
+    gui_obj.info_var = MagicMock()
+    gui_obj.turn_label = MagicMock()
+    gui_obj.turn_var = MagicMock()
+    gui_obj.play_btn = MagicMock()
+    gui_obj.pass_btn = MagicMock()
+    gui_obj.hint_btn = MagicMock()
+    gui_obj.history_var = MagicMock()
+    gui_obj.ranking_var = MagicMock()
+    gui_obj.score_var = MagicMock()
+    gui_obj.update_sidebar = MagicMock()
+
+    game = Game()
+    player = game.players[0]
+    player.hand = [Card('Spades', '3'), Card('Hearts', '4')]
+    game.current_idx = 0
+    game.current_combo = None
+    game.is_valid = MagicMock(return_value=(True, ''))
+    game.snapshots = [game.to_json()]
+    gui_obj.game = game
+
+    gui_obj.selected = {player.hand[0]}
+
+    with patch.object(gui_obj, 'animate_play'), \
+         patch('gui.sound.play'):
+        gui_obj.play_selected()
+
+    assert len(player.hand) == 1
+    gui_obj.hand_view.refresh.assert_called_once()
