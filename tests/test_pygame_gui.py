@@ -44,6 +44,120 @@ def test_update_hand_sprites():
     pygame.quit()
 
 
+class DummySprite(pygame.sprite.Sprite):
+    """Minimal sprite used for input tests."""
+
+    def __init__(self, pos=(0, 0)):
+        super().__init__()
+        self.image = pygame.Surface((1, 1))
+        self.rect = self.image.get_rect(center=pos)
+        self.selected = False
+
+    def toggle(self):
+        self.selected = not self.selected
+
+
+def test_handle_key_shortcuts():
+    view, _ = make_view()
+    view.state = pygame_gui.GameState.PLAYING
+
+    with patch.object(view, 'play_selected') as play:
+        view.handle_key(pygame.K_RETURN)
+        play.assert_called_once()
+
+    with patch.object(view, 'pass_turn') as pass_turn:
+        view.handle_key(pygame.K_SPACE)
+        pass_turn.assert_called_once()
+
+    with patch.object(view, 'show_menu') as show_menu:
+        view.handle_key(pygame.K_m)
+        show_menu.assert_called_once()
+
+    with patch.object(view, 'show_settings') as show_settings:
+        view.handle_key(pygame.K_o)
+        show_settings.assert_called_once()
+    pygame.quit()
+
+
+def test_handle_mouse_select_and_overlay():
+    view, _ = make_view()
+    sprite = DummySprite()
+    center = sprite.rect.center
+    view.hand_sprites = [sprite]
+    view.selected = []
+    view.state = pygame_gui.GameState.PLAYING
+
+    view.handle_mouse(center)
+    assert sprite.selected is True
+    assert sprite in view.selected
+
+    view.handle_mouse(center)
+    assert sprite.selected is False
+    assert sprite not in view.selected
+
+    view.state = pygame_gui.GameState.MENU
+    overlay = MagicMock()
+    view.overlay = overlay
+    view.handle_mouse((5, 5))
+    event = overlay.handle_event.call_args[0][0]
+    assert event.pos == (5, 5)
+    pygame.quit()
+
+
+def test_animate_sprites_moves_to_destination():
+    view, clock = make_view()
+    sprite = DummySprite()
+    with patch('pygame.event.pump'), patch('pygame.display.flip'):
+        view._animate_sprites([sprite], (10, 15), frames=3)
+    assert sprite.rect.center == (10, 15)
+    assert clock.count == 3
+    pygame.quit()
+
+
+def test_animate_back_moves_to_destination():
+    view, clock = make_view()
+    view.screen = MagicMock()
+    rect = pygame.Rect(0, 0, 1, 1)
+    img = MagicMock()
+    img.get_rect.return_value = rect
+    with patch.object(pygame_gui, 'get_card_back', return_value=img):
+        with patch('pygame.event.pump'), patch('pygame.display.flip'):
+            view._animate_back((0, 0), (10, 5), frames=4)
+    assert rect.center == (10, 5)
+    assert clock.count == 4
+    pygame.quit()
+
+
+def test_highlight_turn_draws_at_player_position():
+    view, clock = make_view()
+    view.screen = MagicMock()
+    overlay_surface = MagicMock()
+    with patch('pygame.Surface', return_value=overlay_surface), \
+         patch('pygame.event.pump'), patch('pygame.display.flip'), \
+         patch.object(view, '_player_pos', return_value=(50, 100)) as pos:
+        view._highlight_turn(0, frames=2)
+    pos.assert_called_with(0)
+    topleft = (50 - 70, 100 - 40 - 15)
+    view.screen.blit.assert_called_with(overlay_surface, topleft)
+    assert clock.count == 2
+    pygame.quit()
+
+
+def test_state_methods_update_state():
+    view, _ = make_view()
+    assert view.state == pygame_gui.GameState.MENU
+    with patch.object(view, 'ai_turns'):
+        view.close_overlay()
+    assert view.state == pygame_gui.GameState.PLAYING
+    view.show_settings()
+    assert view.state == pygame_gui.GameState.SETTINGS
+    view.show_menu()
+    assert view.state == pygame_gui.GameState.MENU
+    view.show_game_over('X')
+    assert view.state == pygame_gui.GameState.GAME_OVER
+    pygame.quit()
+
+
 def test_animate_sprites_speed():
     view, clock = make_view()
     sprite = pygame.sprite.Sprite()
