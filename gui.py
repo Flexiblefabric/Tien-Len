@@ -793,7 +793,7 @@ class GameGUI:
                 lbl.place(x=nx, y=ny)
             self.root.update_idletasks()
             delay = max(1, int(20 / self.animation_speed))
-            self.root.after(delay)
+            self.root.after(delay, self.root.update)
         for lbl, _, _ in labels:
             lbl.destroy()
         if detect_combo(cards) == "bomb":
@@ -816,7 +816,7 @@ class GameGUI:
             lbl.place_configure(rely=0.4 - 0.3 * t)
             self.root.update_idletasks()
             delay = max(1, int(20 / self.animation_speed))
-            self.root.after(delay)
+            self.root.after(delay, self.root.update)
         lbl.destroy()
 
     def show_game_over(self, winner: str):
