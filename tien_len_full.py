@@ -192,7 +192,8 @@ class Game:
         self.pass_count = 0
         self.current_combo: list[Card] | None = None
         self.history: list[tuple[int, str]] = []
-        self.move_log: dict[int, list[tuple[str, int, list[Card]]]] = {}
+        # Log of moves in each round using simple serialisable card dictionaries
+        self.move_log: dict[int, list[tuple[str, int, list[dict]]]] = {}
         self.round_states: dict[int, str] = {}
         self.current_round = 1
         self.scores: dict[str, int] = {p.name: 0 for p in self.players}
@@ -618,7 +619,7 @@ class Game:
         self.pass_count = 0
         self.history.append((self.current_round, f"{player.name} plays {cards}"))
         self.move_log.setdefault(self.current_round, []).append(
-            ("play", self.current_idx, list(cards))
+            ("play", self.current_idx, [self._card_to_dict(c) for c in cards])
         )
         for c in cards:
             player.hand.remove(c)

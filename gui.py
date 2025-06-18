@@ -634,8 +634,16 @@ class GameGUI:
             self.game.current_idx = idx
             p = self.game.players[idx]
             if typ == "play":
-                self.animate_play(cards)
-                self.game.process_play(p, list(cards))
+                converted = []
+                for d in cards:
+                    match = next(
+                        (c for c in p.hand if c.suit == d["suit"] and c.rank == d["rank"]),
+                        None,
+                    )
+                    if match:
+                        converted.append(match)
+                self.animate_play(converted)
+                self.game.process_play(p, converted)
             else:
                 self.animate_pass(p)
                 self.game.process_pass(p)
