@@ -65,15 +65,23 @@ Select cards by clicking them and then press **Play Selected**. Press
 **Pass** to skip your turn (subject to the first‑turn rule). AI turns
 are handled automatically.
 
-The GUI supports a few convenience features:
+### Tkinter GUI features
 
-- Press **Enter** to play the currently selected cards or **Space** to pass.
-- In the Tkinter version the card buttons resize when you resize the window
-  or press **F11** for full‑screen. The Pygame interface now rebuilds its
-  sprites whenever the window size changes or full‑screen is toggled.
-- Adjust AI difficulty (Easy/Normal/Hard) from the **Options > Settings** dialog.
-- Pick an AI personality (Aggressive/Defensive/Random) and toggle lookahead for
-  Hard difficulty from the same dialog.
+- Resizable layout; card buttons scale when the window changes size.
+- **F11** toggles full-screen mode.
+- Press **Enter** to play selected cards or **Space** to pass.
+- Adjust AI difficulty (Easy/Normal/Hard) from **Options > Settings**.
+- Choose an AI personality (Aggressive/Defensive/Random) and enable
+  lookahead for Hard difficulty.
+
+### Pygame GUI features
+
+- Sprite-based interface with simple animations.
+- Press **F11** to toggle full-screen.
+- Recreates sprites when the window is resized but no dynamic scaling of
+  layout is implemented yet.
+- Press **Enter** or **Space** for the usual shortcuts.
+- Settings and menu overlays similar to the Tkinter version.
 
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow
