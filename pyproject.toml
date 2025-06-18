@@ -8,10 +8,11 @@ version = "0.1.0"
 description = "Tiến Lên card game with CLI and Tkinter GUI"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["pillow"]
+dependencies = ["pillow", "pygame"]
 
 [project.gui-scripts]
 tien-len = "gui:main"
+tien-len-pg = "pygame_gui:main"
 
 [tool.setuptools]
 py-modules = [
@@ -21,6 +22,7 @@ py-modules = [
     "sound",
     "tooltip",
     "views",
+    "pygame_gui",
 ]
 packages = [
     "assets",
