@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Callable, Optional
 
 import pygame
 
@@ -78,6 +78,106 @@ class CardSprite(pygame.sprite.Sprite):
 
 
 # ---------------------------------------------------------------------------
+# Simple button and overlay helpers
+# ---------------------------------------------------------------------------
+
+class Button:
+    """Basic rectangular button used by overlays."""
+
+    def __init__(self, text: str, rect: pygame.Rect, callback: Callable[[], None], font: pygame.font.Font) -> None:
+        self.text = text
+        self.rect = rect
+        self.callback = callback
+        self.font = font
+
+    def draw(self, surface: pygame.Surface) -> None:
+        pygame.draw.rect(surface, (200, 200, 200), self.rect)
+        pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
+        txt = self.font.render(self.text, True, (0, 0, 0))
+        surface.blit(txt, txt.get_rect(center=self.rect.center))
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+            self.callback()
+
+
+class Overlay:
+    """Base overlay class managing a list of buttons."""
+
+    def __init__(self) -> None:
+        self.buttons: List[Button] = []
+
+    def draw(self, surface: pygame.Surface) -> None:
+        for btn in self.buttons:
+            btn.draw(surface)
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        for btn in self.buttons:
+            btn.handle_event(event)
+
+
+class MenuOverlay(Overlay):
+    def __init__(self, view: 'GameView') -> None:
+        super().__init__()
+        w, h = view.screen.get_size()
+        font = view.font
+        bx = w // 2 - 100
+        by = h // 2 - 70
+        self.buttons = [
+            Button('New Game', pygame.Rect(bx, by, 200, 40), view.restart_game, font),
+            Button('Settings', pygame.Rect(bx, by + 50, 200, 40), view.show_settings, font),
+            Button('Quit', pygame.Rect(bx, by + 100, 200, 40), view.quit_game, font),
+        ]
+
+
+class SettingsOverlay(Overlay):
+    def __init__(self, view: 'GameView') -> None:
+        super().__init__()
+        w, h = view.screen.get_size()
+        font = view.font
+        bx = w // 2 - 120
+        by = h // 2 - 60
+
+        def set_diff(level: str) -> Callable[[], None]:
+            return lambda: view.set_ai_level(level)
+
+        self.buttons = [
+            Button('Easy AI', pygame.Rect(bx, by, 240, 40), set_diff('Easy'), font),
+            Button('Normal AI', pygame.Rect(bx, by + 50, 240, 40), set_diff('Normal'), font),
+            Button('Hard AI', pygame.Rect(bx, by + 100, 240, 40), set_diff('Hard'), font),
+            Button('Close', pygame.Rect(bx, by + 150, 240, 40), view.close_overlay, font),
+        ]
+
+
+class GameOverOverlay(Overlay):
+    def __init__(self, view: 'GameView', winner: str) -> None:
+        super().__init__()
+        self.winner = winner
+        self.rankings = view.game.get_rankings()
+        w, h = view.screen.get_size()
+        font = view.font
+        bx = w // 2 - 100
+        by = h // 2 + 40
+        self.buttons = [
+            Button('Play Again', pygame.Rect(bx, by, 200, 40), view.restart_game, font),
+            Button('Quit', pygame.Rect(bx, by + 50, 200, 40), view.quit_game, font),
+        ]
+
+    def draw(self, surface: pygame.Surface) -> None:
+        w, h = surface.get_size()
+        font = pygame.font.SysFont(None, 32)
+        txt = font.render(f'{self.winner} wins!', True, (255, 255, 255))
+        surface.blit(txt, txt.get_rect(center=(w // 2, h // 2 - 60)))
+        rank_lines = [f'{i+1}. {n} ({c})' for i, (n, c) in enumerate(self.rankings)]
+        y = h // 2 - 20
+        for line in rank_lines:
+            img = font.render(line, True, (255, 255, 255))
+            surface.blit(img, img.get_rect(center=(w // 2, y)))
+            y += 30
+        super().draw(surface)
+
+
+# ---------------------------------------------------------------------------
 # Main game view
 # ---------------------------------------------------------------------------
 
@@ -95,6 +195,9 @@ class GameView:
         load_card_images()
         self.selected: List[CardSprite] = []
         self.running = True
+        self.overlay: Optional[Overlay] = None
+        self.ai_level = 'Normal'
+        self.show_menu()
 
     # Layout helpers --------------------------------------------------
     def _player_pos(self, idx: int) -> Tuple[int, int]:
@@ -107,8 +210,41 @@ class GameView:
             return 100, h // 2
         return w - 100, h // 2
 
+    # Overlay helpers -------------------------------------------------
+    def show_menu(self) -> None:
+        self.overlay = MenuOverlay(self)
+
+    def show_settings(self) -> None:
+        self.overlay = SettingsOverlay(self)
+
+    def close_overlay(self) -> None:
+        had = self.overlay is not None
+        self.overlay = None
+        if had:
+            self.ai_turns()
+
+    def quit_game(self) -> None:
+        self.running = False
+
+    def restart_game(self) -> None:
+        self.game = Game()
+        self.game.setup()
+        self.selected.clear()
+        self.close_overlay()
+
+    def show_game_over(self, winner: str) -> None:
+        self.overlay = GameOverOverlay(self, winner)
+
+    def set_ai_level(self, level: str) -> None:
+        self.ai_level = level
+        self.game.set_ai_level(level)
+
     # Event handling --------------------------------------------------
     def handle_mouse(self, pos):
+        if self.overlay:
+            event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
+            self.overlay.handle_event(event)
+            return
         for sp in self.selected:
             if sp.rect.collidepoint(pos):
                 sp.toggle()
@@ -127,10 +263,18 @@ class GameView:
                 return
 
     def handle_key(self, key):
+        if self.overlay:
+            if key == pygame.K_ESCAPE:
+                self.close_overlay()
+            return
         if key == pygame.K_RETURN:
             self.play_selected()
         elif key == pygame.K_SPACE:
             self.pass_turn()
+        elif key == pygame.K_m:
+            self.show_menu()
+        elif key == pygame.K_o:
+            self.show_settings()
 
     # Game actions ----------------------------------------------------
     def play_selected(self):
@@ -143,7 +287,8 @@ class GameView:
             print(f"Invalid: {msg}")
             return
         if self.game.process_play(player, cards):
-            self.running = False
+            self.show_game_over(player.name)
+            return
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
@@ -164,7 +309,7 @@ class GameView:
                 cards = []
             if cards:
                 if self.game.process_play(p, cards):
-                    self.running = False
+                    self.show_game_over(p.name)
                     break
             else:
                 self.game.process_pass(p)
@@ -203,7 +348,6 @@ class GameView:
 
     def run(self):
         self.update_hand_sprites()
-        self.ai_turns()
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -215,6 +359,11 @@ class GameView:
 
             self.screen.fill(self.TABLE_COLOR)
             self.draw_players()
+            if self.overlay:
+                overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+                overlay_surf.fill((0, 0, 0, 180))
+                self.screen.blit(overlay_surf, (0, 0))
+                self.overlay.draw(self.screen)
             pygame.display.flip()
             self.clock.tick(30)
         pygame.quit()
