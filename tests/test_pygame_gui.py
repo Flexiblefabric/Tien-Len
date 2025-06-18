@@ -86,6 +86,7 @@ def test_handle_mouse_select_and_overlay():
     view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
+    view.action_buttons = []
 
     view.handle_mouse(center)
     assert sprite.selected is True
@@ -273,3 +274,36 @@ def test_toggle_fullscreen_sets_flags_and_rescales():
                     assert load_images.call_args_list[-1][0][0] == view.card_width
                     assert view.card_width == fs_width  # width unchanged for same size
     pygame.quit()
+
+
+def test_action_buttons_created_and_clickable():
+    view, _ = make_view()
+    texts = [b.text for b in view.action_buttons]
+    assert texts == ['Play', 'Pass', 'Undo']
+
+    btn = view.action_buttons[0]
+    btn.callback = MagicMock()
+    view.state = pygame_gui.GameState.PLAYING
+    view.handle_mouse(btn.rect.center)
+    btn.callback.assert_called_once()
+
+
+def test_undo_button_disabled_when_no_snapshot():
+    view, _ = make_view()
+    undo = next(b for b in view.action_buttons if b.text == 'Undo')
+    undo.callback = MagicMock()
+    view.state = pygame_gui.GameState.PLAYING
+    view.game.snapshots = ['s1']
+    view.handle_mouse(undo.rect.center)
+    undo.callback.assert_not_called()
+    view.game.snapshots.append('s2')
+    view.handle_mouse(undo.rect.center)
+    undo.callback.assert_called_once()
+
+
+def test_on_resize_calls_create_action_buttons():
+    view, _ = make_view()
+    with patch.object(view, '_create_action_buttons') as create:
+        view.on_resize(100, 100)
+        create.assert_called_once()
+
