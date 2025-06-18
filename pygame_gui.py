@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Tuple, List, Callable, Optional
+from enum import Enum, auto
 
 import pygame
 
@@ -16,6 +17,15 @@ from tien_len_full import Game, Card, detect_combo
 
 _CARD_CACHE: Dict[Tuple[str, int], pygame.Surface] = {}
 _BASE_IMAGES: Dict[str, pygame.Surface] = {}
+
+
+class GameState(Enum):
+    """Simple enum representing the game's current state."""
+
+    MENU = auto()
+    PLAYING = auto()
+    SETTINGS = auto()
+    GAME_OVER = auto()
 
 
 def _image_key(card: Card) -> str:
@@ -218,6 +228,7 @@ class GameView:
         self.selected: List[CardSprite] = []
         self.running = True
         self.overlay: Optional[Overlay] = None
+        self.state: GameState = GameState.PLAYING
         self.ai_level = 'Normal'
         self.show_menu()
 
@@ -303,14 +314,17 @@ class GameView:
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
         self.overlay = MenuOverlay(self)
+        self.state = GameState.MENU
 
     def show_settings(self) -> None:
         self.overlay = SettingsOverlay(self)
+        self.state = GameState.SETTINGS
 
     def close_overlay(self) -> None:
         had = self.overlay is not None
         self.overlay = None
         if had:
+            self.state = GameState.PLAYING
             self.ai_turns()
 
     def quit_game(self) -> None:
@@ -324,6 +338,7 @@ class GameView:
 
     def show_game_over(self, winner: str) -> None:
         self.overlay = GameOverOverlay(self, winner)
+        self.state = GameState.GAME_OVER
 
     def set_ai_level(self, level: str) -> None:
         self.ai_level = level
@@ -331,9 +346,10 @@ class GameView:
 
     # Event handling --------------------------------------------------
     def handle_mouse(self, pos):
-        if self.overlay:
-            event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
-            self.overlay.handle_event(event)
+        if self.state != GameState.PLAYING:
+            if self.overlay:
+                event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
+                self.overlay.handle_event(event)
             return
         for sp in self.selected:
             if sp.rect.collidepoint(pos):
@@ -353,8 +369,8 @@ class GameView:
                 return
 
     def handle_key(self, key):
-        if self.overlay:
-            if key == pygame.K_ESCAPE:
+        if self.state != GameState.PLAYING:
+            if key == pygame.K_ESCAPE and self.state in {GameState.MENU, GameState.SETTINGS}:
                 self.close_overlay()
             return
         if key == pygame.K_RETURN:
@@ -449,10 +465,16 @@ class GameView:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.handle_mouse(event.pos)
-                elif event.type == pygame.KEYDOWN:
-                    self.handle_key(event.key)
+                elif self.state == GameState.PLAYING:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        self.handle_mouse(event.pos)
+                    elif event.type == pygame.KEYDOWN:
+                        self.handle_key(event.key)
+                else:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        self.handle_mouse(event.pos)
+                    elif event.type == pygame.KEYDOWN:
+                        self.handle_key(event.key)
 
             self._draw_frame()
             self.clock.tick(30)

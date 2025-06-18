@@ -73,3 +73,25 @@ def test_highlight_turn_speed():
         view._highlight_turn(0, frames=10)
         assert clock.count == 5
     pygame.quit()
+
+
+def test_state_transitions():
+    view, _ = make_view()
+    assert view.state == pygame_gui.GameState.MENU
+    with patch.object(view, 'ai_turns'):
+        view.close_overlay()
+    assert view.state == pygame_gui.GameState.PLAYING
+
+    view.show_settings()
+    assert view.state == pygame_gui.GameState.SETTINGS
+    with patch.object(view, 'ai_turns'):
+        view.handle_key(pygame.K_ESCAPE)
+    assert view.state == pygame_gui.GameState.PLAYING
+
+    view.show_game_over('P1')
+    assert view.state == pygame_gui.GameState.GAME_OVER
+    with patch.object(view, 'ai_turns') as mock:
+        view.handle_key(pygame.K_ESCAPE)
+        mock.assert_not_called()
+    assert view.state == pygame_gui.GameState.GAME_OVER
+    pygame.quit()
