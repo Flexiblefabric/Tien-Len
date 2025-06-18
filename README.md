@@ -68,8 +68,9 @@ are handled automatically.
 The GUI supports a few convenience features:
 
 - Press **Enter** to play the currently selected cards or **Space** to pass.
-- Resize the window or press **F11** to toggle full‑screen mode and the
-  card buttons will scale accordingly.
+- In the Tkinter version the card buttons resize when you resize the window
+  or press **F11** for full‑screen. The Pygame interface now rebuilds its
+  sprites whenever the window size changes or full‑screen is toggled.
 - Adjust AI difficulty (Easy/Normal/Hard) from the **Options > Settings** dialog.
 - Pick an AI personality (Aggressive/Defensive/Random) and toggle lookahead for
   Hard difficulty from the same dialog.

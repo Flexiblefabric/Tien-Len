@@ -218,13 +218,15 @@ class GameView:
     def __init__(self, width: int = 1024, height: int = 768) -> None:
         pygame.init()
         pygame.display.set_caption("Tiến Lên - Pygame")
-        self.screen = pygame.display.set_mode((width, height))
+        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        self.fullscreen = False
+        self.card_width = self._calc_card_width(width)
         self.clock = pygame.time.Clock()
         self.animation_speed = 1.0
         self.game = Game()
         self.game.setup()
         self.font = pygame.font.SysFont(None, 24)
-        load_card_images()
+        load_card_images(self.card_width)
         self.selected: List[CardSprite] = []
         self.running = True
         self.overlay: Optional[Overlay] = None
@@ -311,6 +313,10 @@ class GameView:
         w, h = self.screen.get_size()
         return w // 2, h // 2
 
+    def _calc_card_width(self, win_width: int) -> int:
+        """Determine card width based on window width."""
+        return max(30, win_width // 13)
+
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
         self.overlay = MenuOverlay(self)
@@ -343,6 +349,28 @@ class GameView:
     def set_ai_level(self, level: str) -> None:
         self.ai_level = level
         self.game.set_ai_level(level)
+
+    def on_resize(self, width: int, height: int) -> None:
+        """Handle window resize by recreating sprites."""
+        flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
+        self.screen = pygame.display.set_mode((width, height), flags)
+        self.card_width = self._calc_card_width(width)
+        load_card_images(self.card_width)
+        self.update_hand_sprites()
+
+    def toggle_fullscreen(self) -> None:
+        """Toggle full-screen mode."""
+        try:
+            pygame.display.toggle_fullscreen()
+        except Exception:
+            pass
+        self.fullscreen = not getattr(self, 'fullscreen', False)
+        flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
+        size = self.screen.get_size()
+        self.screen = pygame.display.set_mode(size, flags)
+        self.card_width = self._calc_card_width(size[0])
+        load_card_images(self.card_width)
+        self.update_hand_sprites()
 
     # Event handling --------------------------------------------------
     def handle_mouse(self, pos):
@@ -381,6 +409,8 @@ class GameView:
             self.show_menu()
         elif key == pygame.K_o:
             self.show_settings()
+        elif key == pygame.K_F11:
+            self.toggle_fullscreen()
 
     # Game actions ----------------------------------------------------
     def play_selected(self):
@@ -433,7 +463,7 @@ class GameView:
         player = self.game.players[0]
         self.hand_sprites = pygame.sprite.Group()
         start_x, y = self._player_pos(0)
-        card_w = 80
+        card_w = self.card_width
         spacing = card_w + 10
         start_x -= (len(player.hand) * spacing) // 2
         for i, c in enumerate(player.hand):
@@ -465,6 +495,8 @@ class GameView:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self.on_resize(event.w, event.h)
                 elif self.state == GameState.PLAYING:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         self.handle_mouse(event.pos)

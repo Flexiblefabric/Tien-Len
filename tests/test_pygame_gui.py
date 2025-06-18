@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
@@ -94,4 +94,53 @@ def test_state_transitions():
         view.handle_key(pygame.K_ESCAPE)
         mock.assert_not_called()
     assert view.state == pygame_gui.GameState.GAME_OVER
+    pygame.quit()
+
+
+def test_on_resize_rebuilds_sprites():
+    pygame.display.init()
+    surf_small = pygame.Surface((300, 200))
+    surf_large = pygame.Surface((650, 400))
+    set_mode = MagicMock(side_effect=[surf_small, surf_large])
+    with patch('pygame.display.set_mode', set_mode):
+        with patch('pygame.font.SysFont', return_value=DummyFont()):
+            with patch.object(pygame_gui, 'load_card_images') as load_images, \
+                 patch.object(pygame_gui, 'get_card_image', side_effect=lambda c, w: pygame.Surface((w, 1))):
+                view = pygame_gui.GameView(300, 200)
+                view.update_hand_sprites()
+                start_width = view.card_width
+                first = next(iter(view.hand_sprites))
+                assert first.rect.width == start_width
+
+                view.on_resize(650, 400)
+                new_width = view.card_width
+                assert new_width != start_width
+                first = next(iter(view.hand_sprites))
+                assert first.rect.width == new_width
+                load_images.assert_called_with(new_width)
+    pygame.quit()
+
+
+def test_toggle_fullscreen_sets_flags_and_rescales():
+    pygame.display.init()
+    surf = pygame.Surface((300, 200))
+    set_mode = MagicMock(return_value=surf)
+    with patch('pygame.display.set_mode', set_mode):
+        with patch('pygame.font.SysFont', return_value=DummyFont()):
+            with patch.object(pygame_gui, 'load_card_images') as load_images, \
+                 patch.object(pygame_gui, 'get_card_image', side_effect=lambda c, w: pygame.Surface((w, 1))):
+                with patch('pygame.display.toggle_fullscreen'):
+                    view = pygame_gui.GameView(300, 200)
+                    load_images.reset_mock()
+                    set_mode.reset_mock()
+
+                    view.toggle_fullscreen()
+                    set_mode.assert_called_with((300, 200), pygame.FULLSCREEN)
+                    load_images.assert_called_with(view.card_width)
+                    fs_width = view.card_width
+
+                    view.toggle_fullscreen()
+                    set_mode.assert_called_with((300, 200), pygame.RESIZABLE)
+                    assert load_images.call_args_list[-1][0][0] == view.card_width
+                    assert view.card_width == fs_width  # width unchanged for same size
     pygame.quit()
