@@ -32,6 +32,11 @@ python3 tien_len_full.py [--ai Easy|Normal|Hard]
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).
 The game logs actions to `tien_len_game.log`.
 
+## Card notation
+
+Cards are written as ``<rank><symbol>`` (e.g. ``7♣``). When creating a
+``Card`` instance, supply the arguments as ``(suit, rank)``.
+
 ## GUI prototype
 
 A very small graphical interface built with `tkinter` is provided in
