@@ -301,6 +301,18 @@ def test_undo_button_disabled_when_no_snapshot():
     undo.callback.assert_called_once()
 
 
+def test_undo_button_triggers_game_undo_last():
+    view, _ = make_view()
+    undo_btn = next(b for b in view.action_buttons if b.text == 'Undo')
+    view.state = pygame_gui.GameState.PLAYING
+    view.game.snapshots.append('s2')
+    with patch.object(view.game, 'undo_last', return_value=True) as undo_mock, \
+         patch.object(view, '_highlight_turn'):
+        view.handle_mouse(undo_btn.rect.center)
+        undo_mock.assert_called_once()
+    pygame.quit()
+
+
 def test_on_resize_calls_create_action_buttons():
     view, _ = make_view()
     with patch.object(view, '_create_action_buttons') as create:
