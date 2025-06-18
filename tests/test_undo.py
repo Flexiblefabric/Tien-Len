@@ -38,3 +38,12 @@ def test_undo_pass_restores_state():
     assert game.undo_last() is True
     assert len(game.snapshots) == 1
     assert game.pass_count == 0
+
+
+def test_process_play_invalid_card_raises():
+    game = Game()
+    player = game.players[0]
+    player.hand = [Card('Spades', '3')]
+    invalid = Card('Hearts', '4')
+    with pytest.raises(ValueError, match='not in hand'):
+        game.process_play(player, [invalid])
