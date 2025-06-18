@@ -58,6 +58,12 @@ class Card:
     """Simple container for a playing card."""
 
     def __init__(self, suit: str, rank: str):
+        """Initialise a card from ``(suit, rank)``.
+
+        Arguments are provided in this order so they mirror the short
+        notation used throughout the codebase.
+        """
+
         self.suit = suit
         self.rank = rank
 
