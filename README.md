@@ -82,6 +82,7 @@ are handled automatically.
   layout is implemented yet.
 - Press **Enter** or **Space** for the usual shortcuts.
 - Settings and menu overlays similar to the Tkinter version.
+- On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow

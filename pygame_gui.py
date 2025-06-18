@@ -118,20 +118,24 @@ class CardBackSprite(pygame.sprite.Sprite):
 class Button:
     """Basic rectangular button used by overlays."""
 
-    def __init__(self, text: str, rect: pygame.Rect, callback: Callable[[], None], font: pygame.font.Font) -> None:
+    def __init__(self, text: str, rect: pygame.Rect, callback: Callable[[], None],
+                 font: pygame.font.Font, enabled: bool = True) -> None:
         self.text = text
         self.rect = rect
         self.callback = callback
         self.font = font
+        self.enabled = enabled
 
     def draw(self, surface: pygame.Surface) -> None:
-        pygame.draw.rect(surface, (200, 200, 200), self.rect)
+        color = (200, 200, 200) if self.enabled else (150, 150, 150)
+        text_color = (0, 0, 0) if self.enabled else (100, 100, 100)
+        pygame.draw.rect(surface, color, self.rect)
         pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
-        txt = self.font.render(self.text, True, (0, 0, 0))
+        txt = self.font.render(self.text, True, text_color)
         surface.blit(txt, txt.get_rect(center=self.rect.center))
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+        if self.enabled and event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
             self.callback()
 
 
@@ -242,6 +246,8 @@ class GameView:
         self.overlay: Optional[Overlay] = None
         self.state: GameState = GameState.PLAYING
         self.ai_level = 'Normal'
+        self.action_buttons: List[Button] = []
+        self._create_action_buttons()
         self.show_menu()
 
     # Animation helpers -------------------------------------------------
@@ -332,6 +338,20 @@ class GameView:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
 
+    def _create_action_buttons(self) -> None:
+        """Create or reposition the Play/Pass/Undo buttons."""
+        center_x, pile_y = self._pile_center()
+        _, hand_y = self._player_pos(0)
+        mid_y = (pile_y + hand_y) // 2
+        bx = center_x - 60
+        by = mid_y - 60
+        font = self.font
+        self.action_buttons = [
+            Button('Play', pygame.Rect(bx, by, 120, 40), self.play_selected, font),
+            Button('Pass', pygame.Rect(bx, by + 50, 120, 40), self.pass_turn, font),
+            Button('Undo', pygame.Rect(bx, by + 100, 120, 40), self.undo_move, font),
+        ]
+
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
         self.overlay = MenuOverlay(self)
@@ -372,6 +392,7 @@ class GameView:
         self.card_width = self._calc_card_width(width)
         load_card_images(self.card_width)
         self.update_hand_sprites()
+        self._create_action_buttons()
 
     def toggle_fullscreen(self) -> None:
         """Toggle full-screen mode."""
@@ -386,6 +407,7 @@ class GameView:
         self.card_width = self._calc_card_width(size[0])
         load_card_images(self.card_width)
         self.update_hand_sprites()
+        self._create_action_buttons()
 
     # Event handling --------------------------------------------------
     def handle_mouse(self, pos):
@@ -394,6 +416,12 @@ class GameView:
                 event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
                 self.overlay.handle_event(event)
             return
+        for btn in self.action_buttons:
+            if btn.rect.collidepoint(pos):
+                if btn.text == 'Undo' and len(self.game.snapshots) <= 1:
+                    return
+                btn.callback()
+                return
         for sp in reversed(self.selected):
             if sp.rect.collidepoint(pos):
                 up = not sp.selected
@@ -459,6 +487,12 @@ class GameView:
         else:
             self._highlight_turn(self.game.current_idx)
             self.ai_turns()
+
+    def undo_move(self) -> None:
+        """Undo the most recent move and refresh the display."""
+        if self.game.undo_last():
+            self.selected.clear()
+            self.update_hand_sprites()
 
     def ai_turns(self):
         while not self.game.players[self.game.current_idx].is_human:
@@ -534,6 +568,14 @@ class GameView:
             label = self.font.render(pl.name, True, (255, 255, 255))
             lrect = label.get_rect(center=(center[0], center[1] - self.card_width))
             self.screen.blit(label, lrect)
+
+        if self.state == GameState.PLAYING:
+            # Enable or disable Undo based on snapshot history
+            undo_btn = next((b for b in self.action_buttons if b.text == 'Undo'), None)
+            if undo_btn:
+                undo_btn.enabled = len(self.game.snapshots) > 1
+            for btn in self.action_buttons:
+                btn.draw(self.screen)
 
     def run(self):
         self.update_hand_sprites()
