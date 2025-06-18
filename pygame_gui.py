@@ -394,7 +394,7 @@ class GameView:
                 event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
                 self.overlay.handle_event(event)
             return
-        for sp in self.selected:
+        for sp in reversed(self.selected):
             if sp.rect.collidepoint(pos):
                 up = not sp.selected
                 sp.toggle()
@@ -405,7 +405,7 @@ class GameView:
                 else:
                     self.selected.remove(sp)
                 return
-        for sp in self.hand_sprites:
+        for sp in reversed(self.hand_sprites.sprites()):
             if sp.rect.collidepoint(pos):
                 up = not sp.selected
                 sp.toggle()
@@ -482,7 +482,7 @@ class GameView:
     # Rendering -------------------------------------------------------
     def update_hand_sprites(self):
         player = self.game.players[0]
-        self.hand_sprites = pygame.sprite.Group()
+        self.hand_sprites = pygame.sprite.OrderedUpdates()
         start_x, y = self._player_pos(0)
         card_w = self.card_width
         spacing = min(40, card_w)
