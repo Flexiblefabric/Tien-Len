@@ -8,7 +8,7 @@ import random
 import json
 
 from tien_len_full import Game, detect_combo, SUITS, RANKS
-from views import TableView, HandView
+from views import TableView, HandView, OpponentView
 from tooltip import ToolTip
 import sound
 try:
@@ -162,11 +162,43 @@ class GameGUI:
         self.sidebar = tk.Frame(root, bd=1, relief=tk.SUNKEN)
         self.sidebar.pack(side=tk.RIGHT, fill=tk.Y, padx=5, pady=5)
 
+        self.table_area = tk.Frame(self.main_area)
+        self.table_area.pack(pady=5)
+        self.top_opponent = OpponentView(
+            self.table_area,
+            self.game,
+            2,
+            self.base_images,
+            self.scaled_images,
+            self.CARD_WIDTH,
+        )
+        self.top_opponent.pack(side=tk.TOP)
+        middle = tk.Frame(self.table_area)
+        middle.pack()
+        self.left_opponent = OpponentView(
+            middle,
+            self.game,
+            1,
+            self.base_images,
+            self.scaled_images,
+            self.CARD_WIDTH,
+        )
+        self.left_opponent.pack(side=tk.LEFT, padx=5)
         self.table_view = TableView(
-            self.main_area, self.game, self.base_images, self.scaled_images, self.CARD_WIDTH
+            middle, self.game, self.base_images, self.scaled_images, self.CARD_WIDTH
         )
         self.table_view.config(bg=self.table_cloth_color)
-        self.table_view.pack(pady=5)
+        self.table_view.pack(side=tk.LEFT, padx=5)
+        self.right_opponent = OpponentView(
+            middle,
+            self.game,
+            3,
+            self.base_images,
+            self.scaled_images,
+            self.CARD_WIDTH,
+        )
+        self.right_opponent.pack(side=tk.LEFT, padx=5)
+        self.opponent_views = [self.left_opponent, self.top_opponent, self.right_opponent]
         tk.Label(self.main_area, textvariable=self.info_var).pack(pady=5)
         self.turn_label = tk.Label(self.main_area, textvariable=self.turn_var, font=("Arial", 12, "bold"))
         self.turn_label.pack(pady=2)
@@ -431,6 +463,8 @@ class GameGUI:
         self.table_view.refresh()
         self.hand_view.selected = set(self.selected)
         self.hand_view.refresh()
+        for v in self.opponent_views:
+            v.refresh()
 
         cur = self.game.players[self.game.current_idx]
         if cur.is_human:
@@ -524,6 +558,8 @@ class GameGUI:
             self.game = new_game
             self.table_view.game = self.game
             self.hand_view.game = self.game
+            for v in self.opponent_views:
+                v.game = self.game
             self.selected.clear()
             self.apply_options()
         except Exception as exc:
@@ -619,6 +655,8 @@ class GameGUI:
         self.game = replay_game
         self.table_view.game = self.game
         self.hand_view.game = self.game
+        for v in self.opponent_views:
+            v.game = self.game
         self.selected.clear()
         self.update_display()
 
@@ -627,6 +665,8 @@ class GameGUI:
                 self.game = orig_game
                 self.table_view.game = self.game
                 self.hand_view.game = self.game
+                for v in self.opponent_views:
+                    v.game = self.game
                 self.update_display()
                 self.update_sidebar()
                 return
@@ -836,6 +876,10 @@ class GameGUI:
         if scores:
             self.game.scores = scores
         self.game.setup()
+        self.table_view.game = self.game
+        self.hand_view.game = self.game
+        for v in self.opponent_views:
+            v.game = self.game
         self.selected.clear()
         self.apply_options()
 
