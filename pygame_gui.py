@@ -32,11 +32,26 @@ def load_card_images(width: int = 80) -> None:
         key = img.stem
         base = pygame.image.load(str(img)).convert_alpha()
         _BASE_IMAGES[key] = base
+    back = assets / "card_back.png"
+    if back.exists():
+        _BASE_IMAGES["card_back"] = pygame.image.load(str(back)).convert_alpha()
     for key, base in _BASE_IMAGES.items():
         ratio = width / base.get_width()
         _CARD_CACHE[(key, width)] = pygame.transform.smoothscale(
             base, (width, int(base.get_height() * ratio))
         )
+
+def get_card_back(width: int = 80) -> Optional[pygame.Surface]:
+    if "card_back" not in _BASE_IMAGES:
+        return None
+    key = ("card_back", width)
+    if key not in _CARD_CACHE:
+        base = _BASE_IMAGES["card_back"]
+        ratio = width / base.get_width()
+        _CARD_CACHE[key] = pygame.transform.smoothscale(
+            base, (width, int(base.get_height() * ratio))
+        )
+    return _CARD_CACHE[key]
 
 
 def get_card_image(card: Card, width: int) -> pygame.Surface:
@@ -199,6 +214,67 @@ class GameView:
         self.ai_level = 'Normal'
         self.show_menu()
 
+    # Animation helpers -------------------------------------------------
+    def _draw_frame(self) -> None:
+        """Redraw the game state."""
+        self.screen.fill(self.TABLE_COLOR)
+        self.draw_players()
+        if self.overlay:
+            overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+            overlay_surf.fill((0, 0, 0, 180))
+            self.screen.blit(overlay_surf, (0, 0))
+            self.overlay.draw(self.screen)
+        pygame.display.flip()
+
+    def _animate_sprites(self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15) -> None:
+        """Move ``sprites`` toward ``dest`` over ``frames`` steps."""
+        if not sprites:
+            return
+        starts = [sp.rect.center for sp in sprites]
+        for i in range(frames):
+            t = (i + 1) / frames
+            for sp, (sx, sy) in zip(sprites, starts):
+                sp.rect.center = (
+                    int(sx + (dest[0] - sx) * t),
+                    int(sy + (dest[1] - sy) * t),
+                )
+            self._draw_frame()
+            pygame.event.pump()
+            self.clock.tick(60)
+
+    def _animate_back(self, start: Tuple[int, int], dest: Tuple[int, int], frames: int = 15) -> None:
+        """Animate a card back image from ``start`` to ``dest``."""
+        img = get_card_back()
+        if img is None:
+            return
+        rect = img.get_rect(center=start)
+        for i in range(frames):
+            t = (i + 1) / frames
+            rect.center = (
+                int(start[0] + (dest[0] - start[0]) * t),
+                int(start[1] + (dest[1] - start[1]) * t),
+            )
+            self._draw_frame()
+            self.screen.blit(img, rect)
+            pygame.display.flip()
+            pygame.event.pump()
+            self.clock.tick(60)
+
+    def _highlight_turn(self, idx: int, frames: int = 10) -> None:
+        """Flash the active player's name for visual emphasis."""
+        x, y = self._player_pos(idx)
+        rect = pygame.Rect(0, 0, 140, 30)
+        rect.center = (x, y - 40)
+        for i in range(frames):
+            self._draw_frame()
+            overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+            alpha = max(0, 200 - i * 20)
+            overlay.fill((255, 255, 0, alpha))
+            self.screen.blit(overlay, rect.topleft)
+            pygame.display.flip()
+            pygame.event.pump()
+            self.clock.tick(60)
+
     # Layout helpers --------------------------------------------------
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         w, h = self.screen.get_size()
@@ -209,6 +285,10 @@ class GameView:
         if idx == 2:
             return 100, h // 2
         return w - 100, h // 2
+
+    def _pile_center(self) -> Tuple[int, int]:
+        w, h = self.screen.get_size()
+        return w // 2, h // 2
 
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
@@ -289,15 +369,18 @@ class GameView:
         if self.game.process_play(player, cards):
             self.show_game_over(player.name)
             return
+        self._animate_sprites(self.selected, self._pile_center())
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
+        self._highlight_turn(self.game.current_idx)
         self.ai_turns()
 
     def pass_turn(self):
         if self.game.handle_pass():
             self.running = False
         else:
+            self._highlight_turn(self.game.current_idx)
             self.ai_turns()
 
     def ai_turns(self):
@@ -311,10 +394,13 @@ class GameView:
                 if self.game.process_play(p, cards):
                     self.show_game_over(p.name)
                     break
+                self._animate_back(self._player_pos(self.game.current_idx), self._pile_center())
             else:
                 self.game.process_pass(p)
             self.game.next_turn()
+            self._highlight_turn(self.game.current_idx)
         self.update_hand_sprites()
+        self._highlight_turn(self.game.current_idx)
 
     # Rendering -------------------------------------------------------
     def update_hand_sprites(self):
@@ -348,6 +434,7 @@ class GameView:
 
     def run(self):
         self.update_hand_sprites()
+        self._highlight_turn(self.game.current_idx)
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -357,14 +444,7 @@ class GameView:
                 elif event.type == pygame.KEYDOWN:
                     self.handle_key(event.key)
 
-            self.screen.fill(self.TABLE_COLOR)
-            self.draw_players()
-            if self.overlay:
-                overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-                overlay_surf.fill((0, 0, 0, 180))
-                self.screen.blit(overlay_surf, (0, 0))
-                self.overlay.draw(self.screen)
-            pygame.display.flip()
+            self._draw_frame()
             self.clock.tick(30)
         pygame.quit()
 
