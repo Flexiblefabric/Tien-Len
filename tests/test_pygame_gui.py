@@ -83,7 +83,7 @@ def test_handle_mouse_select_and_overlay():
     view, _ = make_view()
     sprite = DummySprite()
     center = sprite.rect.center
-    view.hand_sprites = [sprite]
+    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
 
@@ -101,6 +101,21 @@ def test_handle_mouse_select_and_overlay():
     view.handle_mouse((5, 5))
     event = overlay.handle_event.call_args[0][0]
     assert event.pos == (5, 5)
+    pygame.quit()
+
+
+def test_handle_mouse_selects_rightmost_sprite():
+    view, _ = make_view()
+    left = DummySprite((5, 5))
+    right = DummySprite((5, 5))
+    view.hand_sprites = pygame.sprite.OrderedUpdates(left, right)
+    view.selected = []
+    view.state = pygame_gui.GameState.PLAYING
+
+    view.handle_mouse((5, 5))
+    assert right.selected is True
+    assert right in view.selected
+    assert left.selected is False
     pygame.quit()
 
 
