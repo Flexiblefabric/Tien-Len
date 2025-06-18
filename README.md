@@ -3,7 +3,12 @@
 [![Coverage](https://codecov.io/gh/Flexiblefabric/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/Flexiblefabric/Tien-Len)
 
 This repository contains a simple command line implementation of the
-Vietnamese card game **Tiến Lên** and a small Tkinter-based GUI.
+Vietnamese card game **Tiến Lên**.
+
+Two graphical front-ends are available:
+
+- A legacy Tkinter prototype in `gui.py`.
+- A new Pygame interface in `pygame_gui.py`.
 
 ## Installation
 
@@ -19,7 +24,8 @@ For development you can use the editable mode instead:
 pip install -e .
 ```
 
-After installation launch the GUI simply by running `tien-len`.
+After installation launch the Tkinter GUI with `tien-len` or the new
+Pygame version with `tien-len-pg`.
 
 ## CLI version
 
@@ -39,14 +45,20 @@ Cards are written as ``<rank><symbol>`` (e.g. ``7♣``). When creating a
 
 ## GUI prototype
 
-A very small graphical interface built with `tkinter` is provided in
-`gui.py`. It displays your hand as clickable buttons and shows the last
-combo on the pile. Opponents are played by the built‑in AI.
+Two implementations exist. The original Tkinter version in `gui.py`
+displays your hand as clickable buttons. A new Pygame rewrite in
+`pygame_gui.py` renders the table using sprites and simple animations.
 
-Start it with:
+Start the Tkinter version with:
 
 ```bash
 python3 gui.py
+```
+
+Launch the Pygame GUI with:
+
+```bash
+python3 pygame_gui.py
 ```
 
 Select cards by clicking them and then press **Play Selected**. Press
