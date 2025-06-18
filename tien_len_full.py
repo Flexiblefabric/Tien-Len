@@ -67,6 +67,14 @@ class Card:
         symbol = next((s for s, r in SUIT_SYMBOLS.items() if r == self.suit), '?')
         return f"{self.rank}{symbol}"
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Card):
+            return NotImplemented
+        return self.suit == other.suit and self.rank == other.rank
+
+    def __hash__(self) -> int:
+        return hash((self.suit, self.rank))
+
 class Deck:
     """A standard 52-card deck."""
 
@@ -622,6 +630,8 @@ class Game:
             ("play", self.current_idx, [self._card_to_dict(c) for c in cards])
         )
         for c in cards:
+            if c not in player.hand:
+                print("Card not in hand:", c, "Current hand:", player.hand)
             player.hand.remove(c)
         self.pile.append((player, cards))
         self.current_combo = cards

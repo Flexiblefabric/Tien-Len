@@ -843,6 +843,9 @@ class GameGUI:
     def play_selected(self):
         if not self.game.players[self.game.current_idx].is_human:
             return
+        if not self.selected:
+            messagebox.showwarning("Invalid", "No cards selected")
+            return
         cards = list(self.selected)
         ok, msg = self.game.is_valid(
             self.game.players[0], cards, self.game.current_combo
