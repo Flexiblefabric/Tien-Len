@@ -381,10 +381,16 @@ class GameGUI:
         self.update_display()
 
     def on_resize(self, event):
-        size = max(8, int(event.width / 50))
-        if size != self.card_font["size"]:
-            self.card_font.configure(size=size)
-        self.update_display()
+        if getattr(self, "_resizing", False):
+            return
+        self._resizing = True
+        try:
+            size = max(8, int(event.width / 50))
+            if size != self.card_font["size"]:
+                self.card_font.configure(size=size)
+            self.update_display()
+        finally:
+            self._resizing = False
         
     def _ease_out_quad(self, t: float) -> float:
         """Quadratic easing for smoother animations."""
