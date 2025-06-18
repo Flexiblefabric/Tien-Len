@@ -1,8 +1,5 @@
-import os
-import sys
 from unittest.mock import patch
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from tien_len_full import Game, Card
 
 
