@@ -151,16 +151,22 @@ class SettingsOverlay(Overlay):
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
-        by = h // 2 - 60
+        by = h // 2 - 170
 
         def set_diff(level: str) -> Callable[[], None]:
             return lambda: view.set_ai_level(level)
+
+        def set_speed(speed: float) -> Callable[[], None]:
+            return lambda: setattr(view, 'animation_speed', speed)
 
         self.buttons = [
             Button('Easy AI', pygame.Rect(bx, by, 240, 40), set_diff('Easy'), font),
             Button('Normal AI', pygame.Rect(bx, by + 50, 240, 40), set_diff('Normal'), font),
             Button('Hard AI', pygame.Rect(bx, by + 100, 240, 40), set_diff('Hard'), font),
-            Button('Close', pygame.Rect(bx, by + 150, 240, 40), view.close_overlay, font),
+            Button('Slow Anim', pygame.Rect(bx, by + 150, 240, 40), set_speed(0.5), font),
+            Button('Normal Anim', pygame.Rect(bx, by + 200, 240, 40), set_speed(1.0), font),
+            Button('Fast Anim', pygame.Rect(bx, by + 250, 240, 40), set_speed(2.0), font),
+            Button('Close', pygame.Rect(bx, by + 300, 240, 40), view.close_overlay, font),
         ]
 
 
@@ -204,6 +210,7 @@ class GameView:
         pygame.display.set_caption("Tiến Lên - Pygame")
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
+        self.animation_speed = 1.0
         self.game = Game()
         self.game.setup()
         self.font = pygame.font.SysFont(None, 24)
@@ -230,6 +237,7 @@ class GameView:
         """Move ``sprites`` toward ``dest`` over ``frames`` steps."""
         if not sprites:
             return
+        frames = max(1, int(frames / self.animation_speed))
         starts = [sp.rect.center for sp in sprites]
         for i in range(frames):
             t = (i + 1) / frames
@@ -247,6 +255,7 @@ class GameView:
         img = get_card_back()
         if img is None:
             return
+        frames = max(1, int(frames / self.animation_speed))
         rect = img.get_rect(center=start)
         for i in range(frames):
             t = (i + 1) / frames
@@ -265,6 +274,7 @@ class GameView:
         x, y = self._player_pos(idx)
         rect = pygame.Rect(0, 0, 140, 30)
         rect.center = (x, y - 40)
+        frames = max(1, int(frames / self.animation_speed))
         for i in range(frames):
             self._draw_frame()
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
