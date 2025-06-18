@@ -1,7 +1,3 @@
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 from tien_len_full import Game, Card, RANKS
 
 
