@@ -493,6 +493,7 @@ class GameView:
         if self.game.undo_last():
             self.selected.clear()
             self.update_hand_sprites()
+            self._highlight_turn(self.game.current_idx)
 
     def ai_turns(self):
         while not self.game.players[self.game.current_idx].is_human:
