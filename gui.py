@@ -953,30 +953,35 @@ class GameGUI:
             return
         p = self.game.players[self.game.current_idx]
         if not p.is_human:
-            # Show thinking indicator for AI
+            # Show thinking indicator for AI and process after short delay
             self.thinking.pack()
             self.root.update_idletasks()
-            time.sleep(0.3)
-            cards = self.game.ai_play(self.game.current_combo)
-            self.thinking.pack_forget()
-            ok, _ = self.game.is_valid(p, cards, self.game.current_combo)
-            if not ok:
-                cards = []
-            if cards:
-                self.animate_play(cards)
-                winner = self.game.process_play(p, cards)
+            self.root.after(300, lambda p=p: self._process_ai_turn(p))
+            return
+        self.root.after(100, self.game_loop)
+
+    def _process_ai_turn(self, p):
+        """Handle an AI player's turn after a non-blocking delay."""
+        cards = self.game.ai_play(self.game.current_combo)
+        self.thinking.pack_forget()
+        ok, _ = self.game.is_valid(p, cards, self.game.current_combo)
+        if not ok:
+            cards = []
+        if cards:
+            self.animate_play(cards)
+            winner = self.game.process_play(p, cards)
+            self.update_sidebar()
+            if winner:
+                self.game.scores[p.name] += 1
                 self.update_sidebar()
-                if winner:
-                    self.game.scores[p.name] += 1
-                    self.update_sidebar()
-                    self.show_game_over(p.name)
-                    return
-            else:
-                self.animate_pass(p)
-                self.game.process_pass(p)
-                self.update_sidebar()
-            self.game.next_turn()
-            self.update_display()
+                self.show_game_over(p.name)
+                return
+        else:
+            self.animate_pass(p)
+            self.game.process_pass(p)
+            self.update_sidebar()
+        self.game.next_turn()
+        self.update_display()
         self.root.after(100, self.game_loop)
 
 
