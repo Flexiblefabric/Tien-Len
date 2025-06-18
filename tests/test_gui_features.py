@@ -17,6 +17,7 @@ def make_gui_stub(root):
     g.update_display = MagicMock()
     g.base_images = {}
     g.scaled_images = {}
+    g.opponent_views = []
     return g
 
 
@@ -195,4 +196,37 @@ def test_update_display_sets_undo_state():
     gui_obj.game.snapshots.append('s2')
     gui_obj.update_display()
     gui_obj.undo_btn.config.assert_called_with(state=gui.tk.NORMAL)
+
+
+def test_gui_initializes_opponent_views():
+    root = MagicMock()
+    root.cget = MagicMock(return_value="white")
+    with patch('gui.tk.Menu'), \
+         patch('gui.tk.Frame'), \
+         patch('gui.tk.Label'), \
+         patch('gui.tk.Button'), \
+         patch('gui.tk.Scale'), \
+         patch('gui.tk.StringVar'), \
+         patch('gui.tk.DoubleVar'), \
+         patch('gui.tkfont.Font'), \
+         patch.object(gui.GameGUI, 'load_images'), \
+         patch.object(gui.GameGUI, 'show_menu'), \
+         patch.object(gui.GameGUI, 'update_display'), \
+         patch('gui.TableView'), \
+         patch('gui.HandView'), \
+         patch('gui.OpponentView') as mock_opp, \
+         patch('gui.Game') as MockGame:
+        game = MagicMock()
+        game.setup = MagicMock()
+        players = [MagicMock(is_human=True, name='P', hand=[])]
+        players += [MagicMock(is_human=False, name=f'A{i}', hand=[]) for i in range(1,4)]
+        game.players = players
+        game.scores = {p.name: 0 for p in players}
+        MockGame.return_value = game
+        gui_obj = gui.GameGUI(root)
+        assert mock_opp.call_count == 3
+        assert hasattr(gui_obj, 'left_opponent')
+        assert hasattr(gui_obj, 'top_opponent')
+        assert hasattr(gui_obj, 'right_opponent')
+
 

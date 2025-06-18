@@ -194,3 +194,40 @@ class HandView(tk.Frame):
             spr.pack(side=tk.LEFT, padx=2)
             self.widgets[c] = spr
         self.update_idletasks()
+class OpponentView(tk.Frame):
+    """Display an AI player's remaining cards."""
+
+    def __init__(self, master: tk.Widget, game: Game, idx: int,
+                 base_images: dict[str, Image.Image],
+                 cache: dict[tuple[str, int], ImageTk.PhotoImage],
+                 card_width: int = 80, **kwargs) -> None:
+        super().__init__(master, **kwargs)
+        self.game = game
+        self.idx = idx
+        self.base_images = base_images
+        self.cache = cache
+        self.card_width = card_width
+        self.count_var = tk.StringVar()
+        self.avatar = tk.Label(self, text=self.game.players[idx].name)
+        self.avatar.pack()
+        self.card_label = tk.Label(self)
+        self.card_label.pack()
+        tk.Label(self, textvariable=self.count_var).pack()
+        self.refresh()
+
+    def refresh(self) -> None:
+        player = self.game.players[self.idx]
+        self.count_var.set(str(len(player.hand)))
+        base = self.base_images.get("card_back")
+        if base is None:
+            self.card_label.config(text="[]")
+            return
+        key = ("card_back", self.card_width)
+        if key not in self.cache:
+            ratio = self.card_width / base.width
+            img = base.resize((self.card_width, int(base.height * ratio)), Image.LANCZOS)
+            self.cache[key] = ImageTk.PhotoImage(img)
+        img = self.cache[key]
+        self.card_label.config(image=img)
+        self.card_label.image = img
+
