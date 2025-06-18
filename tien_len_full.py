@@ -637,7 +637,7 @@ class Game:
         )
         for c in cards:
             if c not in player.hand:
-                print("Card not in hand:", c, "Current hand:", player.hand)
+                raise ValueError(f"Card {c} not in hand")
             player.hand.remove(c)
         self.pile.append((player, cards))
         self.current_combo = cards
