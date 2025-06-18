@@ -8,7 +8,7 @@ from enum import Enum, auto
 
 import pygame
 
-from tien_len_full import Game, Card, detect_combo
+from tien_len_full import Game, Card
 
 
 # ---------------------------------------------------------------------------
@@ -96,10 +96,19 @@ class CardSprite(pygame.sprite.Sprite):
 
     def toggle(self) -> None:
         self.selected = not self.selected
-        if self.selected:
-            self.rect.move_ip(0, -10)
-        else:
-            self.rect.move_ip(0, 10)
+        offset = -10 if self.selected else 10
+        self.rect.move_ip(0, offset)
+
+
+class CardBackSprite(pygame.sprite.Sprite):
+    def __init__(self, pos: Tuple[int, int], width: int = 80) -> None:
+        super().__init__()
+        img = get_card_back(width)
+        if img is None:
+            font = pygame.font.SysFont(None, 20)
+            img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
+        self.image = img
+        self.rect = self.image.get_rect(topleft=pos)
 
 
 # ---------------------------------------------------------------------------
@@ -228,6 +237,7 @@ class GameView:
         self.font = pygame.font.SysFont(None, 24)
         load_card_images(self.card_width)
         self.selected: List[CardSprite] = []
+        self.ai_sprites: List[pygame.sprite.Group] = [pygame.sprite.Group() for _ in range(3)]
         self.running = True
         self.overlay: Optional[Overlay] = None
         self.state: GameState = GameState.PLAYING
@@ -281,6 +291,11 @@ class GameView:
             pygame.display.flip()
             pygame.event.pump()
             self.clock.tick(60)
+
+    def _animate_select(self, sprite: CardSprite, up: bool) -> None:
+        offset = -10 if up else 10
+        dest = (sprite.rect.centerx, sprite.rect.centery + offset)
+        self._animate_sprites([sprite], dest, frames=5)
 
     def _highlight_turn(self, idx: int, frames: int = 10) -> None:
         """Flash the active player's name for visual emphasis."""
@@ -381,7 +396,10 @@ class GameView:
             return
         for sp in self.selected:
             if sp.rect.collidepoint(pos):
+                up = not sp.selected
                 sp.toggle()
+                if isinstance(sp, CardSprite):
+                    self._animate_select(sp, up)
                 if sp.selected:
                     self.selected.append(sp)
                 else:
@@ -389,7 +407,10 @@ class GameView:
                 return
         for sp in self.hand_sprites:
             if sp.rect.collidepoint(pos):
+                up = not sp.selected
                 sp.toggle()
+                if isinstance(sp, CardSprite):
+                    self._animate_select(sp, up)
                 if sp.selected and sp not in self.selected:
                     self.selected.append(sp)
                 elif not sp.selected and sp in self.selected:
@@ -464,11 +485,27 @@ class GameView:
         self.hand_sprites = pygame.sprite.Group()
         start_x, y = self._player_pos(0)
         card_w = self.card_width
-        spacing = card_w + 10
-        start_x -= (len(player.hand) * spacing) // 2
+        spacing = min(40, card_w)
+        start_x -= (len(player.hand) - 1) * spacing // 2
         for i, c in enumerate(player.hand):
             sprite = CardSprite(c, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
+
+        self.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
+        for idx in range(1, 4):
+            group = self.ai_sprites[idx - 1]
+            opp = self.game.players[idx]
+            x, y = self._player_pos(idx)
+            if idx == 1:
+                start = x - (len(opp.hand) - 1) * spacing // 2
+                for i in range(len(opp.hand)):
+                    sp = CardBackSprite((start + i * spacing, y), card_w)
+                    group.add(sp)
+            else:
+                start = y - (len(opp.hand) - 1) * spacing // 2
+                for i in range(len(opp.hand)):
+                    sp = CardBackSprite((x, start + i * spacing), card_w)
+                    group.add(sp)
 
     def draw_players(self):
         for idx, p in enumerate(self.game.players):
@@ -480,13 +517,23 @@ class GameView:
             self.screen.blit(img, rect)
 
         self.hand_sprites.draw(self.screen)
-
+        for group in self.ai_sprites:
+            group.draw(self.screen)
         if self.game.pile:
             pl, cards = self.game.pile[-1]
-            txt = f"Pile: {pl.name} -> {cards} ({detect_combo(cards)})"
-            img = self.font.render(txt, True, (255, 255, 255))
-            rect = img.get_rect(center=(self.screen.get_width() // 2, self.screen.get_height() // 2))
-            self.screen.blit(img, rect)
+            center = self._pile_center()
+            spacing = min(40, self.card_width)
+            start_x = center[0] - (len(cards) - 1) * spacing // 2
+            for i, c in enumerate(cards):
+                img = get_card_image(c, self.card_width)
+                if img is None:
+                    font = pygame.font.SysFont(None, 20)
+                    img = font.render(str(c), True, (255, 255, 255), (0, 0, 0))
+                rect = img.get_rect(center=(start_x + i * spacing, center[1]))
+                self.screen.blit(img, rect)
+            label = self.font.render(pl.name, True, (255, 255, 255))
+            lrect = label.get_rect(center=(center[0], center[1] - self.card_width))
+            self.screen.blit(label, lrect)
 
     def run(self):
         self.update_hand_sprites()
