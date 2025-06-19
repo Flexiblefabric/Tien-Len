@@ -541,6 +541,15 @@ class Game:
         logger.info('\n-- Round Summary --')
         for p, c in self.pile:
             logger.info(" %s: %s", p.name, c)
+
+        # Determine who played the last non-pass move
+        winner = None
+        combo = None
+        if self.pile:
+            winner, combo = self.pile[-1]
+            logger.info("%s won the round with %s", winner.name, combo)
+            logger.info("%s will start the next round", winner.name)
+
         self.display_overview()
         logger.info('--')
         log_action(f"Round summary: {self.pile}")
