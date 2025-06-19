@@ -641,7 +641,6 @@ class GameView:
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_settings_button()
-        self._position_settings_button()
 
     def toggle_fullscreen(self) -> None:
         """Toggle full-screen mode."""
