@@ -121,6 +121,20 @@ Coverage statistics exclude the GUI module because automated testing of
 its interface is impractical. The `.coveragerc` file lists
 `pygame_gui.py` under the `omit` section.
 
+## Debugging
+
+Launch the CLI or Pygame GUI under the Python debugger to step through
+game logic:
+
+```bash
+python -m pdb tien_len_full.py
+# or for the graphical version
+python -m pdb pygame_gui.py
+```
+
+If the optional `pgdb` package is installed, it may be used in the same
+way to get a prettier interface.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
