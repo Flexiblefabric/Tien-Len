@@ -411,6 +411,7 @@ class GameView:
         self.tutorial_mode = opts.get("tutorial_mode", self.tutorial_mode)
         self.show_rules = opts.get("show_rules", self.show_rules)
         self.apply_options()
+        self.update_hand_sprites()
         self._create_action_buttons()
         self.show_menu()
 
@@ -515,12 +516,23 @@ class GameView:
 
     def _create_action_buttons(self) -> None:
         """Create or reposition the Play/Pass/Undo buttons."""
-        w, h = self.screen.get_size()
+        w, _ = self.screen.get_size()
         btn_w = 120
         spacing = 20
         total = btn_w * 3 + spacing * 2
         start_x = w // 2 - total // 2
-        y = h - 60
+
+        # Position buttons relative to the player's hand
+        _, hand_y = self._player_pos(0)
+        sprites = getattr(self, 'hand_sprites', None)
+        if sprites:
+            card_h = sprites.sprites()[0].rect.height
+        else:
+            card_h = int(self.card_width * 1.4)
+        hand_top_y = hand_y - card_h // 2
+        control_spacing = min(40, self.card_width) // 2
+        y = hand_top_y - control_spacing
+
         font = self.font
         self.action_buttons = [
             Button('Play', pygame.Rect(start_x, y, btn_w, 40), self.play_selected, font),
@@ -635,6 +647,8 @@ class GameView:
                 pygame.mixer.music.unpause()
             else:
                 pygame.mixer.music.pause()
+        if hasattr(self, 'hand_sprites'):
+            self._create_action_buttons()
 
     def show_game_over(self, winner: str) -> None:
         sound.play('win')
