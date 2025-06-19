@@ -222,6 +222,18 @@ def test_animate_back_moves_to_destination():
     pygame.quit()
 
 
+def test_animate_flip_moves_to_destination():
+    view, clock = make_view()
+    view.screen = MagicMock()
+    sprite = DummyCardSprite()
+    with patch.object(pygame_gui, 'get_card_back', return_value=pygame.Surface((1, 1))), \
+         patch('pygame.event.pump'), patch('pygame.display.flip'):
+        view._animate_flip([sprite], (10, 5), frames=4)
+    assert sprite.rect.center == (10, 5)
+    assert clock.count == 4
+    pygame.quit()
+
+
 def test_highlight_turn_draws_at_player_position():
     view, clock = make_view()
     view.screen = MagicMock()
@@ -481,4 +493,25 @@ def test_draw_frame_with_overlay():
         pygame_gui.GameView._draw_frame(view)
     blit.assert_any_call(overlay_surface, (0, 0))
     flip.assert_called_once()
+    pygame.quit()
+
+
+def test_play_selected_triggers_flip():
+    view, _ = make_view()
+    sprite = DummyCardSprite()
+    view.selected = [sprite]
+    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    dest = view._pile_center()
+    with (
+        patch.object(view.game, 'is_valid', return_value=(True, '')),
+        patch.object(view.game, 'process_play', return_value=False),
+        patch.object(view.game, 'next_turn'),
+        patch.object(view, '_highlight_turn'),
+        patch.object(view, 'ai_turns'),
+        patch.object(view, 'update_hand_sprites'),
+        patch.object(view, '_animate_flip') as flip,
+        patch.object(sound, 'play')
+    ):
+        view.play_selected()
+    flip.assert_called_once_with([sprite], dest)
     pygame.quit()
