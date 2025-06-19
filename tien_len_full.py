@@ -63,6 +63,10 @@ ALLOW_2_IN_SEQUENCE = False
 # values are better.
 TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
 
+# Names used for AI opponents.  The list length exceeds the number of AI
+# players so ``random.sample`` can pick distinct names for each game.
+AI_NAMES = ["Linh", "Phong", "Bao", "Trang", "My", "Tuan", "Nam", "Duy", "Ha", "Minh"]
+
 class Card:
     """Simple container for a playing card."""
 
@@ -205,8 +209,10 @@ class Game:
     def __init__(self) -> None:
         """Initialise a new game instance."""
 
-        # Create one human player followed by three AI opponents.
-        self.players = [Player('Player', True)] + [Player(f'AI {i+1}') for i in range(3)]
+        # Create one human player followed by three AI opponents chosen from a
+        # predefined pool of names.
+        used = random.sample(AI_NAMES, 3)
+        self.players = [Player('Player', True)] + [Player(n) for n in used]
         self.deck = Deck()
         self.pile: list[tuple[Player, list[Card]]] = []
         self.current_idx = 0
