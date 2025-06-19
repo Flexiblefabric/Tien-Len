@@ -5,10 +5,27 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Tuple, List, Callable, Optional
 from enum import Enum, auto
+import json
 
 import pygame
 
-from tien_len_full import Game, Card
+from tien_len_full import Game, Card, detect_combo
+import sound
+
+
+def _mixer_ready() -> bool:
+    """Return True if pygame's mixer is initialised."""
+    return bool(pygame.mixer.get_init())
+
+
+TABLE_THEMES = {
+    "darkgreen": (0, 100, 0),
+    "saddlebrown": (139, 69, 19),
+    "navy": (0, 0, 128),
+    "darkred": (139, 0, 0),
+}
+
+OPTIONS_FILE = Path(__file__).with_name("options.json")
 
 
 # ---------------------------------------------------------------------------
@@ -42,21 +59,20 @@ def load_card_images(width: int = 80) -> None:
         key = img.stem
         base = pygame.image.load(str(img)).convert_alpha()
         _BASE_IMAGES[key] = base
-    back = assets / "card_back.png"
-    if back.exists():
-        _BASE_IMAGES["card_back"] = pygame.image.load(str(back)).convert_alpha()
+    for img in assets.glob("card_back*.png"):
+        _BASE_IMAGES[img.stem] = pygame.image.load(str(img)).convert_alpha()
     for key, base in _BASE_IMAGES.items():
         ratio = width / base.get_width()
         _CARD_CACHE[(key, width)] = pygame.transform.smoothscale(
             base, (width, int(base.get_height() * ratio))
         )
 
-def get_card_back(width: int = 80) -> Optional[pygame.Surface]:
-    if "card_back" not in _BASE_IMAGES:
+def get_card_back(name: str = "card_back", width: int = 80) -> Optional[pygame.Surface]:
+    if name not in _BASE_IMAGES:
         return None
-    key = ("card_back", width)
+    key = (name, width)
     if key not in _CARD_CACHE:
-        base = _BASE_IMAGES["card_back"]
+        base = _BASE_IMAGES[name]
         ratio = width / base.get_width()
         _CARD_CACHE[key] = pygame.transform.smoothscale(
             base, (width, int(base.get_height() * ratio))
@@ -101,9 +117,9 @@ class CardSprite(pygame.sprite.Sprite):
 
 
 class CardBackSprite(pygame.sprite.Sprite):
-    def __init__(self, pos: Tuple[int, int], width: int = 80) -> None:
+    def __init__(self, pos: Tuple[int, int], width: int = 80, name: str = "card_back") -> None:
         super().__init__()
-        img = get_card_back(width)
+        img = get_card_back(name, width)
         if img is None:
             font = pygame.font.SysFont(None, 20)
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
@@ -174,23 +190,38 @@ class SettingsOverlay(Overlay):
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
-        by = h // 2 - 170
+        by = h // 2 - 220
 
-        def set_diff(level: str) -> Callable[[], None]:
-            return lambda: view.set_ai_level(level)
+        def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
+            btn: Button
+            def callback(b: Button) -> Callable[[], None]:
+                def inner() -> None:
+                    cur = getattr(view, attr)
+                    idx = options.index(cur)
+                    cur = options[(idx + 1) % len(options)]
+                    setattr(view, attr, cur)
+                    view.apply_options()
+                    b.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
+                return inner
+            return callback
 
-        def set_speed(speed: float) -> Callable[[], None]:
-            return lambda: setattr(view, 'animation_speed', speed)
+        def make_button(offset: int, attr: str, opts: List, label: str) -> None:
+            text = getattr(view, attr)
+            if isinstance(text, bool):
+                text = 'On' if text else 'Off'
+            btn = Button(f"{label}: {text}", pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+            btn.callback = cycle(attr, opts, label)(btn)
+            self.buttons.append(btn)
 
-        self.buttons = [
-            Button('Easy AI', pygame.Rect(bx, by, 240, 40), set_diff('Easy'), font),
-            Button('Normal AI', pygame.Rect(bx, by + 50, 240, 40), set_diff('Normal'), font),
-            Button('Hard AI', pygame.Rect(bx, by + 100, 240, 40), set_diff('Hard'), font),
-            Button('Slow Anim', pygame.Rect(bx, by + 150, 240, 40), set_speed(0.5), font),
-            Button('Normal Anim', pygame.Rect(bx, by + 200, 240, 40), set_speed(1.0), font),
-            Button('Fast Anim', pygame.Rect(bx, by + 250, 240, 40), set_speed(2.0), font),
-            Button('Close', pygame.Rect(bx, by + 300, 240, 40), view.close_overlay, font),
-        ]
+        make_button(0, 'ai_level', ['Easy', 'Normal', 'Hard'], 'AI Level')
+        make_button(50, 'ai_personality', ['balanced', 'aggressive', 'defensive', 'random'], 'Personality')
+        make_button(100, 'ai_lookahead', [False, True], 'Lookahead')
+        make_button(150, 'animation_speed', [0.5, 1.0, 2.0], 'Anim Speed')
+        make_button(200, 'sort_mode', ['rank', 'suit'], 'Sort Mode')
+        make_button(250, 'sound_enabled', [True, False], 'Sound')
+        make_button(300, 'music_enabled', [True, False], 'Music')
+        btn = Button('Close', pygame.Rect(bx, by + 350, 240, 40), view.close_overlay, font)
+        self.buttons.append(btn)
 
 
 class GameOverOverlay(Overlay):
@@ -226,7 +257,7 @@ class GameOverOverlay(Overlay):
 # ---------------------------------------------------------------------------
 
 class GameView:
-    TABLE_COLOR = (0, 100, 0)
+    TABLE_COLOR = TABLE_THEMES["darkgreen"]
 
     def __init__(self, width: int = 1024, height: int = 768) -> None:
         pygame.init()
@@ -240,20 +271,58 @@ class GameView:
         self.game.setup()
         self.font = pygame.font.SysFont(None, 24)
         load_card_images(self.card_width)
+        # Load sound effects and background music
+        sdir = Path(__file__).with_name("assets") / "sound"
+        sound.load("click", sdir / "card-play.wav")
+        sound.load("pass", sdir / "pass.wav")
+        sound.load("bomb", sdir / "bomb.wav")
+        sound.load("shuffle", sdir / "shuffle.wav")
+        sound.load("win", sdir / "win.wav")
+        if _mixer_ready():
+            music = sdir / "Ambush in Rattlesnake Gulch.mp3"
+            try:
+                pygame.mixer.music.load(str(music))
+                pygame.mixer.music.play(-1)
+            except Exception:
+                pass
         self.selected: List[CardSprite] = []
         self.ai_sprites: List[pygame.sprite.Group] = [pygame.sprite.Group() for _ in range(3)]
         self.running = True
         self.overlay: Optional[Overlay] = None
         self.state: GameState = GameState.PLAYING
         self.ai_level = 'Normal'
+        self.ai_personality = 'balanced'
+        self.ai_lookahead = False
+        self.sort_mode = 'rank'
+        self.player_name = 'Player'
+        self.card_back_name = 'card_back'
+        self.table_color_name = 'darkgreen'
+        self.table_color = TABLE_THEMES[self.table_color_name]
+        self.sound_enabled = True
+        self.music_enabled = True
+        self.volume = 1.0
         self.action_buttons: List[Button] = []
+        self._create_action_buttons()
+        opts = self._load_options()
+        self.animation_speed = opts.get("animation_speed", self.animation_speed)
+        self.table_color_name = opts.get("table_color", self.table_color_name)
+        self.card_back_name = opts.get("card_back", self.card_back_name)
+        self.sort_mode = opts.get("sort_mode", self.sort_mode)
+        self.player_name = opts.get("player_name", self.player_name)
+        self.ai_level = opts.get("ai_level", self.ai_level)
+        self.ai_personality = opts.get("ai_personality", self.ai_personality)
+        self.ai_lookahead = opts.get("ai_lookahead", self.ai_lookahead)
+        self.sound_enabled = opts.get("sound", self.sound_enabled)
+        self.music_enabled = opts.get("music", self.music_enabled)
+        self.volume = opts.get("volume", self.volume)
+        self.apply_options()
         self._create_action_buttons()
         self.show_menu()
 
     # Animation helpers -------------------------------------------------
     def _draw_frame(self) -> None:
         """Redraw the game state."""
-        self.screen.fill(self.TABLE_COLOR)
+        self.screen.fill(self.table_color)
         self.draw_players()
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
@@ -281,7 +350,7 @@ class GameView:
 
     def _animate_back(self, start: Tuple[int, int], dest: Tuple[int, int], frames: int = 15) -> None:
         """Animate a card back image from ``start`` to ``dest``."""
-        img = get_card_back()
+        img = get_card_back(self.card_back_name)
         if img is None:
             return
         frames = max(1, int(frames / self.animation_speed))
@@ -365,6 +434,7 @@ class GameView:
         had = self.overlay is not None
         self.overlay = None
         if had:
+            self._save_options()
             self.state = GameState.PLAYING
             self.ai_turns()
 
@@ -375,9 +445,55 @@ class GameView:
         self.game = Game()
         self.game.setup()
         self.selected.clear()
+        self.apply_options()
         self.close_overlay()
 
+    # Option helpers --------------------------------------------------
+    def _load_options(self) -> dict:
+        try:
+            with open(OPTIONS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def _save_options(self) -> None:
+        data = {
+            "animation_speed": self.animation_speed,
+            "table_color": self.table_color_name,
+            "card_back": self.card_back_name,
+            "sort_mode": self.sort_mode,
+            "player_name": self.player_name,
+            "ai_level": self.ai_level,
+            "ai_personality": self.ai_personality,
+            "ai_lookahead": self.ai_lookahead,
+            "sound": self.sound_enabled,
+            "music": self.music_enabled,
+            "volume": self.volume,
+        }
+        try:
+            with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f)
+        except Exception:
+            pass
+
+    def apply_options(self) -> None:
+        self.table_color = TABLE_THEMES.get(self.table_color_name, TABLE_THEMES["darkgreen"])
+        self.game.players[0].name = self.player_name
+        self.game.players[0].sort_hand(self.sort_mode)
+        self.game.set_ai_level(self.ai_level)
+        self.game.set_personality(self.ai_personality)
+        self.game.ai_lookahead = self.ai_lookahead
+        sound.set_volume(self.volume)
+        sound._ENABLED = self.sound_enabled
+        if _mixer_ready():
+            pygame.mixer.music.set_volume(self.volume)
+            if self.music_enabled:
+                pygame.mixer.music.unpause()
+            else:
+                pygame.mixer.music.pause()
+
     def show_game_over(self, winner: str) -> None:
+        sound.play('win')
         self.overlay = GameOverOverlay(self, winner)
         self.state = GameState.GAME_OVER
 
@@ -474,6 +590,10 @@ class GameView:
         if self.game.process_play(player, cards):
             self.show_game_over(player.name)
             return
+        if detect_combo(cards) == 'bomb':
+            sound.play('bomb')
+        else:
+            sound.play('click')
         self._animate_sprites(self.selected, self._pile_center())
         self.game.next_turn()
         self.selected.clear()
@@ -485,6 +605,7 @@ class GameView:
         if self.game.handle_pass():
             self.running = False
         else:
+            sound.play("pass")
             self._highlight_turn(self.game.current_idx)
             self.ai_turns()
 
@@ -506,8 +627,13 @@ class GameView:
                 if self.game.process_play(p, cards):
                     self.show_game_over(p.name)
                     break
+                if detect_combo(cards) == 'bomb':
+                    sound.play('bomb')
+                else:
+                    sound.play('click')
                 self._animate_back(self._player_pos(self.game.current_idx), self._pile_center())
             else:
+                sound.play('pass')
                 self.game.process_pass(p)
             self.game.next_turn()
             self._highlight_turn(self.game.current_idx)
@@ -534,12 +660,12 @@ class GameView:
             if idx == 1:
                 start = x - (len(opp.hand) - 1) * spacing // 2
                 for i in range(len(opp.hand)):
-                    sp = CardBackSprite((start + i * spacing, y), card_w)
+                    sp = CardBackSprite((start + i * spacing, y), card_w, self.card_back_name)
                     group.add(sp)
             else:
                 start = y - (len(opp.hand) - 1) * spacing // 2
                 for i in range(len(opp.hand)):
-                    sp = CardBackSprite((x, start + i * spacing), card_w)
+                    sp = CardBackSprite((x, start + i * spacing), card_w, self.card_back_name)
                     group.add(sp)
 
     def draw_players(self):
