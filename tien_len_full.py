@@ -14,9 +14,9 @@ decisions:
   implemented in ``pygame_gui.py``.
 """
 import random
-import datetime
 import sys
 import argparse
+import logging
 import sound
 from collections import Counter
 from itertools import combinations
@@ -30,12 +30,21 @@ from itertools import combinations
 # GUI.
 LOG_FILE = 'tien_len_game.log'
 
-def log_action(action: str) -> None:
-    """Append a timestamped entry to the log file."""
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.FileHandler(LOG_FILE)
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
 
-    ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(LOG_FILE, 'a', encoding='utf-8') as f:
-        f.write(f"[{ts}] {action}\n")
+def log_action(action: str) -> None:
+    """Log a game action."""
+
+    logger.info(action)
 
 # Card constants
 # Mapping from suit symbol to its full name.  The order of ``SUITS`` and
@@ -261,7 +270,7 @@ class Game:
             # Log any four-of-a-kind sets for debugging
             b = p.find_bombs()
             if b:
-                print(f"{p.name} bombs: {b}")
+                logger.info("%s bombs: %s", p.name, b)
                 log_action(f"{p.name} bombs: {b}")
 
         # The player holding the 3♠ must start the game
@@ -269,7 +278,7 @@ class Game:
             if any(c.rank == '3' and c.suit == 'Spades' for c in p.hand):
                 self.current_idx = i
                 self.start_idx = i
-                print(f"{p.name} starts (holds 3♠)")
+                logger.info("%s starts (holds 3♠)", p.name)
                 log_action(f"Start: {p.name}")
                 break
 
@@ -388,44 +397,44 @@ class Game:
             try:
                 inp = input("Enter cards or 'pass','hint','help','quit': ")
             except OSError:
-                print('Input unsupported; defaulting to pass')
+                logger.info('Input unsupported; defaulting to pass')
                 return []
             cmd, res = self.parse_input(inp, player.hand)
             if cmd == 'quit':
-                print('Exiting.')
+                logger.info('Exiting.')
                 log_action('Game quit')
                 sys.exit()
             if cmd == 'help':
-                print("Commands: pass, hint, quit, or list card numbers/notation")
+                logger.info("Commands: pass, hint, quit, or list card numbers/notation")
                 continue
             if cmd == 'hint':
-                print(f"Hint: {self.hint(current)}")
+                logger.info("Hint: %s", self.hint(current))
                 continue
             if cmd == 'pass':
                 if player.is_human and self.first_turn and self.current_idx == self.start_idx:
-                    print('You must play a combo including 3♠ on your first turn; cannot pass.')
+                    logger.info('You must play a combo including 3♠ on your first turn; cannot pass.')
                     failures += 1
                     if failures == 3:
-                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
                     continue
                 return []
             if cmd == 'error':
-                print(res)
+                logger.info(str(res))
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
                 continue
             if cmd == 'play':
                 cards = res
                 ok, msg = self.is_valid(player, cards, current)
                 if ok:
                     return cards
-                print(f"Invalid: {msg}")
+                logger.info("Invalid: %s", msg)
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
 
     # AI helper functions
     def generate_valid_moves(self, player, current):
@@ -493,30 +502,30 @@ class Game:
         """Print the current pile to stdout."""
 
         if not self.pile:
-            print('Pile: empty')
+            logger.info('Pile: empty')
         else:
             p, c = self.pile[-1]
-            print(f"Pile: {p.name} -> {c} ({detect_combo(c)})")
+            logger.info("Pile: %s -> %s (%s)", p.name, c, detect_combo(c))
 
     def display_hand(self, player):
         """Print ``player``'s hand with 1-based indices."""
 
-        print(f"\n{player.name}'s hand:")
+        logger.info("\n%s's hand:", player.name)
         for i, c in enumerate(player.hand, 1):
-            print(f" {i}:{c}")
+            logger.info(" %d:%s", i, c)
 
     def display_overview(self):
         """Show how many cards each opponent has left."""
 
-        print("Opponents' cards:")
+        logger.info("Opponents' cards:")
         for p in self.players[1:]:
-            print(f" {p.name}: {len(p.hand)}")
+            logger.info(" %s: %d", p.name, len(p.hand))
 
     # Round and turn processing
     def reset_pile(self):
         """Clear the pile after everyone has passed."""
 
-        print('All passed. Resetting pile.')
+        logger.info('All passed. Resetting pile.')
         self.summary_round()
         self.pile.clear()
         self.current_combo = None
@@ -529,11 +538,11 @@ class Game:
     def summary_round(self):
         """Print a short summary of the round that just ended."""
 
-        print('\n-- Round Summary --')
+        logger.info('\n-- Round Summary --')
         for p, c in self.pile:
-            print(f" {p.name}: {c}")
+            logger.info(" %s: %s", p.name, c)
         self.display_overview()
-        print('--')
+        logger.info('--')
         log_action(f"Round summary: {self.pile}")
 
     def get_rankings(self) -> list[tuple[str, int]]:
@@ -653,11 +662,11 @@ class Game:
             player.hand.remove(c)
         self.pile.append((player, cards))
         self.current_combo = cards
-        print(f"{player.name} plays {cards}\n")
+        logger.info("%s plays %s", player.name, cards)
 
         winner = False
         if not player.hand:
-            print(f"{player.name} wins!")
+            logger.info("%s wins!", player.name)
             log_action(f"Winner: {player.name}")
             winner = True
 
@@ -673,7 +682,7 @@ class Game:
         self.move_log.setdefault(self.current_round, []).append(
             ("pass", self.current_idx, [])
         )
-        print(f"{player.name} passes\n")
+        logger.info("%s passes", player.name)
         active = sum(1 for x in self.players if x.hand)
         if self.current_combo and self.pass_count >= active - 1:
             self.reset_pile()
@@ -698,7 +707,7 @@ class Game:
         player = self.players[self.current_idx]
         ok, msg = self.is_valid(player, [], self.current_combo)
         if not ok:
-            print(f"Invalid pass: {msg}")
+            logger.info("Invalid pass: %s", msg)
             return False
 
         self.process_pass(player)
@@ -717,7 +726,7 @@ class Game:
             self.next_turn()
             return False
 
-        print(f"\n-- {p.name}'s turn --")
+        logger.info("\n-- %s's turn --", p.name)
         self.display_pile()
         self.display_overview()
 
@@ -730,7 +739,7 @@ class Game:
         if not ok:
             cards = []
             if not p.is_human:
-                print('Invalid AI move, passing')
+                logger.info('Invalid AI move, passing')
 
         if cards:
             if self.process_play(p, cards):

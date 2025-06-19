@@ -6,11 +6,25 @@ from pathlib import Path
 from typing import Dict, Tuple, List, Callable, Optional
 from enum import Enum, auto
 import json
+import logging
 
 import pygame
 
 from tien_len_full import Game, Card, detect_combo
 import sound
+
+LOG_FILE = "tien_len_game.log"
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.FileHandler(LOG_FILE)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
 
 
 def _mixer_ready() -> bool:
@@ -584,7 +598,7 @@ class GameView:
         player = self.game.players[self.game.current_idx]
         ok, msg = self.game.is_valid(player, cards, self.game.current_combo)
         if not ok:
-            print(f"Invalid: {msg}")
+            logger.info("Invalid: %s", msg)
             return
         if self.game.process_play(player, cards):
             self.show_game_over(player.name)
