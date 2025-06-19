@@ -470,8 +470,19 @@ class GameView:
     def _highlight_turn(self, idx: int, frames: int = 10) -> None:
         """Flash the active player's name for visual emphasis."""
         x, y = self._player_pos(idx)
+        card_w = self.card_width
+        sprites = self.hand_sprites.sprites()
+        card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
+        spacing = min(40, card_w)
         rect = pygame.Rect(0, 0, 140, 30)
-        rect.center = (x, y - 40)
+        if idx == 0:
+            rect.midtop = (x, y - spacing)
+        elif idx == 1:
+            rect.midbottom = (x, y + card_h + spacing)
+        elif idx == 2:
+            rect.midleft = (x + card_w + spacing, y)
+        else:
+            rect.midright = (x - spacing, y)
         frames = max(1, int(frames / self.animation_speed))
         for i in range(frames):
             self._draw_frame()
@@ -833,12 +844,24 @@ class GameView:
         self.update_play_button_state()
 
     def draw_players(self):
+        card_w = self.card_width
+        sprites = self.hand_sprites.sprites()
+        card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
+        spacing = min(40, card_w)
+
         for idx, p in enumerate(self.game.players):
             x, y = self._player_pos(idx)
             txt = f"{p.name} ({len(p.hand)})"
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
             img = self.font.render(txt, True, color)
-            rect = img.get_rect(center=(x, y - 40))
+            if idx == 0:
+                rect = img.get_rect(midtop=(x, y - spacing))
+            elif idx == 1:
+                rect = img.get_rect(midbottom=(x, y + card_h + spacing))
+            elif idx == 2:
+                rect = img.get_rect(midleft=(x + card_w + spacing, y))
+            else:
+                rect = img.get_rect(midright=(x - spacing, y))
             self.screen.blit(img, rect)
 
         self.hand_sprites.draw(self.screen)

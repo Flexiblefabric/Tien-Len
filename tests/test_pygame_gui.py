@@ -204,7 +204,8 @@ def test_highlight_turn_draws_at_player_position():
          patch.object(view, '_player_pos', return_value=(50, 100)) as pos:
         view._highlight_turn(0, frames=2)
     pos.assert_called_with(0)
-    topleft = (50 - 70, 100 - 40 - 15)
+    spacing = min(40, view.card_width)
+    topleft = (50 - 70, 100 - spacing)
     view.screen.blit.assert_called_with(overlay_surface, topleft)
     assert clock.count == 2
     pygame.quit()
