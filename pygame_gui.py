@@ -434,6 +434,7 @@ class GameView:
         self.apply_options()
         self.update_hand_sprites()
         self._create_action_buttons()
+        self.win_counts: Dict[str, int] = {p.name: 0 for p in self.game.players}
         self.show_menu()
 
     # Animation helpers -------------------------------------------------
@@ -449,6 +450,7 @@ class GameView:
             overlay_surf.fill((0, 0, 0, 180))
             self.screen.blit(overlay_surf, (0, 0))
             self.overlay.draw(self.screen)
+        self.draw_score_overlay()
         pygame.display.flip()
 
     def _animate_sprites(self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15) -> None:
@@ -481,7 +483,10 @@ class GameView:
             factor = 1 + (scale - 1) * t
             for sp, (img, rect) in zip(sprites, originals):
                 w, h = rect.size
-                scaled = pygame.transform.smoothscale(img, (int(w * factor), int(h * factor)))
+                if isinstance(img, pygame.Surface):
+                    scaled = pygame.transform.smoothscale(img, (int(w * factor), int(h * factor)))
+                else:
+                    scaled = img
                 sp.image = scaled
                 sp.rect = scaled.get_rect(center=rect.center)
             self._draw_frame()
@@ -567,9 +572,9 @@ class GameView:
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
             alpha = max(0, 200 - i * 20)
             center = overlay.get_rect().center
-            # Pulse radius between 8 and 14 pixels
             radius = 11 + int(3 * math.sin(math.pi * i / frames))
-            pygame.draw.circle(overlay, (255, 255, 0, alpha), center, radius, width=3)
+            if hasattr(overlay, "get_width"):
+                pygame.draw.circle(overlay, (255, 255, 0, alpha), center, radius, width=3)
             self.screen.blit(overlay, rect.topleft)
             pygame.display.flip()
             pygame.event.pump()
@@ -687,10 +692,14 @@ class GameView:
         self.running = False
 
     def restart_game(self) -> None:
+        counts = self.win_counts
         self.game = Game()
         self.game.setup()
         self.selected.clear()
         self.apply_options()
+        for p in self.game.players:
+            counts.setdefault(p.name, 0)
+        self.win_counts = counts
         self.close_overlay()
 
     # Option helpers --------------------------------------------------
@@ -746,6 +755,7 @@ class GameView:
 
     def show_game_over(self, winner: str) -> None:
         sound.play('win')
+        self.win_counts[winner] = self.win_counts.get(winner, 0) + 1
         self.overlay = GameOverOverlay(self, winner)
         self.state = GameState.GAME_OVER
 
@@ -870,7 +880,7 @@ class GameView:
             sound.play('bomb')
         else:
             sound.play('click')
-        self._animate_flip(self.selected, self._pile_center())
+        self._animate_flip(list(self.selected), self._pile_center())
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
@@ -1016,6 +1026,36 @@ class GameView:
             for btn in self.action_buttons:
                 btn.draw(self.screen)
             self.settings_button.draw(self.screen)
+
+    def draw_score_overlay(self) -> None:
+        """Render a scoreboard panel with last hands played."""
+        size = self.screen.get_size()
+        if isinstance(size, (list, tuple)) and len(size) >= 2:
+            w = size[0]
+        else:
+            w = 0
+        line_height = getattr(self.font, "get_linesize", lambda: 20)()
+        lines = [
+            f"{p.name}: {len(p.hand)} ({self.win_counts.get(p.name, 0)})"
+            for p in self.game.players
+        ]
+        last = self.game.get_last_hands()
+        if any(cards for _, cards in last):
+            lines.append("Last:")
+            for name, cards in last:
+                if cards:
+                    text = " ".join(str(c) for c in cards)
+                    lines.append(f"{name}: {text}")
+        height = line_height * len(lines) + 10
+        panel = pygame.Surface((200, height), pygame.SRCALPHA)
+        panel.fill((0, 0, 0, 150))
+        y = 5
+        for line in lines:
+            img = self.font.render(line, True, (255, 255, 255))
+            panel.blit(img, (5, y))
+            y += line_height
+        rect = panel.get_rect(topright=(w - 10, 10))
+        self.screen.blit(panel, rect.topleft)
 
     def run(self):
         self.update_hand_sprites()

@@ -567,6 +567,16 @@ class Game:
             [(p.name, len(p.hand)) for p in self.players], key=lambda x: x[1]
         )
 
+    def get_last_hands(self) -> list[tuple[str, list[Card]]]:
+        """Return each player's most recent played hand from ``move_log``."""
+
+        last: dict[int, list[Card]] = {}
+        for rnd in sorted(self.move_log):
+            for action, idx, cards in self.move_log[rnd]:
+                if action == "play":
+                    last[idx] = [self._card_from_dict(c) for c in cards]
+        return [(p.name, last.get(i, [])) for i, p in enumerate(self.players)]
+
     # ------------------------------------------------------------------
     # Serialisation helpers
     # ------------------------------------------------------------------
