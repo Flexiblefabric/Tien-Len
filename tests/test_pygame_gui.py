@@ -10,6 +10,7 @@ os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
 
 import pygame
 import pygame_gui
+import sound
 
 
 class DummyFont:
@@ -322,4 +323,73 @@ def test_on_resize_calls_create_action_buttons():
     with patch.object(view, '_create_action_buttons') as create:
         view.on_resize(100, 100)
         create.assert_called_once()
+
+
+def test_apply_options_updates_game_and_audio():
+    view, _ = make_view()
+    p0 = view.game.players[0]
+    view.table_color_name = 'navy'
+    view.player_name = 'Alice'
+    view.sort_mode = 'suit'
+    view.ai_level = 'Hard'
+    view.ai_personality = 'aggressive'
+    view.ai_lookahead = True
+    view.volume = 0.7
+    view.sound_enabled = True
+    view.music_enabled = False
+    with patch.object(sound, 'set_volume') as sv, \
+         patch.object(view.game, 'set_ai_level') as sal, \
+         patch.object(view.game, 'set_personality') as sp, \
+         patch.object(pygame_gui, '_mixer_ready', return_value=True), \
+         patch('pygame.mixer.music.set_volume') as mv, \
+         patch('pygame.mixer.music.pause') as pause, \
+         patch('pygame.mixer.music.unpause') as unpause:
+        view.apply_options()
+    assert view.table_color == pygame_gui.TABLE_THEMES['navy']
+    assert p0.name == 'Alice'
+    sal.assert_called_with('Hard')
+    sp.assert_called_with('aggressive')
+    assert view.game.ai_lookahead is True
+    sv.assert_called_with(0.7)
+    mv.assert_called_with(0.7)
+    pause.assert_called_once()
+    unpause.assert_not_called()
+
+
+def test_toggle_fullscreen_flag_toggles():
+    with patch('pygame.display.set_mode', return_value=pygame.Surface((1,1))):
+        with patch('pygame.font.SysFont', return_value=DummyFont()):
+            with patch.object(pygame_gui, 'load_card_images'):
+                with patch('pygame.display.toggle_fullscreen'):
+                    view = pygame_gui.GameView(100, 100)
+                    start = view.fullscreen
+                    view.toggle_fullscreen()
+                    assert view.fullscreen != start
+                    view.toggle_fullscreen()
+                    assert view.fullscreen == start
+
+
+def test_on_resize_updates_screen_size():
+    view, _ = make_view()
+    with patch('pygame.display.set_mode', return_value=pygame.Surface((1,1))) as sm, \
+         patch.object(pygame_gui, 'load_card_images'), \
+         patch.object(view, 'update_hand_sprites') as uh, \
+         patch.object(view, '_create_action_buttons') as cab:
+        view.on_resize(300, 200)
+    sm.assert_called_with((300, 200), pygame.RESIZABLE)
+    uh.assert_called_once()
+    cab.assert_called_once()
+
+
+def test_overlay_instances_created():
+    view, _ = make_view()
+    view.show_menu()
+    assert isinstance(view.overlay, pygame_gui.MenuOverlay)
+    view.show_settings()
+    assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
+    view.show_game_over('P1')
+    assert isinstance(view.overlay, pygame_gui.GameOverOverlay)
+    with patch.object(view, '_save_options'), patch.object(view, 'ai_turns'):
+        view.close_overlay()
+    assert view.overlay is None
 

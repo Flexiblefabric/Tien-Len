@@ -3,6 +3,7 @@ pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
 from unittest.mock import MagicMock, patch
+import json
 import sys
 import gui
 from tien_len_full import Game, Card
@@ -272,3 +273,53 @@ def test_play_selected_updates_hand_and_refreshes():
 
     assert len(player.hand) == 1
     gui_obj.hand_view.refresh.assert_called_once()
+
+
+def test_load_options_and_save_options(tmp_path):
+    path = tmp_path / "opts.json"
+    path.write_text('{"ai_level": "Hard"}')
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj.OPTIONS_FILE = path
+    opts = gui_obj.load_options()
+    assert opts["ai_level"] == "Hard"
+
+    gui_obj.animation_speed = 1.5
+    gui_obj.table_cloth_color = "navy"
+    gui_obj.card_back_name = "card_back"
+    gui_obj.sort_mode = "suit"
+    gui_obj.player_name = "Bob"
+    gui_obj.ai_level = "Easy"
+    gui_obj.ai_personality = "defensive"
+    gui_obj.ai_lookahead = True
+    gui_obj.save_options()
+    saved = json.loads(path.read_text())
+    assert saved["animation_speed"] == 1.5
+    assert saved["ai_personality"] == "defensive"
+
+
+def test_resize_bg_updates_image():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    gui_obj._bg_base = MagicMock()
+    gui_obj._bg_label = MagicMock()
+    resized = MagicMock()
+    gui_obj._bg_base.resize.return_value = resized
+    with patch('gui.ImageTk.PhotoImage', return_value='img') as photo:
+        gui_obj._resize_bg(MagicMock(width=10, height=20))
+    gui_obj._bg_base.resize.assert_called_with((10, 20), gui.Image.LANCZOS)
+    gui_obj._bg_label.config.assert_called_with(image='img')
+    assert gui_obj._bg_label.image == 'img'
+
+
+def test_show_menu_sets_overlay_active():
+    root = MagicMock()
+    gui_obj = make_gui_stub(root)
+    overlay = MagicMock()
+    box = MagicMock()
+    with patch('gui.tk.Frame', side_effect=[overlay, box]):
+        with patch('gui.tk.Label'), patch('gui.tk.Button'):
+            gui_obj.show_menu()
+    assert gui_obj.overlay_active is True
+    assert gui_obj.menu_overlay is overlay
+    overlay.place.assert_called_once()
