@@ -134,6 +134,10 @@ coverage run -m pytest
 coverage xml
 ```
 
+Tests that exercise the graphical interfaces require the optional
+`Pillow` and `pygame` libraries. Pytest will automatically skip these
+tests when the dependencies are not available.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
