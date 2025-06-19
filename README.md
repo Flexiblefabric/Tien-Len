@@ -3,12 +3,12 @@
 [![Coverage](https://codecov.io/gh/Flexiblefabric/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/Flexiblefabric/Tien-Len)
 
 This repository contains a simple command line implementation of the
-Vietnamese card game **Tiến Lên** with a Pygame graphical interface
-in `pygame_gui.py`.
+Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
+interface implemented in `pygame_gui.py`.
 
 ## Installation
 
-Install the project with `pip` to make the GUI entry point available:
+Install the project with `pip` to make the Pygame GUI entry point available:
 
 ```bash
 pip install .
@@ -20,7 +20,7 @@ For development you can use the editable mode instead:
 pip install -e .
 ```
 
-After installation launch the GUI with `tien-len`.
+After installation launch the Pygame GUI with `tien-len`.
 
 ## CLI version
 
@@ -38,12 +38,12 @@ The game logs actions to `tien_len_game.log`.
 Cards are written as ``<rank><symbol>`` (e.g. ``7♣``). When creating a
 ``Card`` instance, supply the arguments as ``(suit, rank)``.
 
-## GUI
+## Pygame GUI
 
 The graphical interface implemented in `pygame_gui.py` renders the
 table using sprites and simple animations.
 
-Start the GUI with:
+Start the Pygame interface with:
 
 ```bash
 python3 pygame_gui.py
@@ -81,7 +81,7 @@ text buttons. The repository ships with the required files:
 - `red_joker.png` and `black_joker.png` for jokers (optional)
 - 52 images named like `ace_of_spades.png` or `10_of_hearts.png`
 
-Run the GUI from the project root so it can locate `assets/`. If any
+Run the Pygame GUI from the project root so it can locate `assets/`. If any
 images are missing, the program will fall back to text and print a list
 of missing files.
 
