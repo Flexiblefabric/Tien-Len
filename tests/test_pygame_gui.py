@@ -393,3 +393,18 @@ def test_overlay_instances_created():
         view.close_overlay()
     assert view.overlay is None
 
+
+def test_draw_frame_with_overlay():
+    view, _ = make_view()
+    # restore original method
+    view.draw_players = MagicMock()
+    view.overlay = MagicMock()
+    view.screen = MagicMock()
+    overlay_surface = MagicMock()
+    with patch.object(view.screen, 'blit') as blit, \
+         patch('pygame.display.flip') as flip, \
+         patch('pygame.Surface', return_value=overlay_surface):
+        pygame_gui.GameView._draw_frame(view)
+    blit.assert_any_call(overlay_surface, (0, 0))
+    flip.assert_called_once()
+    pygame.quit()
