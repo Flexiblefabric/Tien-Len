@@ -171,6 +171,33 @@ def test_update_hand_sprites_calls_update_play_button_state():
         upd.assert_called_once()
 
 
+def test_card_sprite_draw_shadow_blits():
+    pygame.display.init()
+    with patch('pygame.font.SysFont', return_value=DummyFont()):
+        with patch.object(pygame_gui, 'get_card_image',
+                          return_value=pygame.Surface((1, 1), pygame.SRCALPHA)):
+            sprite = pygame_gui.CardSprite(tien_len_full.Card('Spades', '3'),
+                                          (0, 0), 1)
+    surf = MagicMock()
+    sprite.draw_shadow(surf)
+    assert surf.blit.call_count > 0
+    pygame.quit()
+
+
+def test_draw_players_uses_draw_shadow():
+    view, _ = make_view()
+    with patch('pygame.font.SysFont', return_value=DummyFont()):
+        with patch.object(pygame_gui, 'get_card_image',
+                          return_value=pygame.Surface((1, 1), pygame.SRCALPHA)):
+            sprite = pygame_gui.CardSprite(tien_len_full.Card('Spades', '3'),
+                                          (0, 0), 1)
+    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    with patch.object(sprite, 'draw_shadow') as ds:
+        view.draw_players()
+        ds.assert_called()
+    pygame.quit()
+
+
 def test_animate_sprites_moves_to_destination():
     view, clock = make_view()
     sprite = DummySprite()
