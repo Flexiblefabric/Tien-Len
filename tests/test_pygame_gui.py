@@ -1,3 +1,7 @@
+import pytest
+pytest.importorskip("PIL")
+pytest.importorskip("pygame")
+
 import os
 from unittest.mock import patch, MagicMock
 
