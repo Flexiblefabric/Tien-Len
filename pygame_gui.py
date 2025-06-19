@@ -7,6 +7,7 @@ from typing import Dict, Tuple, List, Callable, Optional
 from enum import Enum, auto
 import json
 import logging
+import math
 
 import pygame
 
@@ -371,6 +372,7 @@ class GameView:
             except Exception:
                 pass
         self.selected: List[CardSprite] = []
+        self.current_trick: list[tuple[str, pygame.Surface]] = []
         self.ai_sprites: List[pygame.sprite.Group] = [pygame.sprite.Group() for _ in range(3)]
         self.running = True
         self.overlay: Optional[Overlay] = None
@@ -739,6 +741,10 @@ class GameView:
         if self.game.process_play(player, cards):
             self.show_game_over(player.name)
             return
+        for c in cards:
+            img = get_card_image(c, self.card_width)
+            if img is not None:
+                self.current_trick.append((player.name, img))
         if detect_combo(cards) == 'bomb':
             sound.play('bomb')
         else:
@@ -757,6 +763,8 @@ class GameView:
             sound.play("pass")
             self._highlight_turn(self.game.current_idx)
             self.ai_turns()
+        if not self.game.pile:
+            self.current_trick.clear()
 
     def undo_move(self) -> None:
         """Undo the most recent move and refresh the display."""
@@ -776,6 +784,10 @@ class GameView:
                 if self.game.process_play(p, cards):
                     self.show_game_over(p.name)
                     break
+                for c in cards:
+                    img = get_card_image(c, self.card_width)
+                    if img is not None:
+                        self.current_trick.append((p.name, img))
                 if detect_combo(cards) == 'bomb':
                     sound.play('bomb')
                 else:
@@ -786,6 +798,8 @@ class GameView:
                 self.game.process_pass(p)
             self.game.next_turn()
             self._highlight_turn(self.game.current_idx)
+            if not self.game.pile:
+                self.current_trick.clear()
         self.update_hand_sprites()
         self._highlight_turn(self.game.current_idx)
 
@@ -830,21 +844,21 @@ class GameView:
         self.hand_sprites.draw(self.screen)
         for group in self.ai_sprites:
             group.draw(self.screen)
-        if self.game.pile:
-            pl, cards = self.game.pile[-1]
+        if not self.game.pile:
+            self.current_trick.clear()
+        if self.current_trick:
             center = self._pile_center()
-            spacing = min(40, self.card_width)
-            start_x = center[0] - (len(cards) - 1) * spacing // 2
-            for i, c in enumerate(cards):
-                img = get_card_image(c, self.card_width)
-                if img is None:
-                    font = pygame.font.SysFont(None, 20)
-                    img = font.render(str(c), True, (255, 255, 255), (0, 0, 0))
-                rect = img.get_rect(center=(start_x + i * spacing, center[1]))
+            radius = self.card_width * 1.5
+            total = len(self.current_trick)
+            for i, (name, img) in enumerate(self.current_trick):
+                angle = math.tau * i / total - math.pi / 2
+                x = center[0] + radius * math.cos(angle)
+                y = center[1] + radius * math.sin(angle)
+                rect = img.get_rect(center=(int(x), int(y)))
                 self.screen.blit(img, rect)
-            label = self.font.render(pl.name, True, (255, 255, 255))
-            lrect = label.get_rect(center=(center[0], center[1] - self.card_width))
-            self.screen.blit(label, lrect)
+                label = self.font.render(name, True, (255, 255, 255))
+                lrect = label.get_rect(center=(int(x), int(y - self.card_width)))
+                self.screen.blit(label, lrect)
 
         if self.state == GameState.PLAYING:
             # Enable or disable Undo based on snapshot history
