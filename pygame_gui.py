@@ -566,7 +566,10 @@ class GameView:
             self._draw_frame()
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
             alpha = max(0, 200 - i * 20)
-            overlay.fill((255, 255, 0, alpha))
+            center = overlay.get_rect().center
+            # Pulse radius between 8 and 14 pixels
+            radius = 11 + int(3 * math.sin(math.pi * i / frames))
+            pygame.draw.circle(overlay, (255, 255, 0, alpha), center, radius, width=3)
             self.screen.blit(overlay, rect.topleft)
             pygame.display.flip()
             pygame.event.pump()
