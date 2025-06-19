@@ -57,8 +57,7 @@ are handled automatically.
 
 - Sprite-based interface with simple animations.
 - Press **F11** to toggle full-screen.
-- Recreates sprites when the window is resized but no dynamic scaling of
-  layout is implemented yet.
+- Sprites and layout adapt automatically when the window is resized.
 - Press **Enter** or **Space** for the usual shortcuts.
 - Settings and menu overlays are provided.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
