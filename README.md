@@ -85,9 +85,10 @@ Run the Pygame GUI from the project root so it can locate `assets/`. If any
 images are missing, the program will fall back to text and print a list
 of missing files.
 
-Optionally place a small image `table_bg.png` in the `assets` directory
-to serve as the background of the playing area. The GUI will tile and
-resize this image when the window is resized.
+Optionally place a small image `table_img.png` in the `assets` directory
+to serve as the background of the playing area. The GUI will load this
+file automatically and tile the texture to fill the screen, resizing it
+whenever the window size changes.
 
 ## Optional sound effects
 

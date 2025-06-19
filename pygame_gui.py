@@ -357,6 +357,15 @@ class GameView:
         self.game.setup()
         self.font = pygame.font.SysFont(None, 24)
         load_card_images(self.card_width)
+        self.table_image: Optional[pygame.Surface] = None
+        img_path = Path(__file__).with_name("assets") / "table_img.png"
+        if img_path.exists():
+            try:
+                self.table_image = pygame.image.load(str(img_path)).convert()
+            except Exception:
+                self.table_image = None
+        self._table_surface: Optional[pygame.Surface] = None
+        self._update_table_surface()
         # Load sound effects and background music
         sdir = Path(__file__).with_name("assets") / "sound"
         sound.load("click", sdir / "card-play.wav")
@@ -418,7 +427,10 @@ class GameView:
     # Animation helpers -------------------------------------------------
     def _draw_frame(self) -> None:
         """Redraw the game state."""
-        self.screen.fill(self.table_color)
+        if self._table_surface:
+            self.screen.blit(self._table_surface, (0, 0))
+        else:
+            self.screen.fill(self.table_color)
         self.draw_players()
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
@@ -513,6 +525,20 @@ class GameView:
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
+
+    def _update_table_surface(self) -> None:
+        """Generate a tiled background surface if a table image is loaded."""
+        if self.table_image is None:
+            self._table_surface = None
+            return
+        w, h = self.screen.get_size()
+        tile_size = max(50, self.card_width * 2)
+        tile = pygame.transform.smoothscale(self.table_image, (tile_size, tile_size))
+        surface = pygame.Surface((w, h))
+        for x in range(0, w, tile.get_width()):
+            for y in range(0, h, tile.get_height()):
+                surface.blit(tile, (x, y))
+        self._table_surface = surface
 
     def _create_action_buttons(self) -> None:
         """Create or reposition the Play/Pass/Undo buttons."""
@@ -665,6 +691,7 @@ class GameView:
         self.screen = pygame.display.set_mode((width, height), flags)
         self.card_width = self._calc_card_width(width)
         load_card_images(self.card_width)
+        self._update_table_surface()
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_settings_button()
@@ -681,6 +708,7 @@ class GameView:
         self.screen = pygame.display.set_mode(size, flags)
         self.card_width = self._calc_card_width(size[0])
         load_card_images(self.card_width)
+        self._update_table_surface()
         self.update_hand_sprites()
         self._create_action_buttons()
 
