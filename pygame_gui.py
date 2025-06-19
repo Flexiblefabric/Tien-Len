@@ -658,6 +658,18 @@ class GameView:
         self.update_hand_sprites()
         self._create_action_buttons()
 
+    def update_play_button_state(self) -> None:
+        """Enable the Play button only when the current selection is valid."""
+        if not self.action_buttons:
+            return
+        cards = [sp.card for sp in self.selected]
+        if not cards:
+            self.action_buttons[0].enabled = False
+            return
+        player = self.game.players[self.game.current_idx]
+        ok, _ = self.game.is_valid(player, cards, self.game.current_combo)
+        self.action_buttons[0].enabled = ok
+
     # Event handling --------------------------------------------------
     def handle_mouse(self, pos):
         if self.state != GameState.PLAYING:
@@ -684,6 +696,7 @@ class GameView:
                     self.selected.append(sp)
                 else:
                     self.selected.remove(sp)
+                self.update_play_button_state()
                 return
         for sp in reversed(self.hand_sprites.sprites()):
             if sp.rect.collidepoint(pos):
@@ -695,6 +708,7 @@ class GameView:
                     self.selected.append(sp)
                 elif not sp.selected and sp in self.selected:
                     self.selected.remove(sp)
+                self.update_play_button_state()
                 return
 
     def handle_key(self, key):
@@ -803,6 +817,7 @@ class GameView:
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite((x, start + i * spacing), card_w, self.card_back_name)
                     group.add(sp)
+        self.update_play_button_state()
 
     def draw_players(self):
         for idx, p in enumerate(self.game.players):

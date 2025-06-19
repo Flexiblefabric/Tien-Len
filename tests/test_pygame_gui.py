@@ -10,6 +10,7 @@ os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
 
 import pygame
 import pygame_gui
+import tien_len_full
 import sound
 
 
@@ -60,6 +61,12 @@ class DummySprite(pygame.sprite.Sprite):
 
     def toggle(self):
         self.selected = not self.selected
+
+
+class DummyCardSprite(DummySprite):
+    def __init__(self, pos=(0, 0)):
+        super().__init__(pos)
+        self.card = tien_len_full.Card("Spades", "3")
 
 
 def test_handle_key_shortcuts():
@@ -117,12 +124,51 @@ def test_handle_mouse_selects_rightmost_sprite():
     view.hand_sprites = pygame.sprite.OrderedUpdates(left, right)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
-
-    view.handle_mouse((5, 5))
+    with patch.object(view, 'update_play_button_state'):
+        view.handle_mouse((5, 5))
     assert right.selected is True
     assert right in view.selected
     assert left.selected is False
     pygame.quit()
+
+
+def test_update_play_button_state_enables_button_on_valid_selection():
+    view, _ = make_view()
+    card_sprite = DummyCardSprite()
+    view.selected = [card_sprite]
+    btn = view.action_buttons[0]
+    with patch.object(view.game, 'is_valid', return_value=(True, '')) as mock:
+        view.update_play_button_state()
+    mock.assert_called_once_with(view.game.players[view.game.current_idx], [card_sprite.card], view.game.current_combo)
+    assert btn.enabled is True
+
+
+def test_update_play_button_state_disables_when_invalid():
+    view, _ = make_view()
+    card_sprite = DummyCardSprite()
+    view.selected = [card_sprite]
+    btn = view.action_buttons[0]
+    with patch.object(view.game, 'is_valid', return_value=(False, 'bad')):
+        view.update_play_button_state()
+    assert btn.enabled is False
+
+
+def test_handle_mouse_calls_update_play_button_state():
+    view, _ = make_view()
+    sprite = DummyCardSprite((5, 5))
+    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    view.selected = []
+    view.state = pygame_gui.GameState.PLAYING
+    with patch.object(view, 'update_play_button_state') as upd:
+        view.handle_mouse(sprite.rect.center)
+        upd.assert_called()
+
+
+def test_update_hand_sprites_calls_update_play_button_state():
+    view, _ = make_view()
+    with patch.object(view, 'update_play_button_state') as upd:
+        view.update_hand_sprites()
+        upd.assert_called_once()
 
 
 def test_animate_sprites_moves_to_destination():
