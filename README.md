@@ -138,6 +138,10 @@ Tests that exercise the graphical interfaces require the optional
 `Pillow` and `pygame` libraries. Pytest will automatically skip these
 tests when the dependencies are not available.
 
+Coverage statistics exclude the GUI modules because automated testing of
+their interfaces is impractical. The `.coveragerc` file lists
+`gui.py` and `pygame_gui.py` under the `omit` section.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
