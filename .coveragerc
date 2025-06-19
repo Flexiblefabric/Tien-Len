@@ -1,5 +1,4 @@
 [run]
 branch = True
 omit =
-    gui.py
     pygame_gui.py

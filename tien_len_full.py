@@ -11,7 +11,7 @@ decisions:
   they hold the ``3♠``.  This mirrors the behaviour of the original proof of
   concept from which this repository was created.
 * The :class:`Game` class encapsulates all state and can be reused by the GUI
-  prototype found in ``gui.py``.
+  implemented in ``pygame_gui.py``.
 """
 import random
 import datetime
