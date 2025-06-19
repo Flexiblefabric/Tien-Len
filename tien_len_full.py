@@ -383,6 +383,7 @@ class Game:
         """Prompt the human player for a move on the command line."""
 
         player = self.players[self.current_idx]
+        failures = 0
         while True:
             try:
                 inp = input("Enter cards or 'pass','hint','help','quit': ")
@@ -403,10 +404,17 @@ class Game:
             if cmd == 'pass':
                 if player.is_human and self.first_turn and self.current_idx == self.start_idx:
                     print('You must play a combo including 3♠ on your first turn; cannot pass.')
+                    failures += 1
+                    if failures == 3:
+                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
                     continue
                 return []
             if cmd == 'error':
                 print(res)
+                if self.first_turn and self.current_idx == self.start_idx:
+                    failures += 1
+                    if failures == 3:
+                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
                 continue
             if cmd == 'play':
                 cards = res
@@ -414,6 +422,10 @@ class Game:
                 if ok:
                     return cards
                 print(f"Invalid: {msg}")
+                if self.first_turn and self.current_idx == self.start_idx:
+                    failures += 1
+                    if failures == 3:
+                        print("Reminder: your opening play must contain 3♠. Example: '3♠'")
 
     # AI helper functions
     def generate_valid_moves(self, player, current):
