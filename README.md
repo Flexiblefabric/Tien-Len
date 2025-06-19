@@ -3,12 +3,8 @@
 [![Coverage](https://codecov.io/gh/Flexiblefabric/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/Flexiblefabric/Tien-Len)
 
 This repository contains a simple command line implementation of the
-Vietnamese card game **Tiến Lên**.
-
-Two graphical front-ends are available:
-
-- A legacy Tkinter prototype in `gui.py`.
-- A new Pygame interface in `pygame_gui.py`.
+Vietnamese card game **Tiến Lên** with a Pygame graphical interface
+in `pygame_gui.py`.
 
 ## Installation
 
@@ -24,8 +20,7 @@ For development you can use the editable mode instead:
 pip install -e .
 ```
 
-After installation launch the Tkinter GUI with `tien-len` or the new
-Pygame version with `tien-len-pg`.
+After installation launch the GUI with `tien-len`.
 
 ## CLI version
 
@@ -43,19 +38,12 @@ The game logs actions to `tien_len_game.log`.
 Cards are written as ``<rank><symbol>`` (e.g. ``7♣``). When creating a
 ``Card`` instance, supply the arguments as ``(suit, rank)``.
 
-## GUI prototype
+## GUI
 
-Two implementations exist. The original Tkinter version in `gui.py`
-displays your hand as clickable buttons. A new Pygame rewrite in
-`pygame_gui.py` renders the table using sprites and simple animations.
+The graphical interface implemented in `pygame_gui.py` renders the
+table using sprites and simple animations.
 
-Start the Tkinter version with:
-
-```bash
-python3 gui.py
-```
-
-Launch the Pygame GUI with:
+Start the GUI with:
 
 ```bash
 python3 pygame_gui.py
@@ -65,15 +53,6 @@ Select cards by clicking them and then press **Play Selected**. Press
 **Pass** to skip your turn (subject to the first‑turn rule). AI turns
 are handled automatically.
 
-### Tkinter GUI features
-
-- Resizable layout; card buttons scale when the window changes size.
-- **F11** toggles full-screen mode.
-- Press **Enter** to play selected cards or **Space** to pass.
-- Adjust AI difficulty (Easy/Normal/Hard) from **Options > Settings**.
-- Choose an AI personality (Aggressive/Defensive/Random) and enable
-  lookahead for Hard difficulty.
-
 ### Pygame GUI features
 
 - Sprite-based interface with simple animations.
@@ -81,7 +60,7 @@ are handled automatically.
 - Recreates sprites when the window is resized but no dynamic scaling of
   layout is implemented yet.
 - Press **Enter** or **Space** for the usual shortcuts.
-- Settings and menu overlays similar to the Tkinter version.
+- Settings and menu overlays are provided.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 
 Displaying card images requires the **Pillow** library, which is
@@ -95,7 +74,7 @@ pip install -r requirements.txt
 ### Showing card images
 
 If an `assets` directory containing PNG card images is present next to
-`gui.py`, the interface will show graphical cards instead of simple
+`pygame_gui.py`, the interface will show graphical cards instead of simple
 text buttons. The repository ships with the required files:
 
 - `card_back.png` for the back of a card
@@ -138,9 +117,9 @@ Tests that exercise the graphical interfaces require the optional
 `Pillow` and `pygame` libraries. Pytest will automatically skip these
 tests when the dependencies are not available.
 
-Coverage statistics exclude the GUI modules because automated testing of
-their interfaces is impractical. The `.coveragerc` file lists
-`gui.py` and `pygame_gui.py` under the `omit` section.
+Coverage statistics exclude the GUI module because automated testing of
+its interface is impractical. The `.coveragerc` file lists
+`pygame_gui.py` under the `omit` section.
 
 ## License
 

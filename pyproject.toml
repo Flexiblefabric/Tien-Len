@@ -5,23 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tien-len"
 version = "0.1.0"
-description = "Tiến Lên card game with CLI and Tkinter GUI"
+description = "Tiến Lên card game with CLI and Pygame GUI"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = ["pillow", "pygame"]
 
 [project.gui-scripts]
-tien-len = "gui:main"
-tien-len-pg = "pygame_gui:main"
+tien-len = "pygame_gui:main"
 
 [tool.setuptools]
 py-modules = [
     "tien_len_full",
-    "gui",
-    "settings_dialog",
     "sound",
-    "tooltip",
-    "views",
     "pygame_gui",
 ]
 packages = [
