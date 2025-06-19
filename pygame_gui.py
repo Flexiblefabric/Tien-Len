@@ -486,6 +486,32 @@ class GameView:
             pygame.event.pump()
             self.clock.tick(60)
 
+    def _animate_flip(
+        self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15
+    ) -> None:
+        """Move ``sprites`` to ``dest`` while flipping from back to front."""
+        if not sprites:
+            return
+        frames = max(1, int(frames / self.animation_speed))
+        starts = [sp.rect.center for sp in sprites]
+        fronts = [sp.image for sp in sprites]
+        back = get_card_back(self.card_back_name, sprites[0].rect.width)
+        for i in range(frames):
+            t = (i + 1) / frames
+            for sp, (sx, sy) in zip(sprites, starts):
+                sp.rect.center = (
+                    int(sx + (dest[0] - sx) * t),
+                    int(sy + (dest[1] - sy) * t),
+                )
+            self._draw_frame()
+            for sp, front in zip(sprites, fronts):
+                img = back if back is not None and t < 0.5 else front
+                rect = img.get_rect(center=sp.rect.center)
+                self.screen.blit(img, rect)
+            pygame.display.flip()
+            pygame.event.pump()
+            self.clock.tick(60)
+
     def _animate_select(self, sprite: CardSprite, up: bool) -> None:
         offset = -10 if up else 10
         dest = (sprite.rect.centerx, sprite.rect.centery + offset)
@@ -813,7 +839,7 @@ class GameView:
             sound.play('bomb')
         else:
             sound.play('click')
-        self._animate_sprites(self.selected, self._pile_center())
+        self._animate_flip(self.selected, self._pile_center())
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
