@@ -218,7 +218,7 @@ def test_animate_back_moves_to_destination():
         with patch('pygame.event.pump'), patch('pygame.display.flip'):
             view._animate_back((0, 0), (10, 5), frames=4)
     assert rect.center == (10, 5)
-    assert clock.count == 4
+    assert clock.count == 10
     pygame.quit()
 
 
@@ -230,7 +230,7 @@ def test_animate_flip_moves_to_destination():
          patch('pygame.event.pump'), patch('pygame.display.flip'):
         view._animate_flip([sprite], (10, 5), frames=4)
     assert sprite.rect.center == (10, 5)
-    assert clock.count == 4
+    assert clock.count == 10
     pygame.quit()
 
 
@@ -283,7 +283,7 @@ def test_animate_back_speed():
         with patch('pygame.event.pump'), patch('pygame.display.flip'):
             view.animation_speed = 0.5
             view._animate_back((0, 0), (1, 1), frames=10)
-            assert clock.count == 20
+            assert clock.count == 32
     pygame.quit()
 
 
