@@ -17,7 +17,7 @@ LOG_FILE = "tien_len_game.log"
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
-    handler = logging.FileHandler(LOG_FILE)
+    handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
