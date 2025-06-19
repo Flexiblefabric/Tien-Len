@@ -510,8 +510,8 @@ class GameView:
         y = h - 60
         font = self.font
         self.action_buttons = [
-            Button('Pass', pygame.Rect(start_x, y, btn_w, 40), self.pass_turn, font),
-            Button('Play', pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40), self.play_selected, font),
+            Button('Play', pygame.Rect(start_x, y, btn_w, 40), self.play_selected, font),
+            Button('Pass', pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40), self.pass_turn, font),
             Button('Undo', pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, 40), self.undo_move, font),
         ]
 
