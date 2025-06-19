@@ -18,6 +18,9 @@ class DummyFont:
     def render(self, *args, **kwargs):
         return pygame.Surface((1, 1))
 
+    def get_linesize(self):
+        return 1
+
 
 class DummyClock:
     def __init__(self):
@@ -237,9 +240,11 @@ def test_animate_flip_moves_to_destination():
 def test_highlight_turn_draws_at_player_position():
     view, clock = make_view()
     view.screen = MagicMock()
+    view.screen.get_size.return_value = (100, 100)
     overlay_surface = MagicMock()
     with patch('pygame.Surface', return_value=overlay_surface), \
          patch('pygame.event.pump'), patch('pygame.display.flip'), \
+         patch('pygame.draw.circle'), \
          patch.object(view, '_player_pos', return_value=(50, 100)) as pos:
         view._highlight_turn(0, frames=2)
     pos.assert_called_with(0)
@@ -486,6 +491,7 @@ def test_draw_frame_with_overlay():
     view.draw_players = MagicMock()
     view.overlay = MagicMock()
     view.screen = MagicMock()
+    view.screen.get_size.return_value = (100, 100)
     overlay_surface = MagicMock()
     with patch.object(view.screen, 'blit') as blit, \
          patch('pygame.display.flip') as flip, \
@@ -514,4 +520,38 @@ def test_play_selected_triggers_flip():
     ):
         view.play_selected()
     flip.assert_called_once_with([sprite], dest)
+    pygame.quit()
+
+
+def test_draw_score_overlay_positions_panel():
+    with patch('random.sample', return_value=tien_len_full.AI_NAMES[:3]):
+        view, _ = make_view()
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (300, 200)
+    surf = pygame.Surface((200, 20))
+    with patch('pygame.Surface', return_value=surf):
+        view.draw_score_overlay()
+    view.screen.blit.assert_called_with(surf, (300 - 200 - 10, 10))
+    pygame.quit()
+
+
+def test_show_game_over_updates_win_counts():
+    with patch('random.sample', return_value=tien_len_full.AI_NAMES[:3]):
+        view, _ = make_view()
+    with patch.object(sound, 'play'):
+        view.show_game_over('Player')
+    assert view.win_counts['Player'] == 1
+    pygame.quit()
+
+
+def test_restart_game_preserves_scores():
+    with patch('random.sample', return_value=tien_len_full.AI_NAMES[:3]):
+        view, _ = make_view()
+    view.win_counts['Player'] = 2
+    with patch('random.sample', return_value=tien_len_full.AI_NAMES[1:4]), \
+         patch.object(view, 'close_overlay'):
+        view.restart_game()
+    assert view.win_counts['Player'] == 2
+    for p in view.game.players:
+        assert p.name in view.win_counts
     pygame.quit()
