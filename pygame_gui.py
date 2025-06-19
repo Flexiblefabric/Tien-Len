@@ -130,6 +130,17 @@ class CardSprite(pygame.sprite.Sprite):
         offset = -10 if self.selected else 10
         self.rect.move_ip(0, offset)
 
+    def draw_shadow(self, surface: pygame.Surface, offset: Tuple[int, int] = (5, 5),
+                     blur: int = 2, alpha: int = 80) -> None:
+        """Draw a simple blurred shadow beneath the card."""
+        shadow = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
+        shadow.fill((0, 0, 0))
+        shadow.set_alpha(alpha)
+        for dx in range(-blur, blur + 1):
+            for dy in range(-blur, blur + 1):
+                rect = self.rect.move(offset[0] + dx, offset[1] + dy)
+                surface.blit(shadow, rect)
+
 
 class CardBackSprite(pygame.sprite.Sprite):
     def __init__(self, pos: Tuple[int, int], width: int = 80, name: str = "card_back") -> None:
@@ -905,6 +916,14 @@ class GameView:
             else:
                 rect = img.get_rect(midright=(x - spacing, y))
             self.screen.blit(img, rect)
+
+        for sp in self.hand_sprites.sprites():
+            if isinstance(sp, CardSprite):
+                sp.draw_shadow(self.screen)
+        for group in self.ai_sprites:
+            for sp in group.sprites():
+                if isinstance(sp, CardSprite):
+                    sp.draw_shadow(self.screen)
 
         self.hand_sprites.draw(self.screen)
         for group in self.ai_sprites:
