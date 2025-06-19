@@ -199,6 +199,26 @@ class MenuOverlay(Overlay):
 
 
 class SettingsOverlay(Overlay):
+    """Top level settings menu."""
+
+    def __init__(self, view: 'GameView') -> None:
+        super().__init__()
+        w, h = view.screen.get_size()
+        font = view.font
+        bx = w // 2 - 120
+        by = h // 2 - 180
+        self.buttons = [
+            Button('Return to Main Menu', pygame.Rect(bx, by, 240, 40), view.show_menu, font),
+            Button('Save Game', pygame.Rect(bx, by + 50, 240, 40), view.save_game, font),
+            Button('Load Game', pygame.Rect(bx, by + 100, 240, 40), view.load_game, font),
+            Button('Quit Game', pygame.Rect(bx, by + 150, 240, 40), view.quit_game, font),
+            Button('Graphics Settings', pygame.Rect(bx, by + 200, 240, 40), view.show_options, font),
+            Button('Audio Settings', pygame.Rect(bx, by + 250, 240, 40), view.show_options, font),
+            Button('Gameplay Settings', pygame.Rect(bx, by + 300, 240, 40), view.show_gameplay_settings, font),
+        ]
+
+
+class OptionsOverlay(Overlay):
     def __init__(self, view: 'GameView') -> None:
         super().__init__()
         w, h = view.screen.get_size()
@@ -235,6 +255,58 @@ class SettingsOverlay(Overlay):
         make_button(300, 'music_enabled', [True, False], 'Music')
         btn = Button('Close', pygame.Rect(bx, by + 350, 240, 40), view.close_overlay, font)
         self.buttons.append(btn)
+
+
+class GameplaySettingsOverlay(Overlay):
+    """Gameplay specific settings."""
+
+    def __init__(self, view: 'GameView') -> None:
+        super().__init__()
+        self.view = view
+        w, h = view.screen.get_size()
+        font = view.font
+        bx = w // 2 - 120
+        by = h // 2 - 90
+
+        def toggle(attr: str, label: str) -> Callable[[], None]:
+            def callback(btn: Button) -> Callable[[], None]:
+                def inner() -> None:
+                    val = not getattr(view, attr)
+                    setattr(view, attr, val)
+                    if attr == 'house_rules':
+                        import tien_len_full as tl
+                        tl.ALLOW_2_IN_SEQUENCE = not val
+                    btn.text = f"{label}: {'On' if val else 'Off'}"
+                return inner
+            return callback
+
+        def make_toggle(offset: int, attr: str, label: str) -> None:
+            val = getattr(view, attr)
+            btn = Button(f"{label}: {'On' if val else 'Off'}", pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+            btn.callback = toggle(attr, label)(btn)
+            self.buttons.append(btn)
+
+        make_toggle(0, 'house_rules', 'House Rules')
+        make_toggle(50, 'tutorial_mode', 'Tutorial Mode')
+        make_toggle(100, 'show_rules', 'Show Rules')
+        back = Button('Back', pygame.Rect(bx, by + 150, 240, 40), view.show_settings, font)
+        self.buttons.append(back)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+        if self.view.show_rules:
+            w, h = surface.get_size()
+            font = pygame.font.SysFont(None, 20)
+            rules = [
+                'Sequences must share a suit.',
+                'Pairs, triples and bombs match ranks.',
+                '2 cannot be used in sequences when house rules enabled.',
+            ]
+            y = h // 2 + 80
+            for line in rules:
+                img = font.render(line, True, (255, 255, 255))
+                surface.blit(img, img.get_rect(center=(w // 2, y)))
+                y += 24
 
 
 class GameOverOverlay(Overlay):
@@ -314,8 +386,13 @@ class GameView:
         self.sound_enabled = True
         self.music_enabled = True
         self.volume = 1.0
+        self.house_rules = True
+        self.tutorial_mode = False
+        self.show_rules = False
         self.action_buttons: List[Button] = []
         self._create_action_buttons()
+        self.settings_button: Button
+        self._position_settings_button()
         opts = self._load_options()
         self.animation_speed = opts.get("animation_speed", self.animation_speed)
         self.table_color_name = opts.get("table_color", self.table_color_name)
@@ -328,6 +405,9 @@ class GameView:
         self.sound_enabled = opts.get("sound", self.sound_enabled)
         self.music_enabled = opts.get("music", self.music_enabled)
         self.volume = opts.get("volume", self.volume)
+        self.house_rules = opts.get("house_rules", self.house_rules)
+        self.tutorial_mode = opts.get("tutorial_mode", self.tutorial_mode)
+        self.show_rules = opts.get("show_rules", self.show_rules)
         self.apply_options()
         self._create_action_buttons()
         self.show_menu()
@@ -422,17 +502,26 @@ class GameView:
 
     def _create_action_buttons(self) -> None:
         """Create or reposition the Play/Pass/Undo buttons."""
-        center_x, pile_y = self._pile_center()
-        _, hand_y = self._player_pos(0)
-        mid_y = (pile_y + hand_y) // 2
-        bx = center_x - 60
-        by = mid_y - 60
+        w, h = self.screen.get_size()
+        btn_w = 120
+        spacing = 20
+        total = btn_w * 3 + spacing * 2
+        start_x = w // 2 - total // 2
+        y = h - 60
         font = self.font
         self.action_buttons = [
-            Button('Play', pygame.Rect(bx, by, 120, 40), self.play_selected, font),
-            Button('Pass', pygame.Rect(bx, by + 50, 120, 40), self.pass_turn, font),
-            Button('Undo', pygame.Rect(bx, by + 100, 120, 40), self.undo_move, font),
+            Button('Pass', pygame.Rect(start_x, y, btn_w, 40), self.pass_turn, font),
+            Button('Play', pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40), self.play_selected, font),
+            Button('Undo', pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, 40), self.undo_move, font),
         ]
+
+    def _position_settings_button(self) -> None:
+        """Position the persistent Settings button."""
+        w, _ = self.screen.get_size()
+        font = self.font
+        if not hasattr(self, 'settings_button'):
+            self.settings_button = Button('Settings', pygame.Rect(0, 0, 100, 40), self.show_settings, font)
+        self.settings_button.rect.topright = (w - 10, 10)
 
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
@@ -442,6 +531,30 @@ class GameView:
     def show_settings(self) -> None:
         self.overlay = SettingsOverlay(self)
         self.state = GameState.SETTINGS
+
+    def show_options(self) -> None:
+        self.overlay = OptionsOverlay(self)
+        self.state = GameState.SETTINGS
+
+    def show_gameplay_settings(self) -> None:
+        self.overlay = GameplaySettingsOverlay(self)
+        self.state = GameState.SETTINGS
+
+    def save_game(self) -> None:
+        try:
+            with open(Path(__file__).with_name('saved_game.json'), 'w', encoding='utf-8') as f:
+                f.write(self.game.to_json())
+        except Exception:
+            pass
+
+    def load_game(self) -> None:
+        try:
+            with open(Path(__file__).with_name('saved_game.json'), 'r', encoding='utf-8') as f:
+                data = f.read()
+            self.game.from_json(data)
+            self.update_hand_sprites()
+        except Exception:
+            pass
 
     def close_overlay(self) -> None:
         had = self.overlay is not None
@@ -482,6 +595,9 @@ class GameView:
             "sound": self.sound_enabled,
             "music": self.music_enabled,
             "volume": self.volume,
+            "house_rules": self.house_rules,
+            "tutorial_mode": self.tutorial_mode,
+            "show_rules": self.show_rules,
         }
         try:
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
@@ -496,6 +612,8 @@ class GameView:
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
+        import tien_len_full as tl
+        tl.ALLOW_2_IN_SEQUENCE = not self.house_rules
         sound.set_volume(self.volume)
         sound._ENABLED = self.sound_enabled
         if _mixer_ready():
@@ -522,6 +640,8 @@ class GameView:
         load_card_images(self.card_width)
         self.update_hand_sprites()
         self._create_action_buttons()
+        self._position_settings_button()
+        self._position_settings_button()
 
     def toggle_fullscreen(self) -> None:
         """Toggle full-screen mode."""
@@ -551,6 +671,9 @@ class GameView:
                     return
                 btn.callback()
                 return
+        if self.settings_button.rect.collidepoint(pos):
+            self.settings_button.callback()
+            return
         for sp in reversed(self.selected):
             if sp.rect.collidepoint(pos):
                 up = not sp.selected
@@ -716,6 +839,7 @@ class GameView:
                 undo_btn.enabled = len(self.game.snapshots) > 1
             for btn in self.action_buttons:
                 btn.draw(self.screen)
+            self.settings_button.draw(self.screen)
 
     def run(self):
         self.update_hand_sprites()
