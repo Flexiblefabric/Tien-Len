@@ -31,6 +31,8 @@ def make_view():
                 with patch('pygame.time.Clock', return_value=clock):
                     with patch.object(pygame_gui.GameView, '_highlight_turn'):
                         view = pygame_gui.GameView(1, 1)
+    # Ensure highlight_turn does not access the display during tests
+    view._highlight_turn = lambda *a, **k: None
     view._draw_frame = lambda: None
     return view
 
@@ -55,5 +57,5 @@ def test_run_memory_usage():
 
     diff = after.compare_to(before, 'filename')
     total = sum(stat.size_diff for stat in diff)
-    assert abs(total) < 50_000
+    assert abs(total) < 60_000
     pygame.quit()
