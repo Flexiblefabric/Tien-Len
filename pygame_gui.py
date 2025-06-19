@@ -954,6 +954,13 @@ class GameView:
         self.hand_sprites.draw(self.screen)
         for group in self.ai_sprites:
             group.draw(self.screen)
+        if self.selected:
+            player = self.game.players[self.game.current_idx]
+            cards = [sp.card for sp in self.selected if hasattr(sp, 'card')]
+            valid = self.game.is_valid(player, cards, self.game.current_combo)[0]
+            color = (0, 255, 0) if valid else (255, 0, 0)
+            for sp in self.selected:
+                pygame.draw.rect(self.screen, color, sp.rect, width=3)
         if not self.game.pile:
             self.current_trick.clear()
         if self.current_trick:
