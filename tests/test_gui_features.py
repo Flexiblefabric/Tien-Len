@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock, patch
 import sys
-
-sys.modules.setdefault('pygame', MagicMock())
-
 import gui
 from tien_len_full import Game, Card
+
+sys.modules.setdefault('pygame', MagicMock())
+gui.pygame = sys.modules['pygame']
 
 
 def make_gui_stub(root):
@@ -68,7 +68,7 @@ def test_show_rules_creates_modal():
     win = MagicMock()
     with patch('gui.tk.Toplevel', return_value=win) as mock_top, \
          patch('gui.tk.Frame') as mock_frame, \
-         patch('gui.tk.Label') as mock_label, \
+         patch('gui.tk.Label'), \
          patch('gui.tk.Button') as mock_button:
         gui_obj.show_rules()
         mock_top.assert_called_with(gui_obj.root)
@@ -85,7 +85,7 @@ def test_show_menu_overlay():
     overlay = MagicMock()
     box = MagicMock()
     with patch('gui.tk.Frame', side_effect=[overlay, box]) as mock_frame, \
-         patch('gui.tk.Label') as mock_label, \
+         patch('gui.tk.Label'), \
          patch('gui.tk.Button') as mock_button:
         gui_obj.show_menu()
         mock_frame.assert_any_call(gui_obj.root, bg='#000000')
@@ -98,7 +98,7 @@ def test_menu_includes_tutorial_button():
     gui_obj = make_gui_stub(root)
     overlay = MagicMock()
     box = MagicMock()
-    with patch('gui.tk.Frame', side_effect=[overlay, box]) as mock_frame, \
+    with patch('gui.tk.Frame', side_effect=[overlay, box]), \
          patch('gui.tk.Label'), \
          patch('gui.tk.Button') as mock_button:
         gui_obj.show_menu()

@@ -1,5 +1,3 @@
-import pytest
-
 from tien_len_full import Game, Card
 
 
