@@ -193,7 +193,6 @@ class SettingsOverlay(Overlay):
         by = h // 2 - 220
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
-            btn: Button
             def callback(b: Button) -> Callable[[], None]:
                 def inner() -> None:
                     cur = getattr(view, attr)
