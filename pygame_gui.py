@@ -8,6 +8,7 @@ from enum import Enum, auto
 import json
 import logging
 import math
+import types
 
 import pygame
 
@@ -467,6 +468,30 @@ class GameView:
             pygame.event.pump()
             self.clock.tick(60)
 
+    def _animate_bounce(self, sprites: List[CardSprite], scale: float = 1.2, frames: int = 6) -> None:
+        """Briefly scale ``sprites`` up then back down for a bounce effect."""
+        if not sprites:
+            return
+        frames = max(1, int(frames / self.animation_speed))
+        half = frames // 2 or 1
+        originals = [(sp.image, sp.rect.copy()) for sp in sprites]
+        for i in range(frames):
+            # progress goes 0->1 then 1->0
+            t = (i + 1) / half if i < half else (frames - i) / half
+            factor = 1 + (scale - 1) * t
+            for sp, (img, rect) in zip(sprites, originals):
+                w, h = rect.size
+                scaled = pygame.transform.smoothscale(img, (int(w * factor), int(h * factor)))
+                sp.image = scaled
+                sp.rect = scaled.get_rect(center=rect.center)
+            self._draw_frame()
+            pygame.event.pump()
+            self.clock.tick(60)
+        # restore originals
+        for sp, (img, rect) in zip(sprites, originals):
+            sp.image = img
+            sp.rect = rect
+
     def _animate_back(self, start: Tuple[int, int], dest: Tuple[int, int], frames: int = 15) -> None:
         """Animate a card back image from ``start`` to ``dest``."""
         img = get_card_back(self.card_back_name)
@@ -485,6 +510,8 @@ class GameView:
             pygame.display.flip()
             pygame.event.pump()
             self.clock.tick(60)
+        dummy = types.SimpleNamespace(image=img, rect=rect)
+        self._animate_bounce([dummy])
 
     def _animate_flip(
         self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15
@@ -511,6 +538,7 @@ class GameView:
             pygame.display.flip()
             pygame.event.pump()
             self.clock.tick(60)
+        self._animate_bounce(sprites)
 
     def _animate_select(self, sprite: CardSprite, up: bool) -> None:
         offset = -10 if up else 10
