@@ -584,10 +584,11 @@ class GameView:
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
-        bottom_y = max(int(h * 0.8), 150)
-        top_y = min(int(h * 0.07), 50)
-        left_x = min(int(w * 0.1), 100)
-        right_x = max(int(w * 0.9), w - 100)
+        margin = int(self.card_width * 1.5)
+        bottom_y = h - margin
+        top_y = margin
+        left_x = margin
+        right_x = w - margin
         if idx == 0:
             return w // 2, bottom_y
         if idx == 1:
@@ -622,7 +623,7 @@ class GameView:
         """Create or reposition the Play/Pass/Undo buttons."""
         w, _ = self.screen.get_size()
         btn_w = 120
-        spacing = 20
+        spacing = max(10, self.card_width // 2)
         total = btn_w * 3 + spacing * 2
         start_x = w // 2 - total // 2
 
@@ -634,7 +635,7 @@ class GameView:
         else:
             card_h = int(self.card_width * 1.4)
         hand_top_y = hand_y - card_h // 2
-        control_spacing = min(40, self.card_width) // 2
+        control_spacing = spacing
         y = hand_top_y - control_spacing
 
         font = self.font
@@ -650,7 +651,8 @@ class GameView:
         font = self.font
         if not hasattr(self, 'settings_button'):
             self.settings_button = Button('Settings', pygame.Rect(0, 0, 100, 40), self.show_settings, font)
-        self.settings_button.rect.topright = (w - 10, 10)
+        margin = max(5, self.card_width // 3)
+        self.settings_button.rect.topright = (w - margin, margin)
 
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:

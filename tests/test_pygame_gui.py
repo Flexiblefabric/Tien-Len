@@ -472,6 +472,43 @@ def test_on_resize_updates_screen_size():
     cab.assert_called_once()
 
 
+def test_on_resize_repositions_layout():
+    pygame.display.init()
+    surf_small = pygame.Surface((300, 200))
+    surf_large = pygame.Surface((600, 400))
+    set_mode = MagicMock(side_effect=[surf_small, surf_large])
+    with patch('pygame.display.set_mode', set_mode):
+        with patch('pygame.font.SysFont', return_value=DummyFont()):
+            with patch.object(pygame_gui, 'load_card_images'), \
+                 patch.object(pygame_gui, 'get_card_image', side_effect=lambda c, w: pygame.Surface((w, 1))):
+                view = pygame_gui.GameView(300, 200)
+                pos_small = view._player_pos(0)
+                btn_small = [b.rect.x for b in view.action_buttons]
+                settings_small = view.settings_button.rect.topright
+
+                view.on_resize(600, 400)
+
+                pos_large = view._player_pos(0)
+                btn_large = [b.rect.x for b in view.action_buttons]
+                settings_large = view.settings_button.rect.topright
+
+                card_w = view.card_width
+                margin = int(card_w * 1.5)
+                expected_pos = (600 // 2, 400 - margin)
+                spacing = max(10, card_w // 2)
+                total = 120 * 3 + spacing * 2
+                start_x = 600 // 2 - total // 2
+                expected_settings = (600 - max(5, card_w // 3), max(5, card_w // 3))
+
+    pygame.quit()
+    assert pos_large == expected_pos
+    assert btn_large[0] == start_x
+    assert settings_large == expected_settings
+    assert pos_small != pos_large
+    assert btn_small[0] != btn_large[0]
+    assert settings_small != settings_large
+
+
 def test_overlay_instances_created():
     view, _ = make_view()
     view.show_menu()
