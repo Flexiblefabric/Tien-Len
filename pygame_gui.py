@@ -804,11 +804,30 @@ class GameView:
         self.action_buttons[0].enabled = ok
 
     # Event handling --------------------------------------------------
-    def handle_mouse(self, pos):
+    def _dispatch_overlay_event(self, event: pygame.event.Event) -> bool:
+        """Send events to the active overlay when the game isn't playing."""
+        if self.state == GameState.PLAYING:
+            return False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and \
+                self.state in {GameState.MENU, GameState.SETTINGS}:
+            self.close_overlay()
+        elif self.overlay:
+            self.overlay.handle_event(event)
+        return True
+
+    def _dispatch_game_event(self, event: pygame.event.Event) -> bool:
+        """Handle mouse or key events during gameplay."""
         if self.state != GameState.PLAYING:
-            if self.overlay:
-                event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
-                self.overlay.handle_event(event)
+            return False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.handle_mouse(event.pos)
+        elif event.type == pygame.KEYDOWN:
+            self.handle_key(event.key)
+        return True
+
+    def handle_mouse(self, pos):
+        event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
+        if self._dispatch_overlay_event(event):
             return
         for btn in self.action_buttons:
             if btn.rect.collidepoint(pos):
@@ -845,9 +864,8 @@ class GameView:
                 return
 
     def handle_key(self, key):
-        if self.state != GameState.PLAYING:
-            if key == pygame.K_ESCAPE and self.state in {GameState.MENU, GameState.SETTINGS}:
-                self.close_overlay()
+        event = pygame.event.Event(pygame.KEYDOWN, {'key': key})
+        if self._dispatch_overlay_event(event):
             return
         if key == pygame.K_RETURN:
             self.play_selected()
@@ -1067,16 +1085,10 @@ class GameView:
                     self.running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.on_resize(event.w, event.h)
-                elif self.state == GameState.PLAYING:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        self.handle_mouse(event.pos)
-                    elif event.type == pygame.KEYDOWN:
-                        self.handle_key(event.key)
+                elif self._dispatch_overlay_event(event):
+                    continue
                 else:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        self.handle_mouse(event.pos)
-                    elif event.type == pygame.KEYDOWN:
-                        self.handle_key(event.key)
+                    self._dispatch_game_event(event)
 
             self._draw_frame()
             self.clock.tick(30)
