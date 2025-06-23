@@ -707,7 +707,8 @@ class GameView:
         try:
             with open(OPTIONS_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to load options: %s", exc)
             return {}
 
     def _save_options(self) -> None:
@@ -730,8 +731,8 @@ class GameView:
         try:
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to save options: %s", exc)
 
     def apply_options(self) -> None:
         self.table_color = TABLE_THEMES.get(self.table_color_name, TABLE_THEMES["darkgreen"])
