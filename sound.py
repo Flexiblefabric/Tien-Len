@@ -61,3 +61,9 @@ def set_volume(vol: float) -> None:
             snd.set_volume(_VOLUME)
         except Exception:
             pass
+
+
+def set_enabled(flag: bool) -> None:
+    """Enable or disable all sound effects."""
+    global _ENABLED
+    _ENABLED = bool(flag)

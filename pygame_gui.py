@@ -751,7 +751,7 @@ class GameView:
         import tien_len_full as tl
         tl.ALLOW_2_IN_SEQUENCE = not self.house_rules
         sound.set_volume(self.volume)
-        sound._ENABLED = self.sound_enabled
+        sound.set_enabled(self.sound_enabled)
         if _mixer_ready():
             pygame.mixer.music.set_volume(self.volume)
             if self.music_enabled:
