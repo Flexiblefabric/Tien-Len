@@ -21,6 +21,26 @@ def test_load_success(tmp_path):
             assert sound._SOUNDS["hit"] is mock_instance
 
 
+def test_load_respects_current_volume(tmp_path):
+    wav = tmp_path / "a.wav"
+    wav.write_text("data")
+    snd = MagicMock()
+    with patch.object(sound, "pygame", _stub_pygame(MagicMock(return_value=snd))):
+        with patch("sound.Path.is_file", return_value=True):
+            sound.set_enabled(True)
+            sound.set_volume(0.25)
+            sound._SOUNDS.clear()
+            assert sound.load("hit", wav)
+            snd.set_volume.assert_called_with(0.25)
+
+
+def test_set_enabled_toggles_flag():
+    sound.set_enabled(True)
+    assert sound._ENABLED is True
+    sound.set_enabled(False)
+    assert sound._ENABLED is False
+
+
 def test_load_disabled_or_missing(tmp_path):
     wav = tmp_path / "a.wav"
     wav.write_text("data")
