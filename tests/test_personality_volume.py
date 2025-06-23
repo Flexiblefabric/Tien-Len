@@ -19,6 +19,44 @@ def test_set_personality_mapping_and_default():
     assert game.bluff_chance == 0.0
 
 
+def test_set_personality_random_case_and_bluff():
+    game = Game()
+    game.set_personality('RANDOM')
+    assert game.ai_personality == 'random'
+    assert game.bluff_chance == 0.1
+
+
+def test_ai_play_bluffs_when_random_under_chance(monkeypatch):
+    game = Game()
+    game.set_personality('aggressive')
+    game.current_idx = 1
+    ai = game.players[1]
+    ai.hand = [Card('Spades', '3')]
+
+    def fake_random():
+        return 0.0
+
+    monkeypatch.setattr('random.random', fake_random)
+    monkeypatch.setattr(game, 'generate_valid_moves', lambda p, c: [ai.hand])
+    assert game.ai_play(None) == []
+
+
+def test_ai_play_random_personality_uses_random_choice(monkeypatch):
+    game = Game()
+    game.set_personality('random')
+    game.current_idx = 1
+    ai = game.players[1]
+    ai.hand = [Card('Hearts', '4')]
+
+    monkeypatch.setattr(game, 'generate_valid_moves', lambda p, c: [ai.hand])
+    chosen = ['chosen']
+    def fake_choice(seq):
+        assert seq == [ai.hand]
+        return chosen
+    monkeypatch.setattr('random.choice', fake_choice)
+    assert game.ai_play(None) is chosen
+
+
 def test_score_move_respects_personality_weighting():
     game = Game()
     ai = game.players[1]
