@@ -582,14 +582,19 @@ class GameView:
 
     # Layout helpers --------------------------------------------------
     def _player_pos(self, idx: int) -> Tuple[int, int]:
+        """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
+        bottom_y = max(int(h * 0.8), 150)
+        top_y = min(int(h * 0.07), 50)
+        left_x = min(int(w * 0.1), 100)
+        right_x = max(int(w * 0.9), w - 100)
         if idx == 0:
-            return w // 2, h - 150
+            return w // 2, bottom_y
         if idx == 1:
-            return w // 2, 50
+            return w // 2, top_y
         if idx == 2:
-            return 100, h // 2
-        return w - 100, h // 2
+            return left_x, h // 2
+        return right_x, h // 2
 
     def _pile_center(self) -> Tuple[int, int]:
         w, h = self.screen.get_size()
