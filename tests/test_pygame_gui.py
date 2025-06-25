@@ -554,6 +554,8 @@ def test_overlay_instances_created():
     assert isinstance(view.overlay, pygame_gui.GraphicsOverlay)
     view.show_audio()
     assert isinstance(view.overlay, pygame_gui.AudioOverlay)
+    view.show_rules()
+    assert isinstance(view.overlay, pygame_gui.RulesOverlay)
     view.show_how_to_play()
     assert isinstance(view.overlay, pygame_gui.HowToPlayOverlay)
     view.show_tutorial()
@@ -654,6 +656,7 @@ def test_restart_game_preserves_scores():
         (pygame_gui.GameSettingsOverlay, ()),
         (pygame_gui.GraphicsOverlay, ()),
         (pygame_gui.AudioOverlay, ()),
+        (pygame_gui.RulesOverlay, (lambda: None,)),
         (pygame_gui.HowToPlayOverlay, (lambda: None,)),
         (pygame_gui.TutorialOverlay, (lambda: None,)),
     ],
@@ -768,6 +771,11 @@ def test_options_persist_across_sessions(tmp_path):
         view.colorblind_mode = True
         view.fx_volume = 0.5
         view.music_volume = 0.25
+        view.rule_chat_bomb = True
+        view.rule_chain_cutting = True
+        view.rule_tu_quy_hierarchy = True
+        view.rule_flip_suit_rank = True
+        view.rule_no_2s = False
         view._save_options()
         # create new view that loads from same options file
         new_view, _ = make_view()
@@ -775,3 +783,26 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.colorblind_mode is True
     assert new_view.fx_volume == 0.5
     assert new_view.music_volume == 0.25
+    assert new_view.rule_chat_bomb is True
+    assert new_view.rule_chain_cutting is True
+    assert new_view.rule_tu_quy_hierarchy is True
+    assert new_view.rule_flip_suit_rank is True
+    assert new_view.rule_no_2s is False
+
+
+def test_rules_overlay_toggles_update_state():
+    view, _ = make_view()
+    view.show_rules()
+    overlay = view.overlay
+    attrs = [
+        "rule_chat_bomb",
+        "rule_chain_cutting",
+        "rule_tu_quy_hierarchy",
+        "rule_flip_suit_rank",
+        "rule_no_2s",
+    ]
+    for btn, attr in zip(overlay.buttons[:-1], attrs):
+        start = getattr(view, attr)
+        btn.callback()
+        assert getattr(view, attr) != start
+    pygame.quit()

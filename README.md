@@ -60,6 +60,8 @@ are handled automatically.
 - Sprites and layout adapt automatically when the window is resized.
 - Press **Enter** or **Space** for the usual shortcuts.
 - Settings and menu overlays are provided.
+- A dedicated *House Rules* screen lets you toggle optional rules
+  such as “Chặt” bombs, chain cutting and others.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 
 Displaying card images requires the **Pillow** library, which is
