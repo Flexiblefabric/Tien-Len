@@ -512,7 +512,7 @@ def test_on_resize_repositions_layout():
 def test_overlay_instances_created():
     view, _ = make_view()
     view.show_menu()
-    assert isinstance(view.overlay, pygame_gui.MenuOverlay)
+    assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
     view.show_settings()
     assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
     view.show_game_over('P1')
