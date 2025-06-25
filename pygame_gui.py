@@ -299,7 +299,7 @@ class MainMenuOverlay(Overlay):
             Button(
                 "How to Play",
                 pygame.Rect(bx, by + 150, 200, 40),
-                lambda: self.view.show_rules(from_menu=True),
+                lambda: self.view.show_how_to_play(from_menu=True),
                 font,
             ),
             Button("Quit", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font),
@@ -335,7 +335,7 @@ class SettingsOverlay(Overlay):
             Button(
                 "Game Tutorial",
                 pygame.Rect(bx, by + 150, 240, 40),
-                lambda: self.view.show_rules(from_menu=False),
+                lambda: self.view.show_tutorial(from_menu=False),
                 font,
             ),
             Button(
@@ -541,6 +541,72 @@ class RulesOverlay(Overlay):
         ]
         y = h // 2 - 40
         for line in rules:
+            img = font.render(line, True, (255, 255, 255))
+            surface.blit(img, img.get_rect(center=(w // 2, y)))
+            y += 24
+
+
+class HowToPlayOverlay(Overlay):
+    """Display a short summary of the basic rules."""
+
+    def __init__(self, view: "GameView", back_cb: Callable[[], None]) -> None:
+        super().__init__(view, back_cb)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        bx = w // 2 - 100
+        by = h // 2 + 60
+        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+        w, h = surface.get_size()
+        font = pygame.font.SysFont(None, 20)
+        lines = [
+            "Each player starts with 13 cards.",
+            "Play higher combinations to beat opponents.",
+            "First to shed all cards wins the round.",
+        ]
+        y = h // 2 - 40
+        for line in lines:
+            img = font.render(line, True, (255, 255, 255))
+            surface.blit(img, img.get_rect(center=(w // 2, y)))
+            y += 24
+
+
+class TutorialOverlay(Overlay):
+    """Explain gameplay via numbered steps."""
+
+    def __init__(self, view: "GameView", back_cb: Callable[[], None]) -> None:
+        super().__init__(view, back_cb)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        bx = w // 2 - 100
+        by = h // 2 + 60
+        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+        w, h = surface.get_size()
+        font = pygame.font.SysFont(None, 20)
+        steps = [
+            "1. Select cards with mouse or arrow keys.",
+            "2. Press Play to submit your move.",
+            "3. Beat opponents until you run out of cards.",
+        ]
+        y = h // 2 - 40
+        for line in steps:
             img = font.render(line, True, (255, 255, 255))
             surface.blit(img, img.get_rect(center=(w // 2, y)))
             y += 24
@@ -997,6 +1063,14 @@ class GameView:
     def show_rules(self, from_menu: bool = False) -> None:
         back_cb = self.show_menu if from_menu else self.show_settings
         self._activate_overlay(RulesOverlay(self, back_cb), GameState.SETTINGS)
+
+    def show_how_to_play(self, from_menu: bool = False) -> None:
+        back_cb = self.show_menu if from_menu else self.show_settings
+        self._activate_overlay(HowToPlayOverlay(self, back_cb), GameState.SETTINGS)
+
+    def show_tutorial(self, from_menu: bool = False) -> None:
+        back_cb = self.show_menu if from_menu else self.show_settings
+        self._activate_overlay(TutorialOverlay(self, back_cb), GameState.SETTINGS)
 
     def save_game(self) -> None:
         try:
