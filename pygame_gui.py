@@ -435,6 +435,7 @@ class GraphicsOverlay(Overlay):
 
         make_color = list(TABLE_THEMES.keys())
         make_back = [self.view.card_back_name]
+        make_card_color = ["red", "blue", "green"]
 
         self.buttons = []
 
@@ -451,8 +452,10 @@ class GraphicsOverlay(Overlay):
 
         make_button(0, "table_color_name", make_color, "Table Color")
         make_button(50, "card_back_name", make_back, "Card Back")
+        make_button(100, "card_color", make_card_color, "Card Color")
+        make_button(150, "colorblind_mode", [False, True], "Colorblind")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 100, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -502,9 +505,10 @@ class AudioOverlay(Overlay):
 
         make_button(0, "sound_enabled", [True, False], "Sound")
         make_button(50, "music_enabled", [True, False], "Music")
-        make_button(100, "volume", [0.5, 0.75, 1.0], "Volume")
+        make_button(100, "fx_volume", [0.5, 0.75, 1.0], "FX Vol")
+        make_button(150, "music_volume", [0.5, 0.75, 1.0], "Music Vol")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 150, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -635,9 +639,12 @@ class GameView:
         self.card_back_name = "card_back"
         self.table_color_name = "darkgreen"
         self.table_color = TABLE_THEMES[self.table_color_name]
+        self.card_color = "red"
+        self.colorblind_mode = False
         self.sound_enabled = True
         self.music_enabled = True
-        self.volume = 1.0
+        self.music_volume = 1.0
+        self.fx_volume = 1.0
         self.house_rules = True
         self.tutorial_mode = False
         self.show_rules = False
@@ -656,7 +663,10 @@ class GameView:
         self.ai_lookahead = opts.get("ai_lookahead", self.ai_lookahead)
         self.sound_enabled = opts.get("sound", self.sound_enabled)
         self.music_enabled = opts.get("music", self.music_enabled)
-        self.volume = opts.get("volume", self.volume)
+        self.music_volume = opts.get("music_volume", self.music_volume)
+        self.fx_volume = opts.get("fx_volume", self.fx_volume)
+        self.card_color = opts.get("card_color", self.card_color)
+        self.colorblind_mode = opts.get("colorblind_mode", self.colorblind_mode)
         self.house_rules = opts.get("house_rules", self.house_rules)
         self.tutorial_mode = opts.get("tutorial_mode", self.tutorial_mode)
         self.show_rules = opts.get("show_rules", self.show_rules)
@@ -1000,7 +1010,10 @@ class GameView:
             "ai_lookahead": self.ai_lookahead,
             "sound": self.sound_enabled,
             "music": self.music_enabled,
-            "volume": self.volume,
+            "music_volume": self.music_volume,
+            "fx_volume": self.fx_volume,
+            "card_color": self.card_color,
+            "colorblind_mode": self.colorblind_mode,
             "house_rules": self.house_rules,
             "tutorial_mode": self.tutorial_mode,
             "show_rules": self.show_rules,
@@ -1023,10 +1036,10 @@ class GameView:
         import tien_len_full as tl
 
         tl.ALLOW_2_IN_SEQUENCE = not self.house_rules
-        sound.set_volume(self.volume)
+        sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)
         if _mixer_ready():
-            pygame.mixer.music.set_volume(self.volume)
+            pygame.mixer.music.set_volume(self.music_volume)
             if self.music_enabled:
                 pygame.mixer.music.unpause()
             else:
