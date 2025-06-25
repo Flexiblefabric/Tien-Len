@@ -83,6 +83,7 @@ def load_card_images(width: int = 80) -> None:
             base, (width, int(base.get_height() * ratio))
         )
 
+
 def get_card_back(name: str = "card_back", width: int = 80) -> Optional[pygame.Surface]:
     if name not in _BASE_IMAGES:
         return None
@@ -113,6 +114,7 @@ def get_card_image(card: Card, width: int) -> pygame.Surface:
 # Sprite classes
 # ---------------------------------------------------------------------------
 
+
 class CardSprite(pygame.sprite.Sprite):
     def __init__(self, card: Card, pos: Tuple[int, int], width: int = 80) -> None:
         super().__init__()
@@ -131,8 +133,13 @@ class CardSprite(pygame.sprite.Sprite):
         offset = -10 if self.selected else 10
         self.rect.move_ip(0, offset)
 
-    def draw_shadow(self, surface: pygame.Surface, offset: Tuple[int, int] = (5, 5),
-                     blur: int = 2, alpha: int = 80) -> None:
+    def draw_shadow(
+        self,
+        surface: pygame.Surface,
+        offset: Tuple[int, int] = (5, 5),
+        blur: int = 2,
+        alpha: int = 80,
+    ) -> None:
         """Draw a simple blurred shadow beneath the card."""
         shadow = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
         shadow.fill((0, 0, 0))
@@ -144,7 +151,9 @@ class CardSprite(pygame.sprite.Sprite):
 
 
 class CardBackSprite(pygame.sprite.Sprite):
-    def __init__(self, pos: Tuple[int, int], width: int = 80, name: str = "card_back") -> None:
+    def __init__(
+        self, pos: Tuple[int, int], width: int = 80, name: str = "card_back"
+    ) -> None:
         super().__init__()
         img = get_card_back(name, width)
         if img is None:
@@ -158,85 +167,167 @@ class CardBackSprite(pygame.sprite.Sprite):
 # Simple button and overlay helpers
 # ---------------------------------------------------------------------------
 
+
 class Button:
     """Basic rectangular button used by overlays."""
 
-    def __init__(self, text: str, rect: pygame.Rect, callback: Callable[[], None],
-                 font: pygame.font.Font, enabled: bool = True) -> None:
+    def __init__(
+        self,
+        text: str,
+        rect: pygame.Rect,
+        callback: Callable[[], None],
+        font: pygame.font.Font,
+        enabled: bool = True,
+    ) -> None:
         self.text = text
         self.rect = rect
         self.callback = callback
         self.font = font
         self.enabled = enabled
+        self.hovered = False
+        self.selected = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        color = (200, 200, 200) if self.enabled else (150, 150, 150)
-        text_color = (0, 0, 0) if self.enabled else (100, 100, 100)
+        if not self.enabled:
+            color = (150, 150, 150)
+            text_color = (100, 100, 100)
+        elif self.selected:
+            color = (255, 220, 120)
+            text_color = (0, 0, 0)
+        elif self.hovered:
+            color = (220, 220, 220)
+            text_color = (0, 0, 0)
+        else:
+            color = (200, 200, 200)
+            text_color = (0, 0, 0)
         pygame.draw.rect(surface, color, self.rect)
         pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
         txt = self.font.render(self.text, True, text_color)
         surface.blit(txt, txt.get_rect(center=self.rect.center))
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        if self.enabled and event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+        if event.type == pygame.MOUSEMOTION:
+            self.hovered = self.rect.collidepoint(event.pos)
+        if (
+            self.enabled
+            and event.type == pygame.MOUSEBUTTONDOWN
+            and self.rect.collidepoint(event.pos)
+        ):
             self.callback()
 
 
 class Overlay:
     """Base overlay class managing a list of buttons."""
 
-    def __init__(self) -> None:
+    def __init__(self, back_cb: Optional[Callable[[], None]] = None) -> None:
         self.buttons: List[Button] = []
+        self.focus_idx = 0
+        self.back_callback = back_cb
 
     def draw(self, surface: pygame.Surface) -> None:
-        for btn in self.buttons:
+        for idx, btn in enumerate(self.buttons):
+            btn.selected = idx == self.focus_idx
             btn.draw(surface)
 
+    def back(self) -> None:
+        if self.back_callback:
+            self.back_callback()
+
     def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.MOUSEMOTION:
+            for i, btn in enumerate(self.buttons):
+                if btn.rect.collidepoint(event.pos):
+                    self.focus_idx = i
         for btn in self.buttons:
             btn.handle_event(event)
+
+        if event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_DOWN, pygame.K_s):
+                self.focus_idx = (self.focus_idx + 1) % len(self.buttons)
+            elif event.key in (pygame.K_UP, pygame.K_w):
+                self.focus_idx = (self.focus_idx - 1) % len(self.buttons)
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                btn = self.buttons[self.focus_idx]
+                if btn.enabled:
+                    btn.callback()
+            elif event.key == pygame.K_ESCAPE:
+                self.back()
+        elif event.type == pygame.JOYHATMOTION:
+            if event.value[1] > 0:
+                self.focus_idx = (self.focus_idx - 1) % len(self.buttons)
+            elif event.value[1] < 0:
+                self.focus_idx = (self.focus_idx + 1) % len(self.buttons)
+        elif event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 0:
+                btn = self.buttons[self.focus_idx]
+                if btn.enabled:
+                    btn.callback()
+            elif event.button == 1:
+                self.back()
 
 
 class MainMenuOverlay(Overlay):
     """Initial game menu."""
 
-    def __init__(self, view: 'GameView') -> None:
-        super().__init__()
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view.close_overlay)
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 100
         by = h // 2 - 120
         self.buttons = [
-            Button('New Game', pygame.Rect(bx, by, 200, 40), view.restart_game, font),
-            Button('Load Game', pygame.Rect(bx, by + 50, 200, 40), view.load_game, font),
-            Button('Settings', pygame.Rect(bx, by + 100, 200, 40), view.show_settings, font),
-            Button('How to Play', pygame.Rect(bx, by + 150, 200, 40),
-                   lambda: view.show_rules(from_menu=True), font),
-            Button('Quit', pygame.Rect(bx, by + 200, 200, 40), view.quit_game, font),
+            Button("New Game", pygame.Rect(bx, by, 200, 40), view.restart_game, font),
+            Button(
+                "Load Game", pygame.Rect(bx, by + 50, 200, 40), view.load_game, font
+            ),
+            Button(
+                "Settings", pygame.Rect(bx, by + 100, 200, 40), view.show_settings, font
+            ),
+            Button(
+                "How to Play",
+                pygame.Rect(bx, by + 150, 200, 40),
+                lambda: view.show_rules(from_menu=True),
+                font,
+            ),
+            Button("Quit", pygame.Rect(bx, by + 200, 200, 40), view.quit_game, font),
         ]
 
 
 class SettingsOverlay(Overlay):
     """Top level settings menu."""
 
-    def __init__(self, view: 'GameView') -> None:
-        super().__init__()
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view.close_overlay)
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
         by = h // 2 - 120
         self.buttons = [
-            Button('Game Settings', pygame.Rect(bx, by, 240, 40), view.show_game_settings, font),
-            Button('Graphics', pygame.Rect(bx, by + 50, 240, 40), view.show_graphics, font),
-            Button('Audio', pygame.Rect(bx, by + 100, 240, 40), view.show_audio, font),
-            Button('Game Tutorial', pygame.Rect(bx, by + 150, 240, 40), lambda: view.show_rules(from_menu=False), font),
-            Button('Back', pygame.Rect(bx, by + 200, 240, 40), view.close_overlay, font),
+            Button(
+                "Game Settings",
+                pygame.Rect(bx, by, 240, 40),
+                view.show_game_settings,
+                font,
+            ),
+            Button(
+                "Graphics", pygame.Rect(bx, by + 50, 240, 40), view.show_graphics, font
+            ),
+            Button("Audio", pygame.Rect(bx, by + 100, 240, 40), view.show_audio, font),
+            Button(
+                "Game Tutorial",
+                pygame.Rect(bx, by + 150, 240, 40),
+                lambda: view.show_rules(from_menu=False),
+                font,
+            ),
+            Button(
+                "Back", pygame.Rect(bx, by + 200, 240, 40), view.close_overlay, font
+            ),
         ]
 
 
 class GameSettingsOverlay(Overlay):
-    def __init__(self, view: 'GameView') -> None:
-        super().__init__()
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view.show_settings)
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
@@ -251,31 +342,45 @@ class GameSettingsOverlay(Overlay):
                     setattr(view, attr, cur)
                     view.apply_options()
                     b.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
+
                 return inner
+
             return callback
 
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
             text = getattr(view, attr)
             if isinstance(text, bool):
-                text = 'On' if text else 'Off'
-            btn = Button(f"{label}: {text}", pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+                text = "On" if text else "Off"
+            btn = Button(
+                f"{label}: {text}",
+                pygame.Rect(bx, by + offset, 240, 40),
+                lambda: None,
+                font,
+            )
             btn.callback = cycle(attr, opts, label)(btn)
             self.buttons.append(btn)
 
-        make_button(0, 'ai_level', ['Easy', 'Normal', 'Hard'], 'AI Level')
-        make_button(50, 'ai_personality', ['balanced', 'aggressive', 'defensive', 'random'], 'Personality')
-        make_button(100, 'ai_lookahead', [False, True], 'Lookahead')
-        make_button(150, 'animation_speed', [0.5, 1.0, 2.0], 'Anim Speed')
-        make_button(200, 'sort_mode', ['rank', 'suit'], 'Sort Mode')
-        make_button(250, 'sound_enabled', [True, False], 'Sound')
-        make_button(300, 'music_enabled', [True, False], 'Music')
-        btn = Button('Back', pygame.Rect(bx, by + 350, 240, 40), view.show_settings, font)
+        make_button(0, "ai_level", ["Easy", "Normal", "Hard"], "AI Level")
+        make_button(
+            50,
+            "ai_personality",
+            ["balanced", "aggressive", "defensive", "random"],
+            "Personality",
+        )
+        make_button(100, "ai_lookahead", [False, True], "Lookahead")
+        make_button(150, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
+        make_button(200, "sort_mode", ["rank", "suit"], "Sort Mode")
+        make_button(250, "sound_enabled", [True, False], "Sound")
+        make_button(300, "music_enabled", [True, False], "Music")
+        btn = Button(
+            "Back", pygame.Rect(bx, by + 350, 240, 40), view.show_settings, font
+        )
         self.buttons.append(btn)
 
 
 class GraphicsOverlay(Overlay):
-    def __init__(self, view: 'GameView') -> None:
-        super().__init__()
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view.show_settings)
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
@@ -290,26 +395,36 @@ class GraphicsOverlay(Overlay):
                     setattr(view, attr, cur)
                     view.apply_options()
                     btn.text = f"{label}: {cur}"
+
                 return inner
+
             return callback
 
         make_color = list(TABLE_THEMES.keys())
         make_back = [view.card_back_name]
+
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
             text = getattr(view, attr)
-            btn = Button(f"{label}: {text}", pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+            btn = Button(
+                f"{label}: {text}",
+                pygame.Rect(bx, by + offset, 240, 40),
+                lambda: None,
+                font,
+            )
             btn.callback = cycle(attr, opts, label)(btn)
             self.buttons.append(btn)
 
-        make_button(0, 'table_color_name', make_color, 'Table Color')
-        make_button(50, 'card_back_name', make_back, 'Card Back')
-        btn = Button('Back', pygame.Rect(bx, by + 100, 240, 40), view.show_settings, font)
+        make_button(0, "table_color_name", make_color, "Table Color")
+        make_button(50, "card_back_name", make_back, "Card Back")
+        btn = Button(
+            "Back", pygame.Rect(bx, by + 100, 240, 40), view.show_settings, font
+        )
         self.buttons.append(btn)
 
 
 class AudioOverlay(Overlay):
-    def __init__(self, view: 'GameView') -> None:
-        super().__init__()
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view.show_settings)
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 120
@@ -324,44 +439,53 @@ class AudioOverlay(Overlay):
                     setattr(view, attr, cur)
                     view.apply_options()
                     btn.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
+
                 return inner
+
             return callback
 
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
             text = getattr(view, attr)
             if isinstance(text, bool):
-                text = 'On' if text else 'Off'
-            btn = Button(f"{label}: {text}", pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+                text = "On" if text else "Off"
+            btn = Button(
+                f"{label}: {text}",
+                pygame.Rect(bx, by + offset, 240, 40),
+                lambda: None,
+                font,
+            )
             btn.callback = cycle(attr, opts, label)(btn)
             self.buttons.append(btn)
 
-        make_button(0, 'sound_enabled', [True, False], 'Sound')
-        make_button(50, 'music_enabled', [True, False], 'Music')
-        make_button(100, 'volume', [0.5, 0.75, 1.0], 'Volume')
-        btn = Button('Back', pygame.Rect(bx, by + 150, 240, 40), view.show_settings, font)
+        make_button(0, "sound_enabled", [True, False], "Sound")
+        make_button(50, "music_enabled", [True, False], "Music")
+        make_button(100, "volume", [0.5, 0.75, 1.0], "Volume")
+        btn = Button(
+            "Back", pygame.Rect(bx, by + 150, 240, 40), view.show_settings, font
+        )
         self.buttons.append(btn)
 
 
 class RulesOverlay(Overlay):
     """Simple overlay showing game rules."""
 
-    def __init__(self, view: 'GameView', back_cb: Callable[[], None]) -> None:
-        super().__init__()
+    def __init__(self, view: "GameView", back_cb: Callable[[], None]) -> None:
+        super().__init__(back_cb)
         self.view = view
         w, h = view.screen.get_size()
         font = view.font
         bx = w // 2 - 100
         by = h // 2 + 60
-        self.buttons = [Button('Back', pygame.Rect(bx, by, 200, 40), back_cb, font)]
+        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), back_cb, font)]
 
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
         w, h = surface.get_size()
         font = pygame.font.SysFont(None, 20)
         rules = [
-            'Sequences must share a suit.',
-            'Pairs, triples and bombs match ranks.',
-            '2 cannot be used in sequences when house rules enabled.',
+            "Sequences must share a suit.",
+            "Pairs, triples and bombs match ranks.",
+            "2 cannot be used in sequences when house rules enabled.",
         ]
         y = h // 2 - 40
         for line in rules:
@@ -371,8 +495,8 @@ class RulesOverlay(Overlay):
 
 
 class GameOverOverlay(Overlay):
-    def __init__(self, view: 'GameView', winner: str) -> None:
-        super().__init__()
+    def __init__(self, view: "GameView", winner: str) -> None:
+        super().__init__(None)
         self.winner = winner
         self.rankings = view.game.get_rankings()
         w, h = view.screen.get_size()
@@ -380,16 +504,16 @@ class GameOverOverlay(Overlay):
         bx = w // 2 - 100
         by = h // 2 + 40
         self.buttons = [
-            Button('Play Again', pygame.Rect(bx, by, 200, 40), view.restart_game, font),
-            Button('Quit', pygame.Rect(bx, by + 50, 200, 40), view.quit_game, font),
+            Button("Play Again", pygame.Rect(bx, by, 200, 40), view.restart_game, font),
+            Button("Quit", pygame.Rect(bx, by + 50, 200, 40), view.quit_game, font),
         ]
 
     def draw(self, surface: pygame.Surface) -> None:
         w, h = surface.get_size()
         font = pygame.font.SysFont(None, 32)
-        txt = font.render(f'{self.winner} wins!', True, (255, 255, 255))
+        txt = font.render(f"{self.winner} wins!", True, (255, 255, 255))
         surface.blit(txt, txt.get_rect(center=(w // 2, h // 2 - 60)))
-        rank_lines = [f'{i+1}. {n} ({c})' for i, (n, c) in enumerate(self.rankings)]
+        rank_lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(self.rankings)]
         y = h // 2 - 20
         for line in rank_lines:
             img = font.render(line, True, (255, 255, 255))
@@ -401,6 +525,7 @@ class GameOverOverlay(Overlay):
 # ---------------------------------------------------------------------------
 # Main game view
 # ---------------------------------------------------------------------------
+
 
 class GameView:
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
@@ -442,17 +567,19 @@ class GameView:
                 pass
         self.selected: List[CardSprite] = []
         self.current_trick: list[tuple[str, pygame.Surface]] = []
-        self.ai_sprites: List[pygame.sprite.Group] = [pygame.sprite.Group() for _ in range(3)]
+        self.ai_sprites: List[pygame.sprite.Group] = [
+            pygame.sprite.Group() for _ in range(3)
+        ]
         self.running = True
         self.overlay: Optional[Overlay] = None
         self.state: GameState = GameState.PLAYING
-        self.ai_level = 'Normal'
-        self.ai_personality = 'balanced'
+        self.ai_level = "Normal"
+        self.ai_personality = "balanced"
         self.ai_lookahead = False
-        self.sort_mode = 'rank'
-        self.player_name = 'Player'
-        self.card_back_name = 'card_back'
-        self.table_color_name = 'darkgreen'
+        self.sort_mode = "rank"
+        self.player_name = "Player"
+        self.card_back_name = "card_back"
+        self.table_color_name = "darkgreen"
         self.table_color = TABLE_THEMES[self.table_color_name]
         self.sound_enabled = True
         self.music_enabled = True
@@ -501,7 +628,9 @@ class GameView:
         self.draw_score_overlay()
         pygame.display.flip()
 
-    def _animate_sprites(self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15) -> None:
+    def _animate_sprites(
+        self, sprites: List[CardSprite], dest: Tuple[int, int], frames: int = 15
+    ) -> None:
         """Move ``sprites`` toward ``dest`` over ``frames`` steps."""
         if not sprites:
             return
@@ -518,7 +647,9 @@ class GameView:
             pygame.event.pump()
             self.clock.tick(60)
 
-    def _animate_bounce(self, sprites: List[CardSprite], scale: float = 1.2, frames: int = 6) -> None:
+    def _animate_bounce(
+        self, sprites: List[CardSprite], scale: float = 1.2, frames: int = 6
+    ) -> None:
         """Briefly scale ``sprites`` up then back down for a bounce effect."""
         if not sprites:
             return
@@ -532,7 +663,9 @@ class GameView:
             for sp, (img, rect) in zip(sprites, originals):
                 w, h = rect.size
                 if isinstance(img, pygame.Surface):
-                    scaled = pygame.transform.smoothscale(img, (int(w * factor), int(h * factor)))
+                    scaled = pygame.transform.smoothscale(
+                        img, (int(w * factor), int(h * factor))
+                    )
                 else:
                     scaled = img
                 sp.image = scaled
@@ -545,7 +678,9 @@ class GameView:
             sp.image = img
             sp.rect = rect
 
-    def _animate_back(self, start: Tuple[int, int], dest: Tuple[int, int], frames: int = 15) -> None:
+    def _animate_back(
+        self, start: Tuple[int, int], dest: Tuple[int, int], frames: int = 15
+    ) -> None:
         """Animate a card back image from ``start`` to ``dest``."""
         img = get_card_back(self.card_back_name)
         if img is None:
@@ -622,7 +757,9 @@ class GameView:
             center = overlay.get_rect().center
             radius = 11 + int(3 * math.sin(math.pi * i / frames))
             if hasattr(overlay, "get_width"):
-                pygame.draw.circle(overlay, (255, 255, 0, alpha), center, radius, width=3)
+                pygame.draw.circle(
+                    overlay, (255, 255, 0, alpha), center, radius, width=3
+                )
             self.screen.blit(overlay, rect.topleft)
             pygame.display.flip()
             pygame.event.pump()
@@ -677,7 +814,7 @@ class GameView:
 
         # Position buttons relative to the player's hand
         _, hand_y = self._player_pos(0)
-        sprites = getattr(self, 'hand_sprites', None)
+        sprites = getattr(self, "hand_sprites", None)
         if sprites:
             card_h = sprites.sprites()[0].rect.height
         else:
@@ -688,17 +825,31 @@ class GameView:
 
         font = self.font
         self.action_buttons = [
-            Button('Play', pygame.Rect(start_x, y, btn_w, 40), self.play_selected, font),
-            Button('Pass', pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40), self.pass_turn, font),
-            Button('Undo', pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, 40), self.undo_move, font),
+            Button(
+                "Play", pygame.Rect(start_x, y, btn_w, 40), self.play_selected, font
+            ),
+            Button(
+                "Pass",
+                pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40),
+                self.pass_turn,
+                font,
+            ),
+            Button(
+                "Undo",
+                pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, 40),
+                self.undo_move,
+                font,
+            ),
         ]
 
     def _position_settings_button(self) -> None:
         """Position the persistent Settings button."""
         w, _ = self.screen.get_size()
         font = self.font
-        if not hasattr(self, 'settings_button'):
-            self.settings_button = Button('Settings', pygame.Rect(0, 0, 100, 40), self.show_settings, font)
+        if not hasattr(self, "settings_button"):
+            self.settings_button = Button(
+                "Settings", pygame.Rect(0, 0, 100, 40), self.show_settings, font
+            )
         margin = max(5, self.card_width // 3)
         self.settings_button.rect.topright = (w - margin, margin)
 
@@ -734,14 +885,18 @@ class GameView:
 
     def save_game(self) -> None:
         try:
-            with open(Path(__file__).with_name('saved_game.json'), 'w', encoding='utf-8') as f:
+            with open(
+                Path(__file__).with_name("saved_game.json"), "w", encoding="utf-8"
+            ) as f:
                 f.write(self.game.to_json())
         except Exception:
             pass
 
     def load_game(self) -> None:
         try:
-            with open(Path(__file__).with_name('saved_game.json'), 'r', encoding='utf-8') as f:
+            with open(
+                Path(__file__).with_name("saved_game.json"), "r", encoding="utf-8"
+            ) as f:
                 data = f.read()
             self.game.from_json(data)
             self.update_hand_sprites()
@@ -803,13 +958,16 @@ class GameView:
             logger.warning("Failed to save options: %s", exc)
 
     def apply_options(self) -> None:
-        self.table_color = TABLE_THEMES.get(self.table_color_name, TABLE_THEMES["darkgreen"])
+        self.table_color = TABLE_THEMES.get(
+            self.table_color_name, TABLE_THEMES["darkgreen"]
+        )
         self.game.players[0].name = self.player_name
         self.game.players[0].sort_hand(self.sort_mode)
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
         import tien_len_full as tl
+
         tl.ALLOW_2_IN_SEQUENCE = not self.house_rules
         sound.set_volume(self.volume)
         sound.set_enabled(self.sound_enabled)
@@ -819,11 +977,11 @@ class GameView:
                 pygame.mixer.music.unpause()
             else:
                 pygame.mixer.music.pause()
-        if hasattr(self, 'hand_sprites'):
+        if hasattr(self, "hand_sprites"):
             self._create_action_buttons()
 
     def show_game_over(self, winner: str) -> None:
-        sound.play('win')
+        sound.play("win")
         self.win_counts[winner] = self.win_counts.get(winner, 0) + 1
         self.overlay = GameOverOverlay(self, winner)
         self.state = GameState.GAME_OVER
@@ -849,7 +1007,7 @@ class GameView:
             pygame.display.toggle_fullscreen()
         except Exception:
             pass
-        self.fullscreen = not getattr(self, 'fullscreen', False)
+        self.fullscreen = not getattr(self, "fullscreen", False)
         flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
         size = self.screen.get_size()
         self.screen = pygame.display.set_mode(size, flags)
@@ -876,10 +1034,7 @@ class GameView:
         """Send events to the active overlay when the game isn't playing."""
         if self.state == GameState.PLAYING:
             return False
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and \
-                self.state in {GameState.MENU, GameState.SETTINGS}:
-            self.close_overlay()
-        elif self.overlay:
+        if self.overlay:
             self.overlay.handle_event(event)
         return True
 
@@ -894,12 +1049,12 @@ class GameView:
         return True
 
     def handle_mouse(self, pos):
-        event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': pos})
+        event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": pos})
         if self._dispatch_overlay_event(event):
             return
         for btn in self.action_buttons:
             if btn.rect.collidepoint(pos):
-                if btn.text == 'Undo' and len(self.game.snapshots) <= 1:
+                if btn.text == "Undo" and len(self.game.snapshots) <= 1:
                     return
                 btn.callback()
                 return
@@ -932,7 +1087,7 @@ class GameView:
                 return
 
     def handle_key(self, key):
-        event = pygame.event.Event(pygame.KEYDOWN, {'key': key})
+        event = pygame.event.Event(pygame.KEYDOWN, {"key": key})
         if self._dispatch_overlay_event(event):
             return
         if key == pygame.K_RETURN:
@@ -963,10 +1118,10 @@ class GameView:
             img = get_card_image(c, self.card_width)
             if img is not None:
                 self.current_trick.append((player.name, img))
-        if detect_combo(cards) == 'bomb':
-            sound.play('bomb')
+        if detect_combo(cards) == "bomb":
+            sound.play("bomb")
         else:
-            sound.play('click')
+            sound.play("click")
         self._animate_flip(list(self.selected), self._pile_center())
         self.game.next_turn()
         self.selected.clear()
@@ -1006,13 +1161,15 @@ class GameView:
                     img = get_card_image(c, self.card_width)
                     if img is not None:
                         self.current_trick.append((p.name, img))
-                if detect_combo(cards) == 'bomb':
-                    sound.play('bomb')
+                if detect_combo(cards) == "bomb":
+                    sound.play("bomb")
                 else:
-                    sound.play('click')
-                self._animate_back(self._player_pos(self.game.current_idx), self._pile_center())
+                    sound.play("click")
+                self._animate_back(
+                    self._player_pos(self.game.current_idx), self._pile_center()
+                )
             else:
-                sound.play('pass')
+                sound.play("pass")
                 self.game.process_pass(p)
             self.game.next_turn()
             self._highlight_turn(self.game.current_idx)
@@ -1041,12 +1198,16 @@ class GameView:
             if idx == 1:
                 start = x - (len(opp.hand) - 1) * spacing // 2
                 for i in range(len(opp.hand)):
-                    sp = CardBackSprite((start + i * spacing, y), card_w, self.card_back_name)
+                    sp = CardBackSprite(
+                        (start + i * spacing, y), card_w, self.card_back_name
+                    )
                     group.add(sp)
             else:
                 start = y - (len(opp.hand) - 1) * spacing // 2
                 for i in range(len(opp.hand)):
-                    sp = CardBackSprite((x, start + i * spacing), card_w, self.card_back_name)
+                    sp = CardBackSprite(
+                        (x, start + i * spacing), card_w, self.card_back_name
+                    )
                     group.add(sp)
         self.update_play_button_state()
 
@@ -1084,7 +1245,7 @@ class GameView:
             group.draw(self.screen)
         if self.selected:
             player = self.game.players[self.game.current_idx]
-            cards = [sp.card for sp in self.selected if hasattr(sp, 'card')]
+            cards = [sp.card for sp in self.selected if hasattr(sp, "card")]
             valid = self.game.is_valid(player, cards, self.game.current_combo)[0]
             color = (0, 255, 0) if valid else (255, 0, 0)
             for sp in self.selected:
@@ -1107,7 +1268,7 @@ class GameView:
 
         if self.state == GameState.PLAYING:
             # Enable or disable Undo based on snapshot history
-            undo_btn = next((b for b in self.action_buttons if b.text == 'Undo'), None)
+            undo_btn = next((b for b in self.action_buttons if b.text == "Undo"), None)
             if undo_btn:
                 undo_btn.enabled = len(self.game.snapshots) > 1
             for btn in self.action_buttons:
