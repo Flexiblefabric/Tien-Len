@@ -548,6 +548,10 @@ def test_overlay_instances_created():
     assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
     view.show_settings()
     assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
+    view.show_how_to_play()
+    assert isinstance(view.overlay, pygame_gui.HowToPlayOverlay)
+    view.show_tutorial()
+    assert isinstance(view.overlay, pygame_gui.TutorialOverlay)
     view.show_game_over("P1")
     assert isinstance(view.overlay, pygame_gui.GameOverOverlay)
     with patch.object(view, "_save_options"), patch.object(view, "ai_turns"):
@@ -661,6 +665,28 @@ def test_overlay_keyboard_navigation():
     overlay.back_callback = MagicMock()
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE}))
     overlay.back_callback.assert_called_once()
+    pygame.quit()
+
+
+def test_how_to_play_overlay_escape_returns_menu():
+    view, _ = make_view()
+    with patch.object(view, "show_menu") as show_menu:
+        view.show_how_to_play(from_menu=True)
+        view.overlay.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
+        )
+        show_menu.assert_called_once()
+    pygame.quit()
+
+
+def test_tutorial_overlay_escape_returns_settings():
+    view, _ = make_view()
+    with patch.object(view, "show_settings") as show_settings:
+        view.show_tutorial(from_menu=False)
+        view.overlay.handle_event(
+            pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
+        )
+        show_settings.assert_called_once()
     pygame.quit()
 
 
