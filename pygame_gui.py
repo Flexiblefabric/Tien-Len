@@ -829,6 +829,55 @@ class GameView:
             pygame.event.pump()
             self.clock.tick(60)
 
+    def _transition_overlay(
+        self,
+        old: Optional[Overlay],
+        new: Overlay,
+        frames: int = 10,
+        slide: bool = False,
+    ) -> None:
+        """Animate transition between two overlays."""
+        if old is None:
+            return
+        frames = max(1, int(frames / self.animation_speed))
+        w, h = self.screen.get_size()
+
+        def render(ov: Overlay) -> pygame.Surface:
+            surf = pygame.Surface((w, h), pygame.SRCALPHA)
+            bg = pygame.Surface((w, h), pygame.SRCALPHA)
+            bg.fill((0, 0, 0, 180))
+            surf.blit(bg, (0, 0))
+            ov.draw(surf)
+            return surf
+
+        from_surf = render(old)
+        to_surf = render(new)
+
+        current = self.overlay
+        for i in range(frames):
+            progress = (i + 1) / frames
+            self.overlay = None
+            self._draw_frame()
+            self.overlay = current
+            if slide:
+                offset = int(w * (1 - progress))
+                self.screen.blit(from_surf, (-offset, 0))
+                self.screen.blit(to_surf, (w - offset, 0))
+            else:
+                fs = from_surf.copy()
+                fs.set_alpha(int(255 * (1 - progress)))
+                ts = to_surf.copy()
+                ts.set_alpha(int(255 * progress))
+                self.screen.blit(fs, (0, 0))
+                self.screen.blit(ts, (0, 0))
+            pygame.display.flip()
+            pygame.event.pump()
+            self.clock.tick(60)
+
+        self.overlay = new
+        self._draw_frame()
+
+
     # Layout helpers --------------------------------------------------
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         """Return the centre position for player ``idx`` based on screen size."""
@@ -917,35 +966,37 @@ class GameView:
         margin = max(5, self.card_width // 3)
         self.settings_button.rect.topright = (w - margin, margin)
 
+    def _activate_overlay(self, overlay: Overlay, state: GameState) -> None:
+        """Switch to ``overlay`` using a brief transition."""
+        old = self.overlay
+        if old is not overlay:
+            self._transition_overlay(old, overlay)
+        self.overlay = overlay
+        self.state = state
+
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
-        self.overlay = MainMenuOverlay(self)
-        self.state = GameState.MENU
+        self._activate_overlay(MainMenuOverlay(self), GameState.MENU)
 
     def show_settings(self) -> None:
-        self.overlay = SettingsOverlay(self)
-        self.state = GameState.SETTINGS
+        self._activate_overlay(SettingsOverlay(self), GameState.SETTINGS)
 
     def show_game_settings(self) -> None:
-        self.overlay = GameSettingsOverlay(self)
-        self.state = GameState.SETTINGS
+        self._activate_overlay(GameSettingsOverlay(self), GameState.SETTINGS)
 
     # Legacy name kept for backwards compatibility
     def show_options(self) -> None:
         self.show_game_settings()
 
     def show_graphics(self) -> None:
-        self.overlay = GraphicsOverlay(self)
-        self.state = GameState.SETTINGS
+        self._activate_overlay(GraphicsOverlay(self), GameState.SETTINGS)
 
     def show_audio(self) -> None:
-        self.overlay = AudioOverlay(self)
-        self.state = GameState.SETTINGS
+        self._activate_overlay(AudioOverlay(self), GameState.SETTINGS)
 
     def show_rules(self, from_menu: bool = False) -> None:
         back_cb = self.show_menu if from_menu else self.show_settings
-        self.overlay = RulesOverlay(self, back_cb)
-        self.state = GameState.SETTINGS
+        self._activate_overlay(RulesOverlay(self, back_cb), GameState.SETTINGS)
 
     def save_game(self) -> None:
         try:
@@ -1050,8 +1101,7 @@ class GameView:
     def show_game_over(self, winner: str) -> None:
         sound.play("win")
         self.win_counts[winner] = self.win_counts.get(winner, 0) + 1
-        self.overlay = GameOverOverlay(self, winner)
-        self.state = GameState.GAME_OVER
+        self._activate_overlay(GameOverOverlay(self, winner), GameState.GAME_OVER)
 
     def set_ai_level(self, level: str) -> None:
         self.ai_level = level

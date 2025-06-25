@@ -555,6 +555,14 @@ def test_overlay_instances_created():
     assert view.overlay is None
 
 
+def test_overlay_transitions_called():
+    view, _ = make_view()
+    with patch.object(view, "_transition_overlay") as trans:
+        view.show_settings()
+        view.show_menu()
+    assert trans.call_count == 2
+
+
 def test_draw_frame_with_overlay():
     view, _ = make_view()
     # restore original method
