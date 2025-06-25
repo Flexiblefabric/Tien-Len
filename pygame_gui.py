@@ -399,8 +399,16 @@ class GameSettingsOverlay(Overlay):
         make_button(200, "sort_mode", ["rank", "suit"], "Sort Mode")
         make_button(250, "sound_enabled", [True, False], "Sound")
         make_button(300, "music_enabled", [True, False], "Music")
+        self.buttons.append(
+            Button(
+                "House Rules",
+                pygame.Rect(bx, by + 350, 240, 40),
+                lambda: self.view.show_rules(from_menu=False),
+                font,
+            )
+        )
         btn = Button(
-            "Back", pygame.Rect(bx, by + 350, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 400, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -514,7 +522,7 @@ class AudioOverlay(Overlay):
 
 
 class RulesOverlay(Overlay):
-    """Simple overlay showing game rules."""
+    """Overlay providing toggles for optional house rules."""
 
     def __init__(self, view: "GameView", back_cb: Callable[[], None]) -> None:
         super().__init__(view, back_cb)
@@ -526,24 +534,38 @@ class RulesOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 + 60
-        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
+        bx = w // 2 - 120
+        by = h // 2 - 150
 
-    def draw(self, surface: pygame.Surface) -> None:
-        super().draw(surface)
-        w, h = surface.get_size()
-        font = pygame.font.SysFont(None, 20)
-        rules = [
-            "Sequences must share a suit.",
-            "Pairs, triples and bombs match ranks.",
-            "2 cannot be used in sequences when house rules enabled.",
-        ]
-        y = h // 2 - 40
-        for line in rules:
-            img = font.render(line, True, (255, 255, 255))
-            surface.blit(img, img.get_rect(center=(w // 2, y)))
-            y += 24
+        def toggle(attr: str, label: str) -> Callable[[Button], Callable[[], None]]:
+            def cb(btn: Button) -> Callable[[], None]:
+                def inner() -> None:
+                    cur = getattr(self.view, attr)
+                    setattr(self.view, attr, not cur)
+                    self.view.apply_options()
+                    btn.text = f"{label}: {'On' if getattr(self.view, attr) else 'Off'}"
+
+                return inner
+
+            return cb
+
+        self.buttons = []
+
+        def make_button(offset: int, attr: str, label: str) -> None:
+            state = getattr(self.view, attr)
+            text = f"{label}: {'On' if state else 'Off'}"
+            btn = Button(text, pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+            btn.callback = toggle(attr, label)(btn)
+            self.buttons.append(btn)
+
+        make_button(0, "rule_chat_bomb", "“Chặt” Bomb")
+        make_button(50, "rule_chain_cutting", "Chain Cutting")
+        make_button(100, "rule_tu_quy_hierarchy", "Tứ Quý Hierarchy")
+        make_button(150, "rule_flip_suit_rank", "Flip Suit Rank")
+        make_button(200, "rule_no_2s", "No 2s in straights")
+        self.buttons.append(
+            Button("Back", pygame.Rect(bx, by + 250, 240, 40), self.back_callback, font)
+        )
 
 
 class HowToPlayOverlay(Overlay):
@@ -714,6 +736,12 @@ class GameView:
         self.house_rules = True
         self.tutorial_mode = False
         self.show_rules = False
+        # Additional house rule toggles
+        self.rule_chat_bomb = False
+        self.rule_chain_cutting = False
+        self.rule_tu_quy_hierarchy = False
+        self.rule_flip_suit_rank = False
+        self.rule_no_2s = True
         self.action_buttons: List[Button] = []
         self._create_action_buttons()
         self.settings_button: Button
@@ -736,6 +764,11 @@ class GameView:
         self.house_rules = opts.get("house_rules", self.house_rules)
         self.tutorial_mode = opts.get("tutorial_mode", self.tutorial_mode)
         self.show_rules = opts.get("show_rules", self.show_rules)
+        self.rule_chat_bomb = opts.get("rule_chat_bomb", self.rule_chat_bomb)
+        self.rule_chain_cutting = opts.get("rule_chain_cutting", self.rule_chain_cutting)
+        self.rule_tu_quy_hierarchy = opts.get("rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy)
+        self.rule_flip_suit_rank = opts.get("rule_flip_suit_rank", self.rule_flip_suit_rank)
+        self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
         self.apply_options()
         self.update_hand_sprites()
         self._create_action_buttons()
@@ -1061,7 +1094,7 @@ class GameView:
         self._activate_overlay(AudioOverlay(self), GameState.SETTINGS)
 
     def show_rules(self, from_menu: bool = False) -> None:
-        back_cb = self.show_menu if from_menu else self.show_settings
+        back_cb = self.show_menu if from_menu else self.show_game_settings
         self._activate_overlay(RulesOverlay(self, back_cb), GameState.SETTINGS)
 
     def show_how_to_play(self, from_menu: bool = False) -> None:
@@ -1142,6 +1175,11 @@ class GameView:
             "house_rules": self.house_rules,
             "tutorial_mode": self.tutorial_mode,
             "show_rules": self.show_rules,
+            "rule_chat_bomb": self.rule_chat_bomb,
+            "rule_chain_cutting": self.rule_chain_cutting,
+            "rule_tu_quy_hierarchy": self.rule_tu_quy_hierarchy,
+            "rule_flip_suit_rank": self.rule_flip_suit_rank,
+            "rule_no_2s": self.rule_no_2s,
         }
         try:
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
@@ -1160,7 +1198,11 @@ class GameView:
         self.game.ai_lookahead = self.ai_lookahead
         import tien_len_full as tl
 
-        tl.ALLOW_2_IN_SEQUENCE = not self.house_rules
+        tl.ALLOW_2_IN_SEQUENCE = not self.rule_no_2s
+        tl.CHAT_BOMB = self.rule_chat_bomb
+        tl.CHAIN_CUTTING = self.rule_chain_cutting
+        tl.TU_QUY_HIERARCHY = self.rule_tu_quy_hierarchy
+        tl.FLIP_SUIT_RANK = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)
         if _mixer_ready():
