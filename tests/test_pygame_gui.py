@@ -548,6 +548,12 @@ def test_overlay_instances_created():
     assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
     view.show_settings()
     assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
+    view.show_game_settings()
+    assert isinstance(view.overlay, pygame_gui.GameSettingsOverlay)
+    view.show_graphics()
+    assert isinstance(view.overlay, pygame_gui.GraphicsOverlay)
+    view.show_audio()
+    assert isinstance(view.overlay, pygame_gui.AudioOverlay)
     view.show_how_to_play()
     assert isinstance(view.overlay, pygame_gui.HowToPlayOverlay)
     view.show_tutorial()
@@ -640,21 +646,34 @@ def test_restart_game_preserves_scores():
     pygame.quit()
 
 
-def test_overlay_keyboard_navigation():
+@pytest.mark.parametrize(
+    "cls, args",
+    [
+        (pygame_gui.MainMenuOverlay, ()),
+        (pygame_gui.SettingsOverlay, ()),
+        (pygame_gui.GameSettingsOverlay, ()),
+        (pygame_gui.GraphicsOverlay, ()),
+        (pygame_gui.AudioOverlay, ()),
+        (pygame_gui.HowToPlayOverlay, (lambda: None,)),
+        (pygame_gui.TutorialOverlay, (lambda: None,)),
+    ],
+)
+def test_overlay_keyboard_navigation(cls, args):
     view, _ = make_view()
-    overlay = pygame_gui.SettingsOverlay(view)
+    overlay = cls(view, *args) if args else cls(view)
+
     assert overlay.focus_idx == 0
 
     overlay.handle_event(
-        pygame.event.Event(pygame.MOUSEMOTION, {"pos": overlay.buttons[2].rect.center})
+        pygame.event.Event(pygame.MOUSEMOTION, {"pos": overlay.buttons[-1].rect.center})
     )
-    assert overlay.focus_idx == 2
+    assert overlay.focus_idx == len(overlay.buttons) - 1
 
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_UP}))
-    assert overlay.focus_idx == 1
+    assert overlay.focus_idx == (len(overlay.buttons) - 2) % len(overlay.buttons)
 
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_DOWN}))
-    assert overlay.focus_idx == 2
+    assert overlay.focus_idx == len(overlay.buttons) - 1
 
     overlay.focus_idx = len(overlay.buttons) - 1
     btn = overlay.buttons[overlay.focus_idx]
@@ -705,7 +724,19 @@ def test_on_resize_calls_overlay_resize():
     overlay.resize.assert_called_once()
 
 
-def test_overlay_buttons_reposition_after_resize():
+@pytest.mark.parametrize(
+    "show_fn, args",
+    [
+        ("show_menu", ()),
+        ("show_settings", ()),
+        ("show_game_settings", ()),
+        ("show_graphics", ()),
+        ("show_audio", ()),
+        ("show_how_to_play", ()),
+        ("show_tutorial", ()),
+    ],
+)
+def test_overlay_buttons_reposition_after_resize(show_fn, args):
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((600, 400))
@@ -718,7 +749,7 @@ def test_overlay_buttons_reposition_after_resize():
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
             ):
                 view = pygame_gui.GameView(300, 200)
-                view.show_menu()
+                getattr(view, show_fn)(*args)
                 before = [b.rect.topleft for b in view.overlay.buttons]
 
                 view.on_resize(600, 400)
