@@ -447,7 +447,8 @@ def test_apply_options_updates_game_and_audio():
     view.ai_level = "Hard"
     view.ai_personality = "aggressive"
     view.ai_lookahead = True
-    view.volume = 0.7
+    view.fx_volume = 0.7
+    view.music_volume = 0.5
     view.sound_enabled = True
     view.music_enabled = False
     with patch.object(sound, "set_volume") as sv, patch.object(
@@ -468,7 +469,7 @@ def test_apply_options_updates_game_and_audio():
     sp.assert_called_with("aggressive")
     assert view.game.ai_lookahead is True
     sv.assert_called_with(0.7)
-    mv.assert_called_with(0.7)
+    mv.assert_called_with(0.5)
     pause.assert_called_once()
     unpause.assert_not_called()
 
@@ -692,3 +693,20 @@ def test_overlay_buttons_reposition_after_resize():
 
     pygame.quit()
     assert before != after
+
+
+def test_options_persist_across_sessions(tmp_path):
+    opt = tmp_path / "opts.json"
+    with patch.object(pygame_gui, "OPTIONS_FILE", opt):
+        view, _ = make_view()
+        view.card_color = "blue"
+        view.colorblind_mode = True
+        view.fx_volume = 0.5
+        view.music_volume = 0.25
+        view._save_options()
+        # create new view that loads from same options file
+        new_view, _ = make_view()
+    assert new_view.card_color == "blue"
+    assert new_view.colorblind_mode is True
+    assert new_view.fx_volume == 0.5
+    assert new_view.music_volume == 0.25
