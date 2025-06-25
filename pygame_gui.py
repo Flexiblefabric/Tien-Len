@@ -219,10 +219,17 @@ class Button:
 class Overlay:
     """Base overlay class managing a list of buttons."""
 
-    def __init__(self, back_cb: Optional[Callable[[], None]] = None) -> None:
+    def __init__(
+        self, view: "GameView", back_cb: Optional[Callable[[], None]] = None
+    ) -> None:
+        self.view = view
         self.buttons: List[Button] = []
         self.focus_idx = 0
         self.back_callback = back_cb
+
+    def resize(self) -> None:
+        """Recalculate layout based on the current screen size."""
+        pass
 
     def draw(self, surface: pygame.Surface) -> None:
         for idx, btn in enumerate(self.buttons):
@@ -270,26 +277,32 @@ class MainMenuOverlay(Overlay):
     """Initial game menu."""
 
     def __init__(self, view: "GameView") -> None:
-        super().__init__(view.close_overlay)
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, view.close_overlay)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 100
         by = h // 2 - 120
         self.buttons = [
-            Button("New Game", pygame.Rect(bx, by, 200, 40), view.restart_game, font),
+            Button("New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
             Button(
-                "Load Game", pygame.Rect(bx, by + 50, 200, 40), view.load_game, font
+                "Load Game", pygame.Rect(bx, by + 50, 200, 40), self.view.load_game, font
             ),
             Button(
-                "Settings", pygame.Rect(bx, by + 100, 200, 40), view.show_settings, font
+                "Settings", pygame.Rect(bx, by + 100, 200, 40), self.view.show_settings, font
             ),
             Button(
                 "How to Play",
                 pygame.Rect(bx, by + 150, 200, 40),
-                lambda: view.show_rules(from_menu=True),
+                lambda: self.view.show_rules(from_menu=True),
                 font,
             ),
-            Button("Quit", pygame.Rect(bx, by + 200, 200, 40), view.quit_game, font),
+            Button("Quit", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font),
         ]
 
 
@@ -297,58 +310,72 @@ class SettingsOverlay(Overlay):
     """Top level settings menu."""
 
     def __init__(self, view: "GameView") -> None:
-        super().__init__(view.close_overlay)
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, view.close_overlay)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 120
         by = h // 2 - 120
         self.buttons = [
             Button(
                 "Game Settings",
                 pygame.Rect(bx, by, 240, 40),
-                view.show_game_settings,
+                self.view.show_game_settings,
                 font,
             ),
             Button(
-                "Graphics", pygame.Rect(bx, by + 50, 240, 40), view.show_graphics, font
+                "Graphics", pygame.Rect(bx, by + 50, 240, 40), self.view.show_graphics, font
             ),
-            Button("Audio", pygame.Rect(bx, by + 100, 240, 40), view.show_audio, font),
+            Button("Audio", pygame.Rect(bx, by + 100, 240, 40), self.view.show_audio, font),
             Button(
                 "Game Tutorial",
                 pygame.Rect(bx, by + 150, 240, 40),
-                lambda: view.show_rules(from_menu=False),
+                lambda: self.view.show_rules(from_menu=False),
                 font,
             ),
             Button(
-                "Back", pygame.Rect(bx, by + 200, 240, 40), view.close_overlay, font
+                "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.close_overlay, font
             ),
         ]
 
 
 class GameSettingsOverlay(Overlay):
     def __init__(self, view: "GameView") -> None:
-        super().__init__(view.show_settings)
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, view.show_settings)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 120
         by = h // 2 - 220
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(b: Button) -> Callable[[], None]:
                 def inner() -> None:
-                    cur = getattr(view, attr)
+                    cur = getattr(self.view, attr)
                     idx = options.index(cur)
                     cur = options[(idx + 1) % len(options)]
-                    setattr(view, attr, cur)
-                    view.apply_options()
+                    setattr(self.view, attr, cur)
+                    self.view.apply_options()
                     b.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
 
                 return inner
 
             return callback
 
+        self.buttons = []
+
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
-            text = getattr(view, attr)
+            text = getattr(self.view, attr)
             if isinstance(text, bool):
                 text = "On" if text else "Off"
             btn = Button(
@@ -373,27 +400,33 @@ class GameSettingsOverlay(Overlay):
         make_button(250, "sound_enabled", [True, False], "Sound")
         make_button(300, "music_enabled", [True, False], "Music")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 350, 240, 40), view.show_settings, font
+            "Back", pygame.Rect(bx, by + 350, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
 
 class GraphicsOverlay(Overlay):
     def __init__(self, view: "GameView") -> None:
-        super().__init__(view.show_settings)
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, view.show_settings)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 120
         by = h // 2 - 120
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(btn: Button) -> Callable[[], None]:
                 def inner() -> None:
-                    cur = getattr(view, attr)
+                    cur = getattr(self.view, attr)
                     idx = options.index(cur)
                     cur = options[(idx + 1) % len(options)]
-                    setattr(view, attr, cur)
-                    view.apply_options()
+                    setattr(self.view, attr, cur)
+                    self.view.apply_options()
                     btn.text = f"{label}: {cur}"
 
                 return inner
@@ -401,10 +434,12 @@ class GraphicsOverlay(Overlay):
             return callback
 
         make_color = list(TABLE_THEMES.keys())
-        make_back = [view.card_back_name]
+        make_back = [self.view.card_back_name]
+
+        self.buttons = []
 
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
-            text = getattr(view, attr)
+            text = getattr(self.view, attr)
             btn = Button(
                 f"{label}: {text}",
                 pygame.Rect(bx, by + offset, 240, 40),
@@ -417,35 +452,43 @@ class GraphicsOverlay(Overlay):
         make_button(0, "table_color_name", make_color, "Table Color")
         make_button(50, "card_back_name", make_back, "Card Back")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 100, 240, 40), view.show_settings, font
+            "Back", pygame.Rect(bx, by + 100, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
 
 class AudioOverlay(Overlay):
     def __init__(self, view: "GameView") -> None:
-        super().__init__(view.show_settings)
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, view.show_settings)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 120
         by = h // 2 - 120
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(btn: Button) -> Callable[[], None]:
                 def inner() -> None:
-                    cur = getattr(view, attr)
+                    cur = getattr(self.view, attr)
                     idx = options.index(cur)
                     cur = options[(idx + 1) % len(options)]
-                    setattr(view, attr, cur)
-                    view.apply_options()
+                    setattr(self.view, attr, cur)
+                    self.view.apply_options()
                     btn.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
 
                 return inner
 
             return callback
 
+        self.buttons = []
+
         def make_button(offset: int, attr: str, opts: List, label: str) -> None:
-            text = getattr(view, attr)
+            text = getattr(self.view, attr)
             if isinstance(text, bool):
                 text = "On" if text else "Off"
             btn = Button(
@@ -461,7 +504,7 @@ class AudioOverlay(Overlay):
         make_button(50, "music_enabled", [True, False], "Music")
         make_button(100, "volume", [0.5, 0.75, 1.0], "Volume")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 150, 240, 40), view.show_settings, font
+            "Back", pygame.Rect(bx, by + 150, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -470,13 +513,18 @@ class RulesOverlay(Overlay):
     """Simple overlay showing game rules."""
 
     def __init__(self, view: "GameView", back_cb: Callable[[], None]) -> None:
-        super().__init__(back_cb)
-        self.view = view
-        w, h = view.screen.get_size()
-        font = view.font
+        super().__init__(view, back_cb)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 100
         by = h // 2 + 60
-        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), back_cb, font)]
+        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
 
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
@@ -496,16 +544,22 @@ class RulesOverlay(Overlay):
 
 class GameOverOverlay(Overlay):
     def __init__(self, view: "GameView", winner: str) -> None:
-        super().__init__(None)
+        super().__init__(view, None)
         self.winner = winner
         self.rankings = view.game.get_rankings()
-        w, h = view.screen.get_size()
-        font = view.font
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
         bx = w // 2 - 100
         by = h // 2 + 40
         self.buttons = [
-            Button("Play Again", pygame.Rect(bx, by, 200, 40), view.restart_game, font),
-            Button("Quit", pygame.Rect(bx, by + 50, 200, 40), view.quit_game, font),
+            Button("Play Again", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
+            Button("Quit", pygame.Rect(bx, by + 50, 200, 40), self.view.quit_game, font),
         ]
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -1000,6 +1054,8 @@ class GameView:
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_settings_button()
+        if self.overlay:
+            self.overlay.resize()
 
     def toggle_fullscreen(self) -> None:
         """Toggle full-screen mode."""

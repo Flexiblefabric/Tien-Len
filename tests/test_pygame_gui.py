@@ -653,3 +653,42 @@ def test_overlay_keyboard_navigation():
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE}))
     overlay.back_callback.assert_called_once()
     pygame.quit()
+
+
+def test_on_resize_calls_overlay_resize():
+    view, _ = make_view()
+    overlay = MagicMock()
+    view.overlay = overlay
+    with patch(
+        "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
+    ), patch.object(pygame_gui, "load_card_images"), patch.object(
+        view, "update_hand_sprites"
+    ), patch.object(view, "_create_action_buttons"), patch.object(
+        view, "_position_settings_button"
+    ):
+        view.on_resize(100, 100)
+    overlay.resize.assert_called_once()
+
+
+def test_overlay_buttons_reposition_after_resize():
+    pygame.display.init()
+    surf_small = pygame.Surface((300, 200))
+    surf_large = pygame.Surface((600, 400))
+    set_mode = MagicMock(side_effect=[surf_small, surf_large])
+    with patch("pygame.display.set_mode", set_mode):
+        with patch("pygame.font.SysFont", return_value=DummyFont()):
+            with patch.object(pygame_gui, "load_card_images"), patch.object(
+                pygame_gui,
+                "get_card_image",
+                side_effect=lambda c, w: pygame.Surface((w, 1)),
+            ):
+                view = pygame_gui.GameView(300, 200)
+                view.show_menu()
+                before = [b.rect.topleft for b in view.overlay.buttons]
+
+                view.on_resize(600, 400)
+
+                after = [b.rect.topleft for b in view.overlay.buttons]
+
+    pygame.quit()
+    assert before != after
