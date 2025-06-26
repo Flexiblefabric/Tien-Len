@@ -693,6 +693,13 @@ class GameView:
                 self.table_image = pygame.image.load(str(img_path)).convert()
             except Exception:
                 self.table_image = None
+        self.main_menu_image: Optional[pygame.Surface] = None
+        menu_path = Path(__file__).with_name("assets") / "main_menu.png"
+        if menu_path.exists():
+            try:
+                self.main_menu_image = pygame.image.load(str(menu_path)).convert()
+            except Exception:
+                self.main_menu_image = None
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
         # Load sound effects and background music
@@ -776,11 +783,17 @@ class GameView:
     # Animation helpers -------------------------------------------------
     def _draw_frame(self) -> None:
         """Redraw the game state."""
-        if self._table_surface:
-            self.screen.blit(self._table_surface, (0, 0))
+        if self.state == GameState.MENU and self.main_menu_image:
+            bg = pygame.transform.smoothscale(
+                self.main_menu_image, self.screen.get_size()
+            )
+            self.screen.blit(bg, (0, 0))
         else:
-            self.screen.fill(self.table_color)
-        self.draw_players()
+            if self._table_surface:
+                self.screen.blit(self._table_surface, (0, 0))
+            else:
+                self.screen.fill(self.table_color)
+            self.draw_players()
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
             overlay_surf.fill((0, 0, 0, 180))
