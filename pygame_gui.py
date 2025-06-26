@@ -397,18 +397,16 @@ class GameSettingsOverlay(Overlay):
         make_button(100, "ai_lookahead", [False, True], "Lookahead")
         make_button(150, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
         make_button(200, "sort_mode", ["rank", "suit"], "Sort Mode")
-        make_button(250, "sound_enabled", [True, False], "Sound")
-        make_button(300, "music_enabled", [True, False], "Music")
         self.buttons.append(
             Button(
                 "House Rules",
-                pygame.Rect(bx, by + 350, 240, 40),
+                pygame.Rect(bx, by + 250, 240, 40),
                 lambda: self.view.show_rules(from_menu=False),
                 font,
             )
         )
         btn = Button(
-            "Back", pygame.Rect(bx, by + 400, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 300, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
