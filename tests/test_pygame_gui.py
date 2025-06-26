@@ -621,7 +621,7 @@ def test_draw_score_overlay_positions_panel():
     surf = pygame.Surface((200, 20))
     with patch("pygame.Surface", return_value=surf):
         view.draw_score_overlay()
-    view.screen.blit.assert_called_with(surf, (300 - 200 - 10, 10))
+    view.screen.blit.assert_called_with(surf, (10, 10))
     pygame.quit()
 
 

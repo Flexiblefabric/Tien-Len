@@ -1510,11 +1510,6 @@ class GameView:
 
     def draw_score_overlay(self) -> None:
         """Render a scoreboard panel with last hands played."""
-        size = self.screen.get_size()
-        if isinstance(size, (list, tuple)) and len(size) >= 2:
-            w = size[0]
-        else:
-            w = 0
         line_height = getattr(self.font, "get_linesize", lambda: 20)()
         lines = [
             f"{p.name}: {len(p.hand)} ({self.win_counts.get(p.name, 0)})"
@@ -1535,7 +1530,7 @@ class GameView:
             img = self.font.render(line, True, (255, 255, 255))
             panel.blit(img, (5, y))
             y += line_height
-        rect = panel.get_rect(topright=(w - 10, 10))
+        rect = panel.get_rect(topleft=(10, 10))
         self.screen.blit(panel, rect.topleft)
 
     def run(self):
