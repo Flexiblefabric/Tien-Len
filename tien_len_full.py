@@ -100,6 +100,17 @@ class Card:
     def __hash__(self) -> int:
         return hash((self.suit, self.rank))
 
+    def to_dict(self) -> dict:
+        """Return a ``dict`` representation of this card."""
+
+        return {"suit": self.suit, "rank": self.rank}
+
+    @staticmethod
+    def from_dict(d: dict) -> "Card":
+        """Create a :class:`Card` from ``d``."""
+
+        return Card(d["suit"], d["rank"])
+
 class Deck:
     """A standard 52-card deck."""
 
@@ -582,17 +593,12 @@ class Game:
         for rnd in sorted(self.move_log):
             for action, idx, cards in self.move_log[rnd]:
                 if action == "play":
-                    last[idx] = [self._card_from_dict(c) for c in cards]
+                    last[idx] = [Card.from_dict(c) for c in cards]
         return [(p.name, last.get(i, [])) for i, p in enumerate(self.players)]
 
     # ------------------------------------------------------------------
     # Serialisation helpers
     # ------------------------------------------------------------------
-    def _card_to_dict(self, c: Card) -> dict:
-        return {"suit": c.suit, "rank": c.rank}
-
-    def _card_from_dict(self, d: dict) -> Card:
-        return Card(d["suit"], d["rank"])
 
     def to_dict(self) -> dict:
         """Return a dictionary representing the current game state."""
@@ -602,14 +608,14 @@ class Game:
                 {
                     "name": p.name,
                     "is_human": p.is_human,
-                    "hand": [self._card_to_dict(c) for c in p.hand],
+                    "hand": [c.to_dict() for c in p.hand],
                 }
                 for p in self.players
             ],
             "pile": [
                 {
                     "player": self.players.index(pl),
-                    "cards": [self._card_to_dict(c) for c in cards],
+                    "cards": [c.to_dict() for c in cards],
                 }
                 for pl, cards in self.pile
             ],
@@ -617,9 +623,7 @@ class Game:
             "start_idx": self.start_idx,
             "first_turn": self.first_turn,
             "pass_count": self.pass_count,
-            "current_combo": [
-                self._card_to_dict(c) for c in self.current_combo
-            ]
+            "current_combo": [c.to_dict() for c in self.current_combo]
             if self.current_combo
             else None,
             "history": self.history,
@@ -634,7 +638,7 @@ class Game:
             Player(d["name"], d.get("is_human", False)) for d in data["players"]
         ]
         for p, dct in zip(self.players, data["players"]):
-            p.hand = [self._card_from_dict(c) for c in dct.get("hand", [])]
+            p.hand = [Card.from_dict(c) for c in dct.get("hand", [])]
         self.pile = []
         for item in data.get("pile", []):
             idx = item.get("player")
@@ -643,14 +647,14 @@ class Game:
                 if isinstance(idx, int)
                 else next(pl for pl in self.players if pl.name == idx)
             )
-            cards = [self._card_from_dict(c) for c in item.get("cards", [])]
+            cards = [Card.from_dict(c) for c in item.get("cards", [])]
             self.pile.append((player, cards))
         self.current_idx = data.get("current_idx", 0)
         self.start_idx = data.get("start_idx", 0)
         self.first_turn = data.get("first_turn", True)
         self.pass_count = data.get("pass_count", 0)
         combo = data.get("current_combo")
-        self.current_combo = [self._card_from_dict(c) for c in combo] if combo else None
+        self.current_combo = [Card.from_dict(c) for c in combo] if combo else None
         self.history = [tuple(h) for h in data.get("history", [])]
         self.current_round = data.get("current_round", 1)
         self.scores = data.get("scores", {p.name: 0 for p in self.players})
@@ -695,7 +699,7 @@ class Game:
         self.pass_count = 0
         self.history.append((self.current_round, f"{player.name} plays {cards}"))
         self.move_log.setdefault(self.current_round, []).append(
-            ("play", self.current_idx, [self._card_to_dict(c) for c in cards])
+            ("play", self.current_idx, [c.to_dict() for c in cards])
         )
         for c in cards:
             if c not in player.hand:
