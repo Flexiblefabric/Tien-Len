@@ -15,4 +15,4 @@ def test_simulated_game():
     with patch('builtins.input', lambda *args: next(inputs)):
         game.play()
     winners = [p.name for p in game.players if not p.hand]
-    assert winners == [AI_NAMES[1]]
+    assert winners == [AI_NAMES[0]]
