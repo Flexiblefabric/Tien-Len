@@ -713,6 +713,7 @@ def test_in_game_menu_buttons():
     texts = [b.text for b in overlay.buttons]
     cbs = [b.callback for b in overlay.buttons]
     assert texts == [
+        "Resume Game",
         "Save Game",
         "Load Game",
         "Game Settings",
@@ -720,6 +721,7 @@ def test_in_game_menu_buttons():
         "Quit Game",
     ]
     assert cbs == [
+        view.close_overlay,
         view.save_game,
         view.load_game,
         view.show_settings,

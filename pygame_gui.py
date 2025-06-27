@@ -325,29 +325,35 @@ class InGameMenuOverlay(Overlay):
         w, h = self.view.screen.get_size()
         font = self.view.font
         bx = w // 2 - 100
-        by = h // 2 - 120
+        by = h // 2 - 150
         self.buttons = [
-            Button("Save Game", pygame.Rect(bx, by, 200, 40), self.view.save_game, font),
+            Button(
+                "Resume Game",
+                pygame.Rect(bx, by, 200, 40),
+                self.view.close_overlay,
+                font,
+            ),
+            Button("Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font),
             Button(
                 "Load Game",
-                pygame.Rect(bx, by + 50, 200, 40),
+                pygame.Rect(bx, by + 100, 200, 40),
                 self.view.load_game,
                 font,
             ),
             Button(
                 "Game Settings",
-                pygame.Rect(bx, by + 100, 200, 40),
+                pygame.Rect(bx, by + 150, 200, 40),
                 self.view.show_settings,
                 font,
             ),
             Button(
                 "Return to Main Menu",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + 200, 200, 40),
                 self.view.show_menu,
                 font,
             ),
             Button(
-                "Quit Game", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font
+                "Quit Game", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font
             ),
         ]
         if self.focus_idx >= len(self.buttons):
