@@ -1,4 +1,4 @@
 pytest
 coverage
 pillow
-pygame
+pygame-ce
