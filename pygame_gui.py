@@ -1177,9 +1177,9 @@ class GameView:
             with open(
                 Path(__file__).with_name("saved_game.json"), "w", encoding="utf-8"
             ) as f:
-                f.write(self.game.to_json())
-        except Exception:
-            pass
+                json.dump(json.loads(self.game.to_json()), f, indent=2)
+        except OSError as exc:
+            logger.warning("Failed to save game: %s", exc)
 
     def load_game(self) -> None:
         try:
@@ -1187,10 +1187,19 @@ class GameView:
                 Path(__file__).with_name("saved_game.json"), "r", encoding="utf-8"
             ) as f:
                 data = f.read()
-            self.game.from_json(data)
-            self.update_hand_sprites()
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Failed to load game: %s", exc)
+            return
+
+        try:
+            game = Game()
+            game.from_json(data)
+        except Exception as exc:
+            logger.error("Invalid saved game: %s", exc)
+            return
+
+        self.game = game
+        self.update_hand_sprites()
 
     def close_overlay(self) -> None:
         had = self.overlay is not None
