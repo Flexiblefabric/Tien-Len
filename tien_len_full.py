@@ -159,17 +159,17 @@ def is_bomb(cards) -> bool:
     return len(cards) == 4 and len({c.rank for c in cards}) == 1
 
 def is_sequence(cards) -> bool:
-    """Return ``True`` if the cards form a suited consecutive sequence."""
+    """Return ``True`` if ``cards`` form a valid straight."""
 
     if len(cards) < 3:
         return False
     # Optionally disallow sequences containing a 2
     if not ALLOW_2_IN_SEQUENCE and any(c.rank == '2' for c in cards):
         return False
-    # All cards must share the same suit
-    if len({c.suit for c in cards}) != 1:
-        return False
     idx = sorted(RANKS.index(c.rank) for c in cards)
+    # Ranks must be unique and consecutive
+    if len(set(idx)) != len(idx):
+        return False
     return all(idx[i] + 1 == idx[i + 1] for i in range(len(idx) - 1))
 
 def detect_combo(cards):

@@ -38,11 +38,14 @@ def test_combo_detection():
     assert is_bomb(bomb)
     assert detect_combo(bomb) == 'bomb'
 
-    seq = make_cards(('Spades', '3'), ('Spades', '4'), ('Spades', '5'))
+    seq = make_cards(('Spades', '3'), ('Hearts', '4'), ('Clubs', '5'))
     assert is_sequence(seq)
     assert detect_combo(seq) == 'sequence'
 
-    bad_seq = make_cards(('Spades', '3'), ('Spades', '4'), ('Spades', '2'))
+    suited_seq = make_cards(('Spades', '7'), ('Spades', '8'), ('Spades', '9'))
+    assert is_sequence(suited_seq)
+
+    bad_seq = make_cards(('Spades', '3'), ('Hearts', '3'), ('Clubs', '4'))
     assert not is_sequence(bad_seq)
 
 
