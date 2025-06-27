@@ -54,9 +54,11 @@ SUITS = list(SUIT_SYMBOLS.values())
 RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
 
 # Global rule toggles
-# ``ALLOW_2_IN_SEQUENCE`` controls whether suited sequences may contain a 2.
-# The default preserves the house rule used by the tests which forbids 2s
-# in sequences.
+# ``ALLOW_2_IN_SEQUENCE`` controls whether sequences may contain a ``2``.
+# Sequences do not require matching suits—only consecutive ranks—so this
+# toggle merely determines if a ``2`` can appear in such mixed-suit runs.
+# The default preserves the house rule used by the tests which forbids
+# ``2`` in sequences.
 ALLOW_2_IN_SEQUENCE = False
 # Additional optional rules toggles.  These defaults match the behaviour
 # used by the tests and GUI unless overridden.
