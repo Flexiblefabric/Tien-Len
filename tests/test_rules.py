@@ -112,3 +112,25 @@ def test_is_valid_basic_rules():
     bomb = make_cards(('Spades', '7'), ('Hearts', '7'), ('Clubs', '7'), ('Diamonds', '7'))
     ok, msg = game.is_valid(starter, bomb, current)
     assert ok
+
+
+def test_flip_suit_rank_sorting_and_deck_order():
+    import tien_len_full as tl
+
+    tl.FLIP_SUIT_RANK = False
+    p = tl.Player('Tester')
+    p.hand = [tl.Card(s, '3') for s in tl.SUITS]
+    p.sort_hand()
+    assert [c.suit for c in p.hand] == tl.SUITS
+
+    tl.FLIP_SUIT_RANK = True
+    p2 = tl.Player('Tester2')
+    p2.hand = [tl.Card(s, '3') for s in tl.SUITS]
+    p2.sort_hand()
+    assert [c.suit for c in p2.hand] == list(reversed(tl.SUITS))
+
+    deck = tl.Deck()
+    block = len(tl.RANKS)
+    suits = [deck.cards[i * block].suit for i in range(len(tl.SUITS))]
+    assert suits == list(reversed(tl.SUITS))
+    tl.FLIP_SUIT_RANK = False

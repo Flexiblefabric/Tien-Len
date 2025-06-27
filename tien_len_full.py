@@ -65,6 +65,16 @@ CHAIN_CUTTING = False
 TU_QUY_HIERARCHY = False
 FLIP_SUIT_RANK = False
 
+# Helper --------------------------------------------------------------
+
+def suit_index(suit: str) -> int:
+    """Return the index of ``suit`` respecting ``FLIP_SUIT_RANK``."""
+
+    idx = SUITS.index(suit)
+    if FLIP_SUIT_RANK:
+        idx = len(SUITS) - idx - 1
+    return idx
+
 # Rough ranking used by the very simple AI to choose which move to play.  Higher
 # values are better.
 TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
@@ -116,8 +126,10 @@ class Deck:
 
     def __init__(self) -> None:
         # Generate cards in canonical order so tests can seed ``random`` and
-        # reproduce games deterministically.
-        self.cards = [Card(s, r) for s in SUITS for r in RANKS]
+        # reproduce games deterministically.  Suit ordering respects the
+        # ``FLIP_SUIT_RANK`` rule.
+        ordered = sorted(SUITS, key=suit_index)
+        self.cards = [Card(s, r) for s in ordered for r in RANKS]
 
     def shuffle(self) -> None:
         """Shuffle the deck in place."""
@@ -206,13 +218,9 @@ class Player:
         """
 
         if mode == "suit":
-            self.hand.sort(
-                key=lambda c: (SUITS.index(c.suit), RANKS.index(c.rank))
-            )
+            self.hand.sort(key=lambda c: (suit_index(c.suit), RANKS.index(c.rank)))
         else:
-            self.hand.sort(
-                key=lambda c: (RANKS.index(c.rank), SUITS.index(c.suit))
-            )
+            self.hand.sort(key=lambda c: (RANKS.index(c.rank), suit_index(c.suit)))
 
     def find_bombs(self):
         """Return all four-of-a-kind sets in the player's hand."""

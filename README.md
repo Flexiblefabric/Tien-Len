@@ -62,6 +62,8 @@ are handled automatically.
 - Settings and menu overlays are provided.
 - A dedicated *House Rules* screen lets you toggle optional rules
   such as “Chặt” bombs, chain cutting and others.
+  The *Flip Suit Rank* rule reverses suit ordering and can only be
+  enabled from the main menu.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 
 Displaying card images requires the **Pillow** library, which is
