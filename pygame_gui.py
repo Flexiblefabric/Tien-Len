@@ -291,19 +291,67 @@ class MainMenuOverlay(Overlay):
         self.buttons = [
             Button("New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
             Button(
-                "Load Game", pygame.Rect(bx, by + 50, 200, 40), self.view.load_game, font
+                "Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font
             ),
             Button(
-                "Settings", pygame.Rect(bx, by + 100, 200, 40), self.view.show_settings, font
+                "Load Game", pygame.Rect(bx, by + 100, 200, 40), self.view.load_game, font
+            ),
+            Button(
+                "Settings", pygame.Rect(bx, by + 150, 200, 40), self.view.show_settings, font
             ),
             Button(
                 "How to Play",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + 200, 200, 40),
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
             ),
-            Button("Quit", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font),
+            Button("Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font),
         ]
+        if self.focus_idx >= len(self.buttons):
+            self.focus_idx = max(0, len(self.buttons) - 1)
+
+
+class InGameMenuOverlay(Overlay):
+    """Menu accessible during gameplay via the Settings button."""
+
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view, view.close_overlay)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        bx = w // 2 - 100
+        by = h // 2 - 120
+        self.buttons = [
+            Button("Save Game", pygame.Rect(bx, by, 200, 40), self.view.save_game, font),
+            Button(
+                "Load Game",
+                pygame.Rect(bx, by + 50, 200, 40),
+                self.view.load_game,
+                font,
+            ),
+            Button(
+                "Game Settings",
+                pygame.Rect(bx, by + 100, 200, 40),
+                self.view.show_settings,
+                font,
+            ),
+            Button(
+                "Return to Main Menu",
+                pygame.Rect(bx, by + 150, 200, 40),
+                self.view.show_menu,
+                font,
+            ),
+            Button(
+                "Quit Game", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font
+            ),
+        ]
+        if self.focus_idx >= len(self.buttons):
+            self.focus_idx = max(0, len(self.buttons) - 1)
 
 
 class SettingsOverlay(Overlay):
@@ -1074,8 +1122,10 @@ class GameView:
         font = self.font
         if not hasattr(self, "settings_button"):
             self.settings_button = Button(
-                "Settings", pygame.Rect(0, 0, 100, 40), self.show_settings, font
+                "Settings", pygame.Rect(0, 0, 100, 40), self.show_in_game_menu, font
             )
+        else:
+            self.settings_button.callback = self.show_in_game_menu
         margin = max(5, self.card_width // 3)
         self.settings_button.rect.topright = (w - margin, margin)
 
@@ -1090,6 +1140,9 @@ class GameView:
     # Overlay helpers -------------------------------------------------
     def show_menu(self) -> None:
         self._activate_overlay(MainMenuOverlay(self), GameState.MENU)
+
+    def show_in_game_menu(self) -> None:
+        self._activate_overlay(InGameMenuOverlay(self), GameState.SETTINGS)
 
     def show_settings(self) -> None:
         self._activate_overlay(SettingsOverlay(self), GameState.SETTINGS)

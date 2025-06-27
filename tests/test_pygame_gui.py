@@ -273,6 +273,8 @@ def test_state_methods_update_state():
         with patch.object(view, "ai_turns"):
             view.close_overlay()
         assert view.state == pygame_gui.GameState.PLAYING
+        view.show_in_game_menu()
+        assert view.state == pygame_gui.GameState.SETTINGS
         view.show_settings()
         assert view.state == pygame_gui.GameState.SETTINGS
         view.show_menu()
@@ -548,6 +550,8 @@ def test_overlay_instances_created():
     with patch("pygame.display.flip"), patch("pygame.event.pump"):
         view.show_menu()
         assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
+        view.show_in_game_menu()
+        assert isinstance(view.overlay, pygame_gui.InGameMenuOverlay)
         view.show_settings()
         assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
         view.show_game_settings()
@@ -654,6 +658,7 @@ def test_restart_game_preserves_scores():
     "cls, args",
     [
         (pygame_gui.MainMenuOverlay, ()),
+        (pygame_gui.InGameMenuOverlay, ()),
         (pygame_gui.SettingsOverlay, ()),
         (pygame_gui.GameSettingsOverlay, ()),
         (pygame_gui.GraphicsOverlay, ()),
@@ -689,6 +694,50 @@ def test_overlay_keyboard_navigation(cls, args):
     overlay.back_callback = MagicMock()
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE}))
     overlay.back_callback.assert_called_once()
+    pygame.quit()
+
+
+def test_main_menu_has_save_button():
+    view, _ = make_view()
+    overlay = pygame_gui.MainMenuOverlay(view)
+    assert len(overlay.buttons) >= 2
+    btn = overlay.buttons[1]
+    assert btn.text == "Save Game"
+    assert btn.callback == view.save_game
+    pygame.quit()
+
+
+def test_in_game_menu_buttons():
+    view, _ = make_view()
+    overlay = pygame_gui.InGameMenuOverlay(view)
+    texts = [b.text for b in overlay.buttons]
+    cbs = [b.callback for b in overlay.buttons]
+    assert texts == [
+        "Save Game",
+        "Load Game",
+        "Game Settings",
+        "Return to Main Menu",
+        "Quit Game",
+    ]
+    assert cbs == [
+        view.save_game,
+        view.load_game,
+        view.show_settings,
+        view.show_menu,
+        view.quit_game,
+    ]
+    pygame.quit()
+
+
+def test_settings_button_opens_in_game_menu():
+    view, _ = make_view()
+    with patch.object(view, "_save_options"), patch.object(view, "ai_turns"), patch(
+        "pygame.display.flip"
+    ):
+        view.close_overlay()
+    view.settings_button.callback = MagicMock()
+    view.handle_mouse(view.settings_button.rect.center)
+    view.settings_button.callback.assert_called_once()
     pygame.quit()
 
 
@@ -733,6 +782,7 @@ def test_on_resize_calls_overlay_resize():
     "show_fn, args",
     [
         ("show_menu", ()),
+        ("show_in_game_menu", ()),
         ("show_settings", ()),
         ("show_game_settings", ()),
         ("show_graphics", ()),
