@@ -8,7 +8,8 @@ decisions:
 
 * The module logs actions to ``tien_len_game.log`` for easier debugging.
 * Only the human player is forbidden from passing on the very first turn when
-  they hold the ``3♠``.  This mirrors the behaviour of the original proof of
+  they hold the ``3♠`` (or ``3♥`` when suit ranking is flipped).  This mirrors
+  the behaviour of the original proof of
   concept from which this repository was created.
 * The :class:`Game` class encapsulates all state and can be reused by the GUI
   implemented in ``pygame_gui.py``.
@@ -67,6 +68,29 @@ CHAIN_CUTTING = False
 TU_QUY_HIERARCHY = False
 FLIP_SUIT_RANK = False
 
+# Helper --------------------------------------------------------------
+
+def suit_index(suit: str) -> int:
+    """Return the index of ``suit`` respecting ``FLIP_SUIT_RANK``."""
+
+    idx = SUITS.index(suit)
+    if FLIP_SUIT_RANK:
+        idx = len(SUITS) - idx - 1
+    return idx
+
+
+def opening_suit() -> str:
+    """Return the suit required for the first play."""
+
+    return "Hearts" if FLIP_SUIT_RANK else "Spades"
+
+
+def opening_card_str() -> str:
+    """Return the opening card notation, e.g. ``3♠`` or ``3♥``."""
+
+    symbol = next(sym for sym, name in SUIT_SYMBOLS.items() if name == opening_suit())
+    return f"3{symbol}"
+
 # Rough ranking used by the very simple AI to choose which move to play.  Higher
 # values are better.
 TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
@@ -118,8 +142,10 @@ class Deck:
 
     def __init__(self) -> None:
         # Generate cards in canonical order so tests can seed ``random`` and
-        # reproduce games deterministically.
-        self.cards = [Card(s, r) for s in SUITS for r in RANKS]
+        # reproduce games deterministically.  Suit ordering respects the
+        # ``FLIP_SUIT_RANK`` rule.
+        ordered = sorted(SUITS, key=suit_index)
+        self.cards = [Card(s, r) for s in ordered for r in RANKS]
 
     def shuffle(self) -> None:
         """Shuffle the deck in place."""
@@ -208,13 +234,9 @@ class Player:
         """
 
         if mode == "suit":
-            self.hand.sort(
-                key=lambda c: (SUITS.index(c.suit), RANKS.index(c.rank))
-            )
+            self.hand.sort(key=lambda c: (suit_index(c.suit), RANKS.index(c.rank)))
         else:
-            self.hand.sort(
-                key=lambda c: (RANKS.index(c.rank), SUITS.index(c.suit))
-            )
+            self.hand.sort(key=lambda c: (RANKS.index(c.rank), suit_index(c.suit)))
 
     def find_bombs(self):
         """Return all four-of-a-kind sets in the player's hand."""
@@ -298,12 +320,12 @@ class Game:
                 logger.info("%s bombs: %s", p.name, b)
                 log_action(f"{p.name} bombs: {b}")
 
-        # The player holding the 3♠ must start the game
+        # The player holding the 3♠ (or 3♥) must start the game
         for i, p in enumerate(self.players):
-            if any(c.rank == '3' and c.suit == 'Spades' for c in p.hand):
+            if any(c.rank == '3' and c.suit == opening_suit() for c in p.hand):
                 self.current_idx = i
                 self.start_idx = i
-                logger.info("%s starts (holds 3♠)", p.name)
+                logger.info("%s starts (holds %s)", p.name, opening_card_str())
                 log_action(f"Start: {p.name}")
                 break
 
@@ -328,17 +350,17 @@ class Game:
         # Prevent passing on the opening turn if you started the game
         if not cards:
             if self.first_turn and self.current_idx == self.start_idx:
-                return False, 'Must include 3♠ first'
+                return False, f'Must include {opening_card_str()} first'
             return True, ''
 
         combo = detect_combo(cards)
         if not combo:
             return False, 'Invalid combo'
 
-        # The starting player must include the 3♠ in their very first play
+        # The starting player must include the required suit in their very first play
         if self.first_turn and self.current_idx == self.start_idx:
-            if not any(c.rank == '3' and c.suit == 'Spades' for c in cards):
-                return False, 'Must include 3♠ first'
+            if not any(c.rank == '3' and c.suit == opening_suit() for c in cards):
+                return False, f'Must include {opening_card_str()} first'
 
         # If the pile is empty any combo is valid at this point
         if not current:
@@ -437,10 +459,10 @@ class Game:
                 continue
             if cmd == 'pass':
                 if player.is_human and self.first_turn and self.current_idx == self.start_idx:
-                    logger.info('You must play a combo including 3♠ on your first turn; cannot pass.')
+                    logger.info('You must play a combo including %s on your first turn; cannot pass.', opening_card_str())
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
                     continue
                 return []
             if cmd == 'error':
@@ -448,7 +470,7 @@ class Game:
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
                 continue
             if cmd == 'play':
                 cards = res
@@ -459,7 +481,7 @@ class Game:
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain 3♠. Example: '3♠'")
+                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
 
     # AI helper functions
     def generate_valid_moves(self, player, current):
