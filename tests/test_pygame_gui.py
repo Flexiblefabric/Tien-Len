@@ -692,6 +692,16 @@ def test_overlay_keyboard_navigation(cls, args):
     pygame.quit()
 
 
+def test_main_menu_has_save_button():
+    view, _ = make_view()
+    overlay = pygame_gui.MainMenuOverlay(view)
+    assert len(overlay.buttons) >= 2
+    btn = overlay.buttons[1]
+    assert btn.text == "Save Game"
+    assert btn.callback == view.save_game
+    pygame.quit()
+
+
 def test_how_to_play_overlay_escape_returns_menu():
     view, _ = make_view()
     with patch.object(view, "show_menu") as show_menu, patch("pygame.display.flip"):

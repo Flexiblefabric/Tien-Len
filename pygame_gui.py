@@ -291,19 +291,24 @@ class MainMenuOverlay(Overlay):
         self.buttons = [
             Button("New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
             Button(
-                "Load Game", pygame.Rect(bx, by + 50, 200, 40), self.view.load_game, font
+                "Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font
             ),
             Button(
-                "Settings", pygame.Rect(bx, by + 100, 200, 40), self.view.show_settings, font
+                "Load Game", pygame.Rect(bx, by + 100, 200, 40), self.view.load_game, font
+            ),
+            Button(
+                "Settings", pygame.Rect(bx, by + 150, 200, 40), self.view.show_settings, font
             ),
             Button(
                 "How to Play",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + 200, 200, 40),
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
             ),
-            Button("Quit", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font),
+            Button("Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font),
         ]
+        if self.focus_idx >= len(self.buttons):
+            self.focus_idx = max(0, len(self.buttons) - 1)
 
 
 class SettingsOverlay(Overlay):
