@@ -740,7 +740,7 @@ class GameView:
         self.fx_volume = 1.0
         self.house_rules = True
         self.tutorial_mode = False
-        self.show_rules = False
+        self.show_rules_option = False
         # Additional house rule toggles
         self.rule_chat_bomb = False
         self.rule_chain_cutting = False
@@ -768,7 +768,10 @@ class GameView:
         self.colorblind_mode = opts.get("colorblind_mode", self.colorblind_mode)
         self.house_rules = opts.get("house_rules", self.house_rules)
         self.tutorial_mode = opts.get("tutorial_mode", self.tutorial_mode)
-        self.show_rules = opts.get("show_rules", self.show_rules)
+        self.show_rules_option = opts.get(
+            "show_rules_option",
+            opts.get("show_rules", self.show_rules_option),
+        )
         self.rule_chat_bomb = opts.get("rule_chat_bomb", self.rule_chat_bomb)
         self.rule_chain_cutting = opts.get("rule_chain_cutting", self.rule_chain_cutting)
         self.rule_tu_quy_hierarchy = opts.get("rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy)
@@ -1162,7 +1165,10 @@ class GameView:
     def _load_options(self) -> dict:
         try:
             with open(OPTIONS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+            if "show_rules" in data and "show_rules_option" not in data:
+                data["show_rules_option"] = data["show_rules"]
+            return data
         except Exception as exc:
             logger.warning("Failed to load options: %s", exc)
             return {}
@@ -1185,7 +1191,7 @@ class GameView:
             "colorblind_mode": self.colorblind_mode,
             "house_rules": self.house_rules,
             "tutorial_mode": self.tutorial_mode,
-            "show_rules": self.show_rules,
+            "show_rules_option": self.show_rules_option,
             "rule_chat_bomb": self.rule_chat_bomb,
             "rule_chain_cutting": self.rule_chain_cutting,
             "rule_tu_quy_hierarchy": self.rule_tu_quy_hierarchy,
