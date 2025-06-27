@@ -1177,7 +1177,7 @@ class GameView:
             with open(
                 Path(__file__).with_name("saved_game.json"), "w", encoding="utf-8"
             ) as f:
-                json.dump(json.loads(self.game.to_json()), f, indent=2)
+                json.dump(self.game.to_dict(), f, indent=2)
         except OSError as exc:
             logger.warning("Failed to save game: %s", exc)
 
@@ -1186,14 +1186,14 @@ class GameView:
             with open(
                 Path(__file__).with_name("saved_game.json"), "r", encoding="utf-8"
             ) as f:
-                data = f.read()
+                data = json.load(f)
         except OSError as exc:
             logger.warning("Failed to load game: %s", exc)
             return
 
         try:
             game = Game()
-            game.from_json(data)
+            game.from_dict(data)
         except Exception as exc:
             logger.error("Invalid saved game: %s", exc)
             return

@@ -594,12 +594,10 @@ class Game:
     def _card_from_dict(self, d: dict) -> Card:
         return Card(d["suit"], d["rank"])
 
-    def to_json(self) -> str:
-        """Return a JSON string representing the current game state."""
+    def to_dict(self) -> dict:
+        """Return a dictionary representing the current game state."""
 
-        import json
-
-        data = {
+        return {
             "players": [
                 {
                     "name": p.name,
@@ -628,26 +626,22 @@ class Game:
             "current_round": self.current_round,
             "scores": self.scores,
         }
-        return json.dumps(data)
 
-    def from_json(self, s: str) -> None:
-        """Restore game state from ``s`` (a JSON string)."""
+    def from_dict(self, data: dict) -> None:
+        """Restore game state from ``data`` (a dictionary)."""
 
-        import json
-
-        data = json.loads(s)
         self.players = [
             Player(d["name"], d.get("is_human", False)) for d in data["players"]
         ]
-        for p, d in zip(self.players, data["players"]):
-            p.hand = [self._card_from_dict(c) for c in d.get("hand", [])]
+        for p, dct in zip(self.players, data["players"]):
+            p.hand = [self._card_from_dict(c) for c in dct.get("hand", [])]
         self.pile = []
         for item in data.get("pile", []):
             idx = item.get("player")
             player = (
                 self.players[idx]
                 if isinstance(idx, int)
-                else next(p for p in self.players if p.name == idx)
+                else next(pl for pl in self.players if pl.name == idx)
             )
             cards = [self._card_from_dict(c) for c in item.get("cards", [])]
             self.pile.append((player, cards))
@@ -662,6 +656,20 @@ class Game:
         self.scores = data.get("scores", {p.name: 0 for p in self.players})
         self.move_log.clear()
         self.round_states.clear()
+
+    def to_json(self) -> str:
+        """Return a JSON string representing the current game state."""
+
+        import json
+
+        return json.dumps(self.to_dict())
+
+    def from_json(self, s: str) -> None:
+        """Restore game state from ``s`` (a JSON string)."""
+
+        import json
+
+        self.from_dict(json.loads(s))
 
     # New helper methods -------------------------------------------------
     def process_play(self, player: Player, cards: list[Card]) -> bool:
