@@ -289,15 +289,26 @@ class MainMenuOverlay(Overlay):
         bx = w // 2 - 100
         by = h // 2 - 120
         self.buttons = [
-            Button("New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
             Button(
-                "Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font
+                "New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font
             ),
             Button(
-                "Load Game", pygame.Rect(bx, by + 100, 200, 40), self.view.load_game, font
+                "Save Game",
+                pygame.Rect(bx, by + 50, 200, 40),
+                self.view.save_game,
+                font,
             ),
             Button(
-                "Settings", pygame.Rect(bx, by + 150, 200, 40), self.view.show_settings, font
+                "Load Game",
+                pygame.Rect(bx, by + 100, 200, 40),
+                self.view.load_game,
+                font,
+            ),
+            Button(
+                "Settings",
+                pygame.Rect(bx, by + 150, 200, 40),
+                self.view.show_settings,
+                font,
             ),
             Button(
                 "How to Play",
@@ -305,7 +316,9 @@ class MainMenuOverlay(Overlay):
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
             ),
-            Button("Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font),
+            Button(
+                "Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font
+            ),
         ]
         if self.focus_idx >= len(self.buttons):
             self.focus_idx = max(0, len(self.buttons) - 1)
@@ -333,7 +346,12 @@ class InGameMenuOverlay(Overlay):
                 self.view.close_overlay,
                 font,
             ),
-            Button("Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font),
+            Button(
+                "Save Game",
+                pygame.Rect(bx, by + 50, 200, 40),
+                self.view.save_game,
+                font,
+            ),
             Button(
                 "Load Game",
                 pygame.Rect(bx, by + 100, 200, 40),
@@ -386,9 +404,14 @@ class SettingsOverlay(Overlay):
                 font,
             ),
             Button(
-                "Graphics", pygame.Rect(bx, by + 50, 240, 40), self.view.show_graphics, font
+                "Graphics",
+                pygame.Rect(bx, by + 50, 240, 40),
+                self.view.show_graphics,
+                font,
             ),
-            Button("Audio", pygame.Rect(bx, by + 100, 240, 40), self.view.show_audio, font),
+            Button(
+                "Audio", pygame.Rect(bx, by + 100, 240, 40), self.view.show_audio, font
+            ),
             Button(
                 "Game Tutorial",
                 pygame.Rect(bx, by + 150, 240, 40),
@@ -396,7 +419,10 @@ class SettingsOverlay(Overlay):
                 font,
             ),
             Button(
-                "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.close_overlay, font
+                "Back",
+                pygame.Rect(bx, by + 200, 240, 40),
+                self.view.close_overlay,
+                font,
             ),
         ]
 
@@ -614,7 +640,9 @@ class RulesOverlay(Overlay):
         def make_button(offset: int, attr: str, label: str) -> None:
             state = getattr(self.view, attr)
             text = f"{label}: {'On' if state else 'Off'}"
-            btn = Button(text, pygame.Rect(bx, by + offset, 240, 40), lambda: None, font)
+            btn = Button(
+                text, pygame.Rect(bx, by + offset, 240, 40), lambda: None, font
+            )
             btn.callback = toggle(attr, label)(btn)
             self.buttons.append(btn)
 
@@ -643,7 +671,9 @@ class HowToPlayOverlay(Overlay):
         font = self.view.font
         bx = w // 2 - 100
         by = h // 2 + 60
-        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
+        self.buttons = [
+            Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)
+        ]
 
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
@@ -676,7 +706,9 @@ class TutorialOverlay(Overlay):
         font = self.view.font
         bx = w // 2 - 100
         by = h // 2 + 60
-        self.buttons = [Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)]
+        self.buttons = [
+            Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)
+        ]
 
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
@@ -697,7 +729,9 @@ class TutorialOverlay(Overlay):
 class SavePromptOverlay(Overlay):
     """Prompt the user to save before performing an action."""
 
-    def __init__(self, view: "GameView", action: Callable[[], None], label: str) -> None:
+    def __init__(
+        self, view: "GameView", action: Callable[[], None], label: str
+    ) -> None:
         super().__init__(view, view.close_overlay)
         self.action = action
         self.label = label
@@ -724,7 +758,12 @@ class SavePromptOverlay(Overlay):
                 self.action,
                 font,
             ),
-            Button("Cancel", pygame.Rect(bx, by + 100, 240, 40), self.view.close_overlay, font),
+            Button(
+                "Cancel",
+                pygame.Rect(bx, by + 100, 240, 40),
+                self.view.close_overlay,
+                font,
+            ),
         ]
 
     def _save_then_action(self) -> None:
@@ -756,8 +795,12 @@ class GameOverOverlay(Overlay):
         bx = w // 2 - 100
         by = h // 2 + 40
         self.buttons = [
-            Button("Play Again", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font),
-            Button("Quit", pygame.Rect(bx, by + 50, 200, 40), self.view.quit_game, font),
+            Button(
+                "Play Again", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font
+            ),
+            Button(
+                "Quit", pygame.Rect(bx, by + 50, 200, 40), self.view.quit_game, font
+            ),
         ]
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -881,9 +924,15 @@ class GameView:
             opts.get("show_rules", self.show_rules_option),
         )
         self.rule_chat_bomb = opts.get("rule_chat_bomb", self.rule_chat_bomb)
-        self.rule_chain_cutting = opts.get("rule_chain_cutting", self.rule_chain_cutting)
-        self.rule_tu_quy_hierarchy = opts.get("rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy)
-        self.rule_flip_suit_rank = opts.get("rule_flip_suit_rank", self.rule_flip_suit_rank)
+        self.rule_chain_cutting = opts.get(
+            "rule_chain_cutting", self.rule_chain_cutting
+        )
+        self.rule_tu_quy_hierarchy = opts.get(
+            "rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy
+        )
+        self.rule_flip_suit_rank = opts.get(
+            "rule_flip_suit_rank", self.rule_flip_suit_rank
+        )
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
         if opts.get("fullscreen", False):
             self.toggle_fullscreen()
@@ -1029,13 +1078,17 @@ class GameView:
         spacing = min(40, card_w)
         rect = pygame.Rect(0, 0, 140, 30)
         if idx == 0:
-            rect.midtop = (x, y - spacing)
+            offset = card_h // 2 + spacing // 2
+            rect.midbottom = (x, y - offset)
         elif idx == 1:
-            rect.midbottom = (x, y + card_h + spacing)
+            offset = card_h // 2 + spacing // 2
+            rect.midtop = (x, y + offset)
         elif idx == 2:
-            rect.midleft = (x + card_w + spacing, y)
+            offset = card_w // 2 + spacing // 2
+            rect.midleft = (x + offset, y)
         else:
-            rect.midright = (x - spacing, y)
+            offset = card_w // 2 + spacing // 2
+            rect.midright = (x - offset, y)
         frames = max(1, int(frames / self.animation_speed))
         for i in range(frames):
             self._draw_frame()
@@ -1100,16 +1153,17 @@ class GameView:
         self.overlay = new
         self._draw_frame()
 
-
     # Layout helpers --------------------------------------------------
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
-        margin = int(self.card_width * 1.5)
-        bottom_y = h - margin
-        top_y = margin
-        left_x = margin
-        right_x = w - margin
+        card_w = self.card_width
+        card_h = int(card_w * 1.4)
+        margin = min(60, max(40, int(card_w * 0.75)))
+        bottom_y = h - margin - card_h // 2
+        top_y = margin + card_h // 2
+        left_x = margin + card_w // 2
+        right_x = w - margin - card_w // 2
         if idx == 0:
             return w // 2, bottom_y
         if idx == 1:
@@ -1120,7 +1174,12 @@ class GameView:
 
     def _pile_center(self) -> Tuple[int, int]:
         w, h = self.screen.get_size()
-        return w // 2, h // 2
+        if self.action_buttons:
+            top = self.action_buttons[0].rect.top
+            y = top - self.card_width
+        else:
+            y = h // 2
+        return w // 2, y
 
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
@@ -1155,9 +1214,9 @@ class GameView:
             card_h = sprites.sprites()[0].rect.height
         else:
             card_h = int(self.card_width * 1.4)
-        hand_top_y = hand_y - card_h // 2
+        hand_bottom_y = hand_y + card_h // 2
         control_spacing = spacing
-        y = hand_top_y - control_spacing
+        y = hand_bottom_y + control_spacing
 
         font = self.font
         self.action_buttons = [
@@ -1188,7 +1247,7 @@ class GameView:
             )
         else:
             self.settings_button.callback = self.show_in_game_menu
-        margin = max(5, self.card_width // 3)
+        margin = min(60, max(40, self.card_width // 3))
         self.settings_button.rect.topright = (w - margin, margin)
 
     def _activate_overlay(self, overlay: Overlay, state: GameState) -> None:
@@ -1612,13 +1671,17 @@ class GameView:
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
             img = self.font.render(txt, True, color)
             if idx == 0:
-                rect = img.get_rect(midtop=(x, y - spacing))
+                offset = card_h // 2 + spacing // 2
+                rect = img.get_rect(midbottom=(x, y - offset))
             elif idx == 1:
-                rect = img.get_rect(midbottom=(x, y + card_h + spacing))
+                offset = card_h // 2 + spacing // 2
+                rect = img.get_rect(midtop=(x, y + offset))
             elif idx == 2:
-                rect = img.get_rect(midleft=(x + card_w + spacing, y))
+                offset = card_w // 2 + spacing // 2
+                rect = img.get_rect(midleft=(x + offset, y))
             else:
-                rect = img.get_rect(midright=(x - spacing, y))
+                offset = card_w // 2 + spacing // 2
+                rect = img.get_rect(midright=(x - offset, y))
             self.screen.blit(img, rect)
 
         for sp in self.hand_sprites.sprites():

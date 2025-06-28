@@ -529,12 +529,14 @@ def test_on_resize_repositions_layout():
                 settings_large = view.settings_button.rect.topright
 
                 card_w = view.card_width
-                margin = int(card_w * 1.5)
-                expected_pos = (600 // 2, 400 - margin)
+                card_h = int(card_w * 1.4)
+                margin = min(60, max(40, int(card_w * 0.75)))
+                expected_pos = (600 // 2, 400 - margin - card_h // 2)
                 spacing = max(10, card_w // 2)
                 total = 120 * 3 + spacing * 2
                 start_x = 600 // 2 - total // 2
-                expected_settings = (600 - max(5, card_w // 3), max(5, card_w // 3))
+                setting_margin = min(60, max(40, card_w // 3))
+                expected_settings = (600 - setting_margin, setting_margin)
 
     pygame.quit()
     assert pos_large == expected_pos
@@ -757,7 +759,9 @@ def test_how_to_play_overlay_escape_returns_menu():
 
 def test_tutorial_overlay_escape_returns_settings():
     view, _ = make_view()
-    with patch.object(view, "show_settings") as show_settings, patch("pygame.display.flip"):
+    with patch.object(view, "show_settings") as show_settings, patch(
+        "pygame.display.flip"
+    ):
         view.show_tutorial(from_menu=False)
         view.overlay.handle_event(
             pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
@@ -774,7 +778,9 @@ def test_on_resize_calls_overlay_resize():
         "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
     ), patch.object(pygame_gui, "load_card_images"), patch.object(
         view, "update_hand_sprites"
-    ), patch.object(view, "_create_action_buttons"), patch.object(
+    ), patch.object(
+        view, "_create_action_buttons"
+    ), patch.object(
         view, "_position_settings_button"
     ):
         view.on_resize(100, 100)
