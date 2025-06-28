@@ -325,29 +325,38 @@ class InGameMenuOverlay(Overlay):
         w, h = self.view.screen.get_size()
         font = self.view.font
         bx = w // 2 - 100
-        by = h // 2 - 120
+        by = h // 2 - 150
         self.buttons = [
-            Button("Save Game", pygame.Rect(bx, by, 200, 40), self.view.save_game, font),
+            Button(
+                "Resume Game",
+                pygame.Rect(bx, by, 200, 40),
+                self.view.close_overlay,
+                font,
+            ),
+            Button("Save Game", pygame.Rect(bx, by + 50, 200, 40), self.view.save_game, font),
             Button(
                 "Load Game",
-                pygame.Rect(bx, by + 50, 200, 40),
+                pygame.Rect(bx, by + 100, 200, 40),
                 self.view.load_game,
                 font,
             ),
             Button(
                 "Game Settings",
-                pygame.Rect(bx, by + 100, 200, 40),
+                pygame.Rect(bx, by + 150, 200, 40),
                 self.view.show_settings,
                 font,
             ),
             Button(
                 "Return to Main Menu",
-                pygame.Rect(bx, by + 150, 200, 40),
-                self.view.show_menu,
+                pygame.Rect(bx, by + 200, 200, 40),
+                self.view.confirm_return_to_menu,
                 font,
             ),
             Button(
-                "Quit Game", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font
+                "Quit Game",
+                pygame.Rect(bx, by + 250, 200, 40),
+                self.view.confirm_quit,
+                font,
             ),
         ]
         if self.focus_idx >= len(self.buttons):
@@ -481,7 +490,11 @@ class GraphicsOverlay(Overlay):
                     cur = options[(idx + 1) % len(options)]
                     setattr(self.view, attr, cur)
                     self.view.apply_options()
-                    btn.text = f"{label}: {cur}"
+                    if isinstance(cur, bool):
+                        cur_txt = "On" if cur else "Off"
+                    else:
+                        cur_txt = cur
+                    btn.text = f"{label}: {cur_txt}"
 
                 return inner
 
@@ -508,8 +521,9 @@ class GraphicsOverlay(Overlay):
         make_button(50, "card_back_name", make_back, "Card Back")
         make_button(100, "card_color", make_card_color, "Card Color")
         make_button(150, "colorblind_mode", [False, True], "Colorblind")
+        make_button(200, "fullscreen", [False, True], "Fullscreen")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -680,6 +694,52 @@ class TutorialOverlay(Overlay):
             y += 24
 
 
+class SavePromptOverlay(Overlay):
+    """Prompt the user to save before performing an action."""
+
+    def __init__(self, view: "GameView", action: Callable[[], None], label: str) -> None:
+        super().__init__(view, view.close_overlay)
+        self.action = action
+        self.label = label
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        bx = w // 2 - 120
+        by = h // 2
+        self.buttons = [
+            Button(
+                f"Save and {self.label}",
+                pygame.Rect(bx, by, 240, 40),
+                self._save_then_action,
+                font,
+            ),
+            Button(
+                f"{self.label} Without Saving",
+                pygame.Rect(bx, by + 50, 240, 40),
+                self.action,
+                font,
+            ),
+            Button("Cancel", pygame.Rect(bx, by + 100, 240, 40), self.view.close_overlay, font),
+        ]
+
+    def _save_then_action(self) -> None:
+        self.view.save_game()
+        self.action()
+
+    def draw(self, surface: pygame.Surface) -> None:
+        w, h = surface.get_size()
+        font = pygame.font.SysFont(None, 24)
+        msg = f"Save your game before {self.label.lower()}?"
+        img = font.render(msg, True, (255, 255, 255))
+        surface.blit(img, img.get_rect(center=(w // 2, h // 2 - 60)))
+        super().draw(surface)
+
+
 class GameOverOverlay(Overlay):
     def __init__(self, view: "GameView", winner: str) -> None:
         super().__init__(view, None)
@@ -825,6 +885,8 @@ class GameView:
         self.rule_tu_quy_hierarchy = opts.get("rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy)
         self.rule_flip_suit_rank = opts.get("rule_flip_suit_rank", self.rule_flip_suit_rank)
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
+        if opts.get("fullscreen", False):
+            self.toggle_fullscreen()
         self.apply_options()
         self.update_hand_sprites()
         self._create_action_buttons()
@@ -1172,6 +1234,18 @@ class GameView:
         back_cb = self.show_menu if from_menu else self.show_settings
         self._activate_overlay(TutorialOverlay(self, back_cb), GameState.SETTINGS)
 
+    def confirm_quit(self) -> None:
+        self._activate_overlay(
+            SavePromptOverlay(self, self.quit_game, "Quit"),
+            GameState.SETTINGS,
+        )
+
+    def confirm_return_to_menu(self) -> None:
+        self._activate_overlay(
+            SavePromptOverlay(self, self.show_menu, "Return"),
+            GameState.SETTINGS,
+        )
+
     def save_game(self) -> None:
         try:
             with open(
@@ -1259,6 +1333,7 @@ class GameView:
             "rule_tu_quy_hierarchy": self.rule_tu_quy_hierarchy,
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
+            "fullscreen": self.fullscreen,
         }
         try:
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:

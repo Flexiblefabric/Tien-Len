@@ -666,6 +666,7 @@ def test_restart_game_preserves_scores():
         (pygame_gui.RulesOverlay, (lambda: None,)),
         (pygame_gui.HowToPlayOverlay, (lambda: None,)),
         (pygame_gui.TutorialOverlay, (lambda: None,)),
+        (pygame_gui.SavePromptOverlay, (lambda: None, "Quit")),
     ],
 )
 def test_overlay_keyboard_navigation(cls, args):
@@ -713,6 +714,7 @@ def test_in_game_menu_buttons():
     texts = [b.text for b in overlay.buttons]
     cbs = [b.callback for b in overlay.buttons]
     assert texts == [
+        "Resume Game",
         "Save Game",
         "Load Game",
         "Game Settings",
@@ -720,11 +722,12 @@ def test_in_game_menu_buttons():
         "Quit Game",
     ]
     assert cbs == [
+        view.close_overlay,
         view.save_game,
         view.load_game,
         view.show_settings,
-        view.show_menu,
-        view.quit_game,
+        view.confirm_return_to_menu,
+        view.confirm_quit,
     ]
     pygame.quit()
 
@@ -828,6 +831,7 @@ def test_options_persist_across_sessions(tmp_path):
         view.rule_tu_quy_hierarchy = True
         view.rule_flip_suit_rank = True
         view.rule_no_2s = False
+        view.fullscreen = True
         view._save_options()
         # create new view that loads from same options file
         new_view, _ = make_view()
@@ -840,6 +844,7 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.rule_tu_quy_hierarchy is True
     assert new_view.rule_flip_suit_rank is True
     assert new_view.rule_no_2s is False
+    assert new_view.fullscreen is True
 
 
 def test_rules_overlay_toggles_update_state():
@@ -859,3 +864,14 @@ def test_rules_overlay_toggles_update_state():
         btn.callback()
         assert getattr(view, attr) != start
     pygame.quit()
+
+
+def test_save_prompt_overlay_buttons():
+    view, _ = make_view()
+    overlay = pygame_gui.SavePromptOverlay(view, view.quit_game, "Quit")
+    texts = [b.text for b in overlay.buttons]
+    assert texts == [
+        "Save and Quit",
+        "Quit Without Saving",
+        "Cancel",
+    ]
