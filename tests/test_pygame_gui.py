@@ -771,6 +771,15 @@ def test_current_trick_reset_on_restart_and_new_round():
     pygame.quit()
 
 
+def test_restart_game_clears_current_trick_immediately():
+    view, _ = make_view()
+    view.current_trick.append(("P1", pygame.Surface((1, 1))))
+    with patch.object(view, "close_overlay"):
+        view.restart_game()
+    assert view.current_trick == []
+    pygame.quit()
+
+
 def test_draw_players_displays_trick_linearly():
     view, _ = make_view()
     view.hand_sprites = pygame.sprite.OrderedUpdates()
