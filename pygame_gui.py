@@ -43,6 +43,9 @@ TABLE_THEMES = {
 
 OPTIONS_FILE = Path(__file__).with_name("options.json")
 
+# Default distance between cards in a player's hand
+HAND_SPACING = 30
+
 
 # ---------------------------------------------------------------------------
 # Helpers for loading and caching card images
@@ -1651,10 +1654,15 @@ class GameView:
     def update_hand_sprites(self):
         player = self.game.players[0]
         self.hand_sprites = pygame.sprite.OrderedUpdates()
+        w, h = self.screen.get_size()
         start_x, y = self._player_pos(0)
         card_w = self.card_width
-        spacing = min(40, card_w)
-        start_x -= (len(player.hand) - 1) * spacing // 2
+        card_h = int(card_w * 1.4)
+        spacing = HAND_SPACING
+        margin = min(60, max(40, int(card_w * 0.75)))
+        hand_w = card_w + (len(player.hand) - 1) * spacing
+        start_x = w // 2 - hand_w // 2
+        start_x = max(margin, min(start_x, w - margin - hand_w))
         for i, c in enumerate(player.hand):
             sprite = CardSprite(c, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
@@ -1665,14 +1673,18 @@ class GameView:
             opp = self.game.players[idx]
             x, y = self._player_pos(idx)
             if idx == 1:
-                start = x - (len(opp.hand) - 1) * spacing // 2
+                hand_w = card_w + (len(opp.hand) - 1) * spacing
+                start = w // 2 - hand_w // 2
+                start = max(margin, min(start, w - margin - hand_w))
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite(
                         (start + i * spacing, y), card_w, self.card_back_name
                     )
                     group.add(sp)
             else:
-                start = y - (len(opp.hand) - 1) * spacing // 2
+                hand_h = card_h + (len(opp.hand) - 1) * spacing
+                start = h // 2 - hand_h // 2
+                start = max(margin, min(start, h - margin - hand_h))
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite(
                         (x, start + i * spacing), card_w, self.card_back_name
