@@ -1224,6 +1224,29 @@ class GameView:
         w, _ = self.screen.get_size()
         return w // 2, self.pile_y
 
+    def _hud_box(
+        self,
+        lines: list[str],
+        text_color: Tuple[int, int, int] = (255, 255, 255),
+        padding: int = 5,
+        bg_color: Tuple[int, int, int, int] = (0, 0, 0, 150),
+    ) -> pygame.Surface:
+        """Return a surface with ``lines`` rendered on a semi-transparent box."""
+        line_height = getattr(self.font, "get_linesize", lambda: 20)()
+        imgs = [self.font.render(line, True, text_color) for line in lines]
+        if imgs:
+            width = max(int(img.get_width()) for img in imgs) + 2 * padding
+        else:
+            width = 0
+        height = line_height * len(imgs) + 2 * padding
+        panel = pygame.Surface((max(1, width), max(1, height)), pygame.SRCALPHA)
+        panel.fill(bg_color)
+        y = padding
+        for img in imgs:
+            panel.blit(img, (padding, y))
+            y += line_height
+        return panel
+
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
@@ -1764,20 +1787,20 @@ class GameView:
             x, y = self._player_pos(idx)
             txt = f"{p.name} ({len(p.hand)})"
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
-            img = self.font.render(txt, True, color)
+            panel = self._hud_box([txt], text_color=color, padding=3)
             if idx == 0:
                 offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = img.get_rect(midbottom=(x, y - offset))
+                rect = panel.get_rect(midbottom=(x, y - offset))
             elif idx == 1:
                 offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = img.get_rect(midtop=(x, y + offset))
+                rect = panel.get_rect(midtop=(x, y + offset))
             elif idx == 2:
                 offset = card_w // 2 + spacing // 2 + LABEL_PAD
-                rect = img.get_rect(midleft=(x + offset, y))
+                rect = panel.get_rect(midleft=(x + offset, y))
             else:
                 offset = card_w // 2 + spacing // 2 + LABEL_PAD
-                rect = img.get_rect(midright=(x - offset, y))
-            self.screen.blit(img, rect)
+                rect = panel.get_rect(midright=(x - offset, y))
+            self.screen.blit(panel, rect)
 
         for sp in self.hand_sprites.sprites():
             if isinstance(sp, CardSprite):
@@ -1841,7 +1864,6 @@ class GameView:
 
     def draw_score_overlay(self) -> None:
         """Render a scoreboard panel with last hands played."""
-        line_height = getattr(self.font, "get_linesize", lambda: 20)()
         lines = [
             f"{p.name}: {len(p.hand)} ({self.win_counts.get(p.name, 0)})"
             for p in self.game.players
@@ -1853,14 +1875,7 @@ class GameView:
                 if cards:
                     text = " ".join(str(c) for c in cards)
                     lines.append(f"{name}: {text}")
-        height = line_height * len(lines) + 10
-        panel = pygame.Surface((200, height), pygame.SRCALPHA)
-        panel.fill((0, 0, 0, 150))
-        y = 5
-        for line in lines:
-            img = self.font.render(line, True, (255, 255, 255))
-            panel.blit(img, (5, y))
-            y += line_height
+        panel = self._hud_box(lines, padding=5)
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
         if self.score_visible:
