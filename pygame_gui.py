@@ -1798,10 +1798,7 @@ class GameView:
             color = (0, 255, 0) if valid else (255, 0, 0)
             for sp in self.selected:
                 pygame.draw.rect(self.screen, color, sp.rect, width=3)
-        if not self.game.pile:
-            self.current_trick.clear()
-        if self.current_trick:
-            self.draw_center_pile()
+        self.draw_center_pile()
 
         if self.state == GameState.PLAYING:
             # Enable or disable Undo based on snapshot history
@@ -1814,8 +1811,13 @@ class GameView:
 
     def draw_center_pile(self) -> None:
         """Draw the cards currently in the centre pile."""
-        center_x, y = self._pile_center()
+        if not self.game.pile:
+            if self.current_trick:
+                self.current_trick.clear()
+            return
+
         w, _ = self.screen.get_size()
+        y = self.pile_y
         card_w = self.card_width
         start_rel, overlap = calc_start_and_overlap(
             w, len(self.current_trick), card_w, 25, card_w - 5
