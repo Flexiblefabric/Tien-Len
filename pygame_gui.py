@@ -195,13 +195,19 @@ class CardSprite(pygame.sprite.Sprite):
 
 class CardBackSprite(pygame.sprite.Sprite):
     def __init__(
-        self, pos: Tuple[int, int], width: int = 80, name: str = "card_back"
+        self,
+        pos: Tuple[int, int],
+        width: int = 80,
+        name: str = "card_back",
+        rotation: int = 0,
     ) -> None:
         super().__init__()
         img = get_card_back(name, width)
         if img is None:
             font = pygame.font.SysFont(None, 20)
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
+        if rotation:
+            img = pygame.transform.rotate(img, rotation)
         self.image = img
         self.rect = self.image.get_rect(topleft=pos)
 
@@ -1782,12 +1788,16 @@ class GameView:
                     )
                     group.add(sp)
             else:
-                hand_h = card_h + (len(opp.hand) - 1) * spacing
+                hand_h = card_w + (len(opp.hand) - 1) * spacing
                 start = h // 2 - hand_h // 2
                 start = max(margin, min(start, h - margin - hand_h))
+                rotation = 90 if idx == 2 else -90
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite(
-                        (x, start + i * spacing), card_w, self.card_back_name
+                        (x, start + i * spacing),
+                        card_w,
+                        self.card_back_name,
+                        rotation=rotation,
                     )
                     group.add(sp)
         self.update_play_button_state()
@@ -1810,10 +1820,10 @@ class GameView:
                 offset = card_h // 2 + spacing // 2 + LABEL_PAD
                 rect = panel.get_rect(midtop=(x, y + offset))
             elif idx == 2:
-                offset = card_w // 2 + spacing // 2 + LABEL_PAD
+                offset = card_h // 2 + spacing // 2 + LABEL_PAD
                 rect = panel.get_rect(midleft=(x + offset, y))
             else:
-                offset = card_w // 2 + spacing // 2 + LABEL_PAD
+                offset = card_h // 2 + spacing // 2 + LABEL_PAD
                 rect = panel.get_rect(midright=(x - offset, y))
             self.screen.blit(panel, rect)
 
