@@ -1823,12 +1823,20 @@ class GameView:
         )
         spacing = card_w - overlap
         start = start_rel + card_w // 2
-        for i, (name, img) in enumerate(self.current_trick):
+        first_rect = last_rect = None
+        for i, (_, img) in enumerate(self.current_trick):
             x = start + i * spacing
             rect = img.get_rect(center=(int(x), int(y)))
             self.screen.blit(img, rect)
+            if first_rect is None:
+                first_rect = rect
+            last_rect = rect
+
+        if first_rect:
+            name = self.current_trick[0][0]
             label = self.font.render(name, True, (255, 255, 255))
-            lrect = label.get_rect(midbottom=(rect.centerx, rect.top))
+            center_x = (first_rect.left + last_rect.right) // 2
+            lrect = label.get_rect(midbottom=(center_x, first_rect.top))
             self.screen.blit(label, lrect)
 
     def draw_score_overlay(self) -> None:
