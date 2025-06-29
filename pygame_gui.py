@@ -1526,7 +1526,6 @@ class GameView:
         self._create_action_buttons()
         self._position_score_button()
         self._position_settings_button()
-        self._position_score_button()
         if self.overlay:
             self.overlay.resize()
 
