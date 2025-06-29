@@ -790,8 +790,8 @@ def test_draw_players_displays_trick_linearly():
     view.current_trick = [("A", surf1), ("B", surf2)]
     view.screen = MagicMock()
     view.screen.get_size.return_value = (200, 200)
-    with patch.object(view, "_pile_center", return_value=(100, 50)):
-        view.draw_players()
+    view.pile_y = 50
+    view.draw_center_pile()
     calls = [c for c in view.screen.blit.call_args_list if c.args[0] in (surf1, surf2)]
     card_w = view.card_width
     start_rel, overlap = pygame_gui.calc_start_and_overlap(
