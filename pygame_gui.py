@@ -157,7 +157,16 @@ class CardSprite(pygame.sprite.Sprite):
             # Render a text fallback
             font = pygame.font.SysFont(None, 20)
             img = font.render(str(card), True, (0, 0, 0), (255, 255, 255))
-        self.image = img
+
+        border = 2
+        w, h = img.get_size()
+        surf = pygame.Surface((w + border * 2, h + border * 2), pygame.SRCALPHA)
+        rect = surf.get_rect()
+        pygame.draw.rect(surf, (220, 220, 220), rect, border_radius=5)
+        pygame.draw.rect(surf, (0, 0, 0), rect, width=1, border_radius=5)
+        surf.blit(img, (border, border))
+
+        self.image = surf
         self.rect = self.image.get_rect(topleft=pos)
         self.card = card
         self.selected = False
