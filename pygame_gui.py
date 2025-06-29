@@ -1157,7 +1157,7 @@ class GameView:
         self,
         old: Optional[Overlay],
         new: Overlay,
-        frames: int = 10,
+        frames: int = 20,
         slide: bool = False,
     ) -> None:
         """Animate transition between two overlays."""
@@ -1178,11 +1178,14 @@ class GameView:
         to_surf = render(new)
 
         current = self.overlay
+        # Draw the base screen once and reuse it during the animation
+        self.overlay = None
+        self._draw_frame()
+        base = self.screen.copy()
+        self.overlay = current
         for i in range(frames):
             progress = (i + 1) / frames
-            self.overlay = None
-            self._draw_frame()
-            self.overlay = current
+            self.screen.blit(base, (0, 0))
             if slide:
                 offset = int(w * (1 - progress))
                 self.screen.blit(from_surf, (-offset, 0))
