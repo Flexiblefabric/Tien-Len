@@ -580,7 +580,7 @@ def test_on_resize_repositions_layout():
                 spacing = max(10, card_w // 2)
                 total = 120 * 3 + spacing * 2
                 start_x = 600 // 2 - total // 2
-                expected_y = view._pile_center()[1] + card_h
+                expected_y = view.button_y
                 setting_margin = min(60, max(40, card_w // 3))
                 expected_settings = (600 - setting_margin, setting_margin)
 
