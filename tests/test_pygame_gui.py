@@ -259,7 +259,7 @@ def test_highlight_turn_draws_at_player_position():
     ) as pos:
         view._highlight_turn(0, frames=2)
     pos.assert_called_with(0)
-    spacing = min(40, view.card_width)
+    spacing = pygame_gui.HAND_SPACING
     topleft = (50 - 70, 100 - spacing)
     view.screen.blit.assert_called_with(overlay_surface, topleft)
     assert clock.count == 2
