@@ -45,6 +45,8 @@ OPTIONS_FILE = Path(__file__).with_name("options.json")
 
 # Default distance between cards in a player's hand
 HAND_SPACING = 30
+# Extra padding used when positioning player labels
+LABEL_PAD = 10
 
 
 # ---------------------------------------------------------------------------
@@ -1700,16 +1702,16 @@ class GameView:
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
             img = self.font.render(txt, True, color)
             if idx == 0:
-                offset = card_h // 2 + spacing // 2
+                offset = card_h // 2 + spacing // 2 + LABEL_PAD
                 rect = img.get_rect(midbottom=(x, y - offset))
             elif idx == 1:
-                offset = card_h // 2 + spacing // 2
+                offset = card_h // 2 + spacing // 2 + LABEL_PAD
                 rect = img.get_rect(midtop=(x, y + offset))
             elif idx == 2:
-                offset = card_w // 2 + spacing // 2
+                offset = card_w // 2 + spacing // 2 + LABEL_PAD
                 rect = img.get_rect(midleft=(x + offset, y))
             else:
-                offset = card_w // 2 + spacing // 2
+                offset = card_w // 2 + spacing // 2 + LABEL_PAD
                 rect = img.get_rect(midright=(x - offset, y))
             self.screen.blit(img, rect)
 
