@@ -1217,11 +1217,9 @@ class GameView:
 
         # Position buttons relative to the pile location
         _, pile_y = self._pile_center()
-        sprites = getattr(self, "hand_sprites", None)
-        if sprites:
-            card_h = sprites.sprites()[0].rect.height
-        else:
-            card_h = int(self.card_width * 1.4)
+        # Card height is derived from the current card width so we don't
+        # rely on any existing sprite dimensions.
+        card_h = int(self.card_width * 1.4)
         y = pile_y + card_h
 
         font = self.font
@@ -1492,6 +1490,10 @@ class GameView:
         self.card_width = self._calc_card_width(width)
         load_card_images(self.card_width)
         self._update_table_surface()
+        # Recalculate layout helpers based on the new size
+        for i in range(4):
+            self._player_pos(i)
+        self._pile_center()
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_score_button()
@@ -1682,7 +1684,9 @@ class GameView:
         player = self.game.players[0]
         self.hand_sprites = pygame.sprite.OrderedUpdates()
         w, h = self.screen.get_size()
-        start_x, y = self._player_pos(0)
+        # Y-position is based solely on window height; X start is
+        # recalculated from scratch each call.
+        _, y = self._player_pos(0)
         card_w = self.card_width
         card_h = int(card_w * 1.4)
         spacing = HAND_SPACING

@@ -128,7 +128,10 @@ def test_handle_mouse_selects_rightmost_sprite():
     view.hand_sprites = pygame.sprite.OrderedUpdates(left, right)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
-    with patch.object(view, "update_play_button_state"):
+    view.action_buttons = []
+    with patch.object(view, "update_play_button_state"), patch.object(
+        view, "_highlight_turn"
+    ):
         view.handle_mouse((5, 5))
     assert right.selected is True
     assert right in view.selected
@@ -167,7 +170,10 @@ def test_handle_mouse_calls_update_play_button_state():
     view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
-    with patch.object(view, "update_play_button_state") as upd:
+    view.action_buttons = []
+    with patch.object(view, "update_play_button_state") as upd, patch.object(
+        view, "_highlight_turn"
+    ):
         view.handle_mouse(sprite.rect.center)
         upd.assert_called()
 
@@ -589,6 +595,48 @@ def test_on_resize_repositions_layout():
     assert settings_small != settings_large
 
 
+def test_resize_keeps_sprites_within_margins():
+    pygame.display.init()
+    surf_small = pygame.Surface((300, 200))
+    surf_large = pygame.Surface((600, 600))
+    set_mode = MagicMock(side_effect=[surf_small, surf_large])
+    with patch("pygame.display.set_mode", set_mode):
+        with patch("pygame.font.SysFont", return_value=DummyFont()):
+            with patch.object(pygame_gui, "load_card_images"), patch.object(
+                pygame_gui,
+                "get_card_image",
+                side_effect=lambda c, w: pygame.Surface((w, int(w * 1.4))),
+            ), patch.object(
+                pygame_gui,
+                "get_card_back",
+                side_effect=lambda name, w=1: pygame.Surface((w, int(w * 1.4))),
+            ):
+                view = pygame_gui.GameView(300, 200)
+                view.on_resize(600, 600)
+
+                w, h = view.screen.get_size()
+                card_w = view.card_width
+                margin = min(60, max(40, int(card_w * 0.75)))
+
+                hand = view.hand_sprites.sprites()
+                assert hand[0].rect.left >= margin
+                assert hand[-1].rect.right <= w - margin
+
+                top_group = view.ai_sprites[0].sprites()
+                assert top_group[0].rect.left >= margin
+                assert top_group[-1].rect.right <= w - margin
+
+                left_group = view.ai_sprites[1].sprites()
+                assert min(sp.rect.top for sp in left_group) >= margin
+                assert max(sp.rect.bottom for sp in left_group) <= h - margin
+
+                right_group = view.ai_sprites[2].sprites()
+                assert min(sp.rect.top for sp in right_group) >= margin
+                assert max(sp.rect.bottom for sp in right_group) <= h - margin
+
+    pygame.quit()
+
+
 def test_overlay_instances_created():
     view, _ = make_view()
     with patch("pygame.display.flip"), patch("pygame.event.pump"):
@@ -635,7 +683,9 @@ def test_draw_frame_with_overlay():
     overlay_surface = MagicMock()
     with patch.object(view.screen, "blit") as blit, patch(
         "pygame.display.flip"
-    ) as flip, patch("pygame.Surface", return_value=overlay_surface):
+    ) as flip, patch("pygame.Surface", return_value=overlay_surface), patch.object(
+        view.score_button, "draw"
+    ):
         pygame_gui.GameView._draw_frame(view)
     blit.assert_any_call(overlay_surface, (0, 0))
     flip.assert_called_once()
@@ -670,7 +720,9 @@ def test_draw_score_overlay_positions_panel():
     view.score_pos = (15, 20)
     view.screen.get_size.return_value = (300, 200)
     surf = pygame.Surface((200, 20))
-    with patch("pygame.Surface", return_value=surf):
+    with patch("pygame.Surface", return_value=surf), patch.object(
+        view.score_button, "draw"
+    ):
         view.draw_score_overlay()
     view.screen.blit.assert_called_with(surf, view.score_pos)
     pygame.quit()
