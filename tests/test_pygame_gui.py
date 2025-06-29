@@ -718,6 +718,7 @@ def test_draw_score_overlay_positions_panel():
         view, _ = make_view()
     view.screen = MagicMock()
     view.score_pos = (15, 20)
+    view.score_visible = True
     view.screen.get_size.return_value = (300, 200)
     surf = pygame.Surface((200, 20))
     with patch("pygame.Surface", return_value=surf), patch.object(
