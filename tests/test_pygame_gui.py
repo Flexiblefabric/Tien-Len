@@ -458,6 +458,8 @@ def test_apply_options_updates_game_and_audio():
         view.game, "set_ai_level"
     ) as sal, patch.object(view.game, "set_personality") as sp, patch.object(
         pygame_gui, "_mixer_ready", return_value=True
+    ), patch.object(
+        view, "update_hand_sprites"
     ), patch(
         "pygame.mixer.music.set_volume"
     ) as mv, patch(

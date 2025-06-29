@@ -527,8 +527,7 @@ class GraphicsOverlay(Overlay):
             return callback
 
         make_color = list(TABLE_THEMES.keys())
-        make_back = [self.view.card_back_name]
-        make_card_color = ["red", "blue", "green"]
+        make_card_color = ["red", "blue", "green", "black"]
 
         self.buttons = []
 
@@ -544,12 +543,11 @@ class GraphicsOverlay(Overlay):
             self.buttons.append(btn)
 
         make_button(0, "table_color_name", make_color, "Table Color")
-        make_button(50, "card_back_name", make_back, "Card Back")
-        make_button(100, "card_color", make_card_color, "Card Color")
-        make_button(150, "colorblind_mode", [False, True], "Colorblind")
-        make_button(200, "fullscreen", [False, True], "Fullscreen")
+        make_button(50, "card_color", make_card_color, "Card Color")
+        make_button(100, "colorblind_mode", [False, True], "Colorblind")
+        make_button(150, "fullscreen", [False, True], "Fullscreen")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -1078,17 +1076,13 @@ class GameView:
         spacing = min(40, card_w)
         rect = pygame.Rect(0, 0, 140, 30)
         if idx == 0:
-            offset = card_h // 2 + spacing // 2
-            rect.midbottom = (x, y - offset)
+            rect.midbottom = (x, y)
         elif idx == 1:
-            offset = card_h // 2 + spacing // 2
-            rect.midtop = (x, y + offset)
+            rect.midtop = (x, y)
         elif idx == 2:
-            offset = card_w // 2 + spacing // 2
-            rect.midleft = (x + offset, y)
+            rect.midleft = (x, y)
         else:
-            offset = card_w // 2 + spacing // 2
-            rect.midright = (x - offset, y)
+            rect.midright = (x, y)
         frames = max(1, int(frames / self.animation_speed))
         for i in range(frames):
             self._draw_frame()
@@ -1404,6 +1398,13 @@ class GameView:
         self.table_color = TABLE_THEMES.get(
             self.table_color_name, TABLE_THEMES["darkgreen"]
         )
+        back_map = {
+            "red": "card_back",
+            "blue": "card_back",
+            "green": "card_back_green",
+            "black": "card_back_black",
+        }
+        self.card_back_name = back_map.get(self.card_color, "card_back")
         self.game.players[0].name = self.player_name
         self.game.players[0].sort_hand(self.sort_mode)
         self.game.set_ai_level(self.ai_level)
