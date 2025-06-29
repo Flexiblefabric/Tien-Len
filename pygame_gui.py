@@ -47,6 +47,9 @@ OPTIONS_FILE = Path(__file__).with_name("options.json")
 HAND_SPACING = 30
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
+# Button dimensions and layout spacing
+BUTTON_HEIGHT = 40
+ZONE_GUTTER = 10
 
 
 # ---------------------------------------------------------------------------
@@ -857,6 +860,7 @@ class GameView:
                 self.main_menu_image = None
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
+        self._layout_zones()
         # Load sound effects and background music
         sdir = Path(__file__).with_name("assets") / "sound"
         sound.load("click", sdir / "card-play.wav")
@@ -1163,13 +1167,22 @@ class GameView:
         self._draw_frame()
 
     # Layout helpers --------------------------------------------------
+    def _layout_zones(self) -> None:
+        """Update stored vertical positions for hand, pile, and buttons."""
+        card_h = int(self.card_width * 1.4)
+        _, h = self.screen.get_size()
+        margin = min(60, max(40, int(self.card_width * 0.75)))
+        self.hand_y = h - margin - card_h // 2
+        self.pile_y = self.hand_y - card_h - ZONE_GUTTER
+        self.button_y = self.hand_y + card_h // 2 + ZONE_GUTTER
+
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
         card_w = self.card_width
         card_h = int(card_w * 1.4)
         margin = min(60, max(40, int(card_w * 0.75)))
-        bottom_y = h - margin - card_h // 2
+        bottom_y = self.hand_y
         top_y = margin + card_h // 2
         left_x = margin + card_w // 2
         right_x = w - margin - card_w // 2
@@ -1182,12 +1195,8 @@ class GameView:
         return right_x, h // 2
 
     def _pile_center(self) -> Tuple[int, int]:
-        w, h = self.screen.get_size()
-        card_h = int(self.card_width * 1.4)
-        spacing = max(10, self.card_width // 2)
-        _, hand_y = self._player_pos(0)
-        y = hand_y + spacing - card_h // 2
-        return w // 2, y
+        w, _ = self.screen.get_size()
+        return w // 2, self.pile_y
 
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
@@ -1215,27 +1224,22 @@ class GameView:
         total = btn_w * 3 + spacing * 2
         start_x = w // 2 - total // 2
 
-        # Position buttons relative to the pile location
-        _, pile_y = self._pile_center()
-        # Card height is derived from the current card width so we don't
-        # rely on any existing sprite dimensions.
-        card_h = int(self.card_width * 1.4)
-        y = pile_y + card_h
+        y = self.button_y
 
         font = self.font
         self.action_buttons = [
             Button(
-                "Play", pygame.Rect(start_x, y, btn_w, 40), self.play_selected, font
+                "Play", pygame.Rect(start_x, y, btn_w, BUTTON_HEIGHT), self.play_selected, font
             ),
             Button(
                 "Pass",
-                pygame.Rect(start_x + btn_w + spacing, y, btn_w, 40),
+                pygame.Rect(start_x + btn_w + spacing, y, btn_w, BUTTON_HEIGHT),
                 self.pass_turn,
                 font,
             ),
             Button(
                 "Undo",
-                pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, 40),
+                pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, BUTTON_HEIGHT),
                 self.undo_move,
                 font,
             ),
@@ -1491,10 +1495,7 @@ class GameView:
         self.card_width = self._calc_card_width(width)
         load_card_images(self.card_width)
         self._update_table_surface()
-        # Recalculate layout helpers based on the new size
-        for i in range(4):
-            self._player_pos(i)
-        self._pile_center()
+        self._layout_zones()
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_score_button()
@@ -1516,6 +1517,7 @@ class GameView:
         self.card_width = self._calc_card_width(size[0])
         load_card_images(self.card_width)
         self._update_table_surface()
+        self._layout_zones()
         self.update_hand_sprites()
         self._create_action_buttons()
 
