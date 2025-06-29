@@ -243,7 +243,7 @@ def test_draw_players_labels_use_padding():
     card_h = int(card_w * 1.4)
     spacing = min(40, card_w)
     pad_v = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD
-    pad_h = card_w // 2 + spacing // 2 + pygame_gui.LABEL_PAD
+    pad_h = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD
 
     assert calls[0].args[1].midbottom == (100, 150 - pad_v)
     assert calls[1].args[1].midtop == (100, 50 + pad_v)
@@ -300,8 +300,7 @@ def test_highlight_turn_draws_at_player_position():
     ) as pos:
         view._highlight_turn(0, frames=2)
     pos.assert_called_with(0)
-    spacing = pygame_gui.HAND_SPACING
-    topleft = (50 - 70, 100 - spacing)
+    topleft = (50 - 70, 100 - 30)
     view.screen.blit.assert_called_with(overlay_surface, topleft)
     assert clock.count == 2
     pygame.quit()
