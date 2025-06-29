@@ -44,7 +44,7 @@ TABLE_THEMES = {
 OPTIONS_FILE = Path(__file__).with_name("options.json")
 
 # Default distance between cards in a player's hand
-HAND_SPACING = 30
+HAND_SPACING = 20
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
 # Button dimensions and layout spacing
@@ -1210,6 +1210,9 @@ class GameView:
         self.hand_y = h - margin - card_h // 2
         self.pile_y = self.hand_y - card_h - ZONE_GUTTER
         self.button_y = self.hand_y + card_h // 2 + ZONE_GUTTER
+        max_y = h - HAND_SPACING - BUTTON_HEIGHT
+        if self.button_y > max_y:
+            self.button_y = max_y
 
     def _player_pos(self, idx: int) -> Tuple[int, int]:
         """Return the centre position for player ``idx`` based on screen size."""
@@ -1230,7 +1233,7 @@ class GameView:
         return right_x, h // 2
 
     def _pile_center(self) -> Tuple[int, int]:
-        w, _ = self.screen.get_size()
+        w, h = self.screen.get_size()
         return w // 2, self.pile_y
 
     def _hud_box(
@@ -1276,13 +1279,16 @@ class GameView:
 
     def _create_action_buttons(self) -> None:
         """Create or reposition the Play/Pass/Undo buttons."""
-        w, _ = self.screen.get_size()
+        w, h = self.screen.get_size()
         btn_w = 120
         spacing = max(10, self.card_width // 2)
         total = btn_w * 3 + spacing * 2
         start_x = w // 2 - total // 2
 
         y = self.button_y
+        max_y = h - HAND_SPACING - BUTTON_HEIGHT
+        if y > max_y:
+            y = max_y
 
         font = self.font
         self.action_buttons = [
