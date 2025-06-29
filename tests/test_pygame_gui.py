@@ -671,6 +671,29 @@ def test_current_trick_reset_on_restart_and_new_round():
     pygame.quit()
 
 
+def test_draw_players_displays_trick_linearly():
+    view, _ = make_view()
+    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.ai_sprites = []
+    surf1 = pygame.Surface((10, 20))
+    surf2 = pygame.Surface((10, 20))
+    view.current_trick = [("A", surf1), ("B", surf2)]
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (200, 200)
+    with patch.object(view, "_pile_center", return_value=(100, 50)):
+        view.draw_players()
+    calls = [c for c in view.screen.blit.call_args_list if c.args[0] in (surf1, surf2)]
+    card_w = view.card_width
+    spacing = max(5, card_w - 25)
+    total_w = card_w + spacing
+    start = 100 - total_w // 2 + card_w // 2
+    expected = {surf1: (start, 50), surf2: (start + spacing, 50)}
+    for call in calls:
+        surf, rect = call.args
+        assert rect.center == expected[surf]
+    pygame.quit()
+
+
 @pytest.mark.parametrize(
     "cls, args",
     [

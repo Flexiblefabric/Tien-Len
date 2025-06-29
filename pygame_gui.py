@@ -1171,7 +1171,8 @@ class GameView:
         w, h = self.screen.get_size()
         if self.action_buttons:
             top = self.action_buttons[0].rect.top
-            y = top - self.card_width
+            card_h = int(self.card_width * 1.4)
+            y = top - card_h
         else:
             y = h // 2
         return w // 2, y
@@ -1725,17 +1726,17 @@ class GameView:
         if not self.game.pile:
             self.current_trick.clear()
         if self.current_trick:
-            center = self._pile_center()
-            radius = self.card_width * 1.5
-            total = len(self.current_trick)
+            center_x, y = self._pile_center()
+            card_w = self.card_width
+            spacing = max(5, card_w - 25)
+            total_w = card_w + (len(self.current_trick) - 1) * spacing
+            start = center_x - total_w // 2 + card_w // 2
             for i, (name, img) in enumerate(self.current_trick):
-                angle = math.tau * i / total - math.pi / 2
-                x = center[0] + radius * math.cos(angle)
-                y = center[1] + radius * math.sin(angle)
+                x = start + i * spacing
                 rect = img.get_rect(center=(int(x), int(y)))
                 self.screen.blit(img, rect)
                 label = self.font.render(name, True, (255, 255, 255))
-                lrect = label.get_rect(center=(int(x), int(y - self.card_width)))
+                lrect = label.get_rect(midbottom=(rect.centerx, rect.top))
                 self.screen.blit(label, lrect)
 
         if self.state == GameState.PLAYING:
