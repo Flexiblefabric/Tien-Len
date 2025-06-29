@@ -667,12 +667,20 @@ def test_draw_score_overlay_positions_panel():
     with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
         view, _ = make_view()
     view.screen = MagicMock()
+    view.score_pos = (15, 20)
     view.screen.get_size.return_value = (300, 200)
     surf = pygame.Surface((200, 20))
     with patch("pygame.Surface", return_value=surf):
         view.draw_score_overlay()
-    view.screen.blit.assert_called_with(surf, (10, 10))
+    view.screen.blit.assert_called_with(surf, view.score_pos)
     pygame.quit()
+
+
+def test_toggle_score_panel_changes_visibility():
+    view, _ = make_view()
+    start = view.score_visible
+    view.toggle_score()
+    assert view.score_visible != start
 
 
 def test_show_game_over_updates_win_counts():
@@ -916,6 +924,8 @@ def test_options_persist_across_sessions(tmp_path):
         view.rule_flip_suit_rank = True
         view.rule_no_2s = False
         view.fullscreen = True
+        view.score_visible = False
+        view.score_pos = (30, 40)
         view._save_options()
         # create new view that loads from same options file
         new_view, _ = make_view()
@@ -929,6 +939,8 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.rule_flip_suit_rank is True
     assert new_view.rule_no_2s is False
     assert new_view.fullscreen is True
+    assert new_view.score_visible is False
+    assert new_view.score_pos == (30, 40)
 
 
 def test_rules_overlay_toggles_update_state():
