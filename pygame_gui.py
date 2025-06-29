@@ -902,10 +902,17 @@ class GameView:
         self.rule_tu_quy_hierarchy = False
         self.rule_flip_suit_rank = False
         self.rule_no_2s = True
+        self.score_visible = True
+        self.score_pos: Tuple[int, int] = (10, 10)
+        self.score_rect = pygame.Rect(self.score_pos, (0, 0))
+        self._dragging_score = False
+        self._drag_offset = (0, 0)
         self.action_buttons: List[Button] = []
         self._create_action_buttons()
         self.settings_button: Button
         self._position_settings_button()
+        self.score_button: Button
+        self._position_score_button()
         opts = self._load_options()
         self.animation_speed = opts.get("animation_speed", self.animation_speed)
         self.table_color_name = opts.get("table_color", self.table_color_name)
@@ -938,6 +945,8 @@ class GameView:
             "rule_flip_suit_rank", self.rule_flip_suit_rank
         )
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
+        self.score_visible = opts.get("score_visible", self.score_visible)
+        self.score_pos = tuple(opts.get("score_pos", list(self.score_pos)))
         if opts.get("fullscreen", False):
             self.toggle_fullscreen()
         self.apply_options()
@@ -1247,6 +1256,22 @@ class GameView:
         margin = min(60, max(40, self.card_width // 3))
         self.settings_button.rect.topright = (w - margin, margin)
 
+    def _position_score_button(self) -> None:
+        """Create/position the scoreboard toggle button."""
+        font = self.font
+        if not hasattr(self, "score_button"):
+            self.score_button = Button(
+                "S", pygame.Rect(0, 0, 30, 30), self.toggle_score, font
+            )
+        else:
+            self.score_button.callback = self.toggle_score
+        self.score_button.rect.topleft = (5, 5)
+
+    def toggle_score(self) -> None:
+        """Toggle visibility of the score panel and save."""
+        self.score_visible = not self.score_visible
+        self._save_options()
+
     def _activate_overlay(self, overlay: Overlay, state: GameState) -> None:
         """Switch to ``overlay`` using a brief transition."""
         old = self.overlay
@@ -1408,6 +1433,8 @@ class GameView:
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
             "fullscreen": self.fullscreen,
+            "score_visible": self.score_visible,
+            "score_pos": list(self.score_pos),
         }
         try:
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
@@ -1467,7 +1494,9 @@ class GameView:
         self._update_table_surface()
         self.update_hand_sprites()
         self._create_action_buttons()
+        self._position_score_button()
         self._position_settings_button()
+        self._position_score_button()
         if self.overlay:
             self.overlay.resize()
 
@@ -1780,8 +1809,37 @@ class GameView:
             img = self.font.render(line, True, (255, 255, 255))
             panel.blit(img, (5, y))
             y += line_height
-        rect = panel.get_rect(topleft=(10, 10))
-        self.screen.blit(panel, rect.topleft)
+        rect = panel.get_rect(topleft=self.score_pos)
+        self.score_rect = rect
+        if self.score_visible:
+            self.screen.blit(panel, rect.topleft)
+        self.score_button.draw(self.screen)
+
+    def _handle_score_event(self, event: pygame.event.Event) -> bool:
+        """Handle toggle and drag interactions for the score panel."""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.score_button.rect.collidepoint(event.pos):
+                self.toggle_score()
+                return True
+            if self.score_visible and self.score_rect.collidepoint(event.pos):
+                self._dragging_score = True
+                self._drag_offset = (
+                    event.pos[0] - self.score_pos[0],
+                    event.pos[1] - self.score_pos[1],
+                )
+                return True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if self._dragging_score:
+                self._dragging_score = False
+                self._save_options()
+                return True
+        elif event.type == pygame.MOUSEMOTION and self._dragging_score:
+            self.score_pos = (
+                event.pos[0] - self._drag_offset[0],
+                event.pos[1] - self._drag_offset[1],
+            )
+            return True
+        return False
 
     def run(self):
         self.update_hand_sprites()
@@ -1792,6 +1850,8 @@ class GameView:
                     self.running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.on_resize(event.w, event.h)
+                elif self._handle_score_event(event):
+                    continue
                 elif self._dispatch_overlay_event(event):
                     continue
                 else:
