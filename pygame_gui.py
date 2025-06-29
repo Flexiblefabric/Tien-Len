@@ -833,6 +833,7 @@ class GameView:
         self.animation_speed = 1.0
         self.game = Game()
         self.game.setup()
+        self._attach_reset_pile()
         self.font = pygame.font.SysFont(None, 24)
         load_card_images(self.card_width)
         self.table_image: Optional[pygame.Surface] = None
@@ -1326,6 +1327,7 @@ class GameView:
             return
 
         self.game = game
+        self._attach_reset_pile()
         self.update_hand_sprites()
 
     def close_overlay(self) -> None:
@@ -1343,12 +1345,29 @@ class GameView:
         counts = self.win_counts
         self.game = Game()
         self.game.setup()
+        self._attach_reset_pile()
+        self.reset_current_trick()
         self.selected.clear()
         self.apply_options()
         for p in self.game.players:
             counts.setdefault(p.name, 0)
         self.win_counts = counts
         self.close_overlay()
+
+    def reset_current_trick(self) -> None:
+        """Clear the list of cards representing the current trick."""
+        self.current_trick.clear()
+
+    def _attach_reset_pile(self) -> None:
+        """Wrap the game's ``reset_pile`` method to clear the trick."""
+
+        original = self.game.reset_pile
+
+        def wrapped_reset_pile(*args, **kwargs):
+            original(*args, **kwargs)
+            self.reset_current_trick()
+
+        self.game.reset_pile = wrapped_reset_pile
 
     # Option helpers --------------------------------------------------
     def _load_options(self) -> dict:

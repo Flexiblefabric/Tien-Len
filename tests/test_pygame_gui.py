@@ -658,6 +658,19 @@ def test_restart_game_preserves_scores():
     pygame.quit()
 
 
+def test_current_trick_reset_on_restart_and_new_round():
+    view, _ = make_view()
+    view.current_trick.append(("P1", pygame.Surface((1, 1))))
+    with patch.object(view, "close_overlay"):
+        view.restart_game()
+    assert view.current_trick == []
+
+    view.current_trick.append(("P1", pygame.Surface((1, 1))))
+    view.game.reset_pile()
+    assert view.current_trick == []
+    pygame.quit()
+
+
 @pytest.mark.parametrize(
     "cls, args",
     [
