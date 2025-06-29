@@ -1373,6 +1373,7 @@ class GameView:
         self._attach_reset_pile()
         self.reset_current_trick()
         self.selected.clear()
+        self.current_trick.clear()
         self.apply_options()
         for p in self.game.players:
             counts.setdefault(p.name, 0)
