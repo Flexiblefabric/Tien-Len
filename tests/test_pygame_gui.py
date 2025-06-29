@@ -794,9 +794,11 @@ def test_draw_players_displays_trick_linearly():
         view.draw_players()
     calls = [c for c in view.screen.blit.call_args_list if c.args[0] in (surf1, surf2)]
     card_w = view.card_width
-    spacing = max(5, card_w - 25)
-    total_w = card_w + spacing
-    start = 100 - total_w // 2 + card_w // 2
+    start_rel, overlap = pygame_gui.calc_start_and_overlap(
+        200, len(view.current_trick), card_w, 25, card_w - 5
+    )
+    spacing = card_w - overlap
+    start = start_rel + card_w // 2
     expected = {surf1: (start, 50), surf2: (start + spacing, 50)}
     for call in calls:
         surf, rect = call.args

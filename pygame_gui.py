@@ -51,6 +51,32 @@ LABEL_PAD = 10
 BUTTON_HEIGHT = 40
 ZONE_GUTTER = 10
 
+# Helper for positioning card sequences
+def calc_start_and_overlap(
+    screen_width: int,
+    count: int,
+    card_width: int,
+    min_overlap: int,
+    max_overlap: int,
+) -> tuple[int, int]:
+    """Return `(start_x, overlap)` centred within `screen_width`.
+
+    `overlap` is clamped to the given range and represents how much consecutive
+    cards cover one another."""
+    if count <= 0:
+        return screen_width // 2 - card_width // 2, 0
+    min_spacing = card_width - max_overlap
+    max_spacing = card_width - min_overlap
+    if count > 1:
+        fit_spacing = (screen_width - card_width) / (count - 1)
+    else:
+        fit_spacing = card_width
+    spacing = max(min_spacing, min(fit_spacing, max_spacing))
+    total_w = card_width + (count - 1) * spacing
+    start_x = screen_width // 2 - int(total_w // 2)
+    overlap = card_width - spacing
+    return int(start_x), int(overlap)
+
 
 # ---------------------------------------------------------------------------
 # Helpers for loading and caching card images
@@ -1692,11 +1718,12 @@ class GameView:
         _, y = self._player_pos(0)
         card_w = self.card_width
         card_h = int(card_w * 1.4)
-        spacing = HAND_SPACING
         margin = min(60, max(40, int(card_w * 0.75)))
-        hand_w = card_w + (len(player.hand) - 1) * spacing
-        start_x = w // 2 - hand_w // 2
-        start_x = max(margin, min(start_x, w - margin - hand_w))
+        start_rel, overlap = calc_start_and_overlap(
+            w - 2 * margin, len(player.hand), card_w, 25, card_w - 5
+        )
+        spacing = card_w - overlap
+        start_x = start_rel + margin
         for i, c in enumerate(player.hand):
             sprite = CardSprite(c, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
@@ -1707,9 +1734,11 @@ class GameView:
             opp = self.game.players[idx]
             x, y = self._player_pos(idx)
             if idx == 1:
-                hand_w = card_w + (len(opp.hand) - 1) * spacing
-                start = w // 2 - hand_w // 2
-                start = max(margin, min(start, w - margin - hand_w))
+                start_rel, overlap = calc_start_and_overlap(
+                    w - 2 * margin, len(opp.hand), card_w, 25, card_w - 5
+                )
+                spacing = card_w - overlap
+                start = start_rel + margin
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite(
                         (start + i * spacing, y), card_w, self.card_back_name
@@ -1772,18 +1801,7 @@ class GameView:
         if not self.game.pile:
             self.current_trick.clear()
         if self.current_trick:
-            center_x, y = self._pile_center()
-            card_w = self.card_width
-            spacing = max(5, card_w - 25)
-            total_w = card_w + (len(self.current_trick) - 1) * spacing
-            start = center_x - total_w // 2 + card_w // 2
-            for i, (name, img) in enumerate(self.current_trick):
-                x = start + i * spacing
-                rect = img.get_rect(center=(int(x), int(y)))
-                self.screen.blit(img, rect)
-                label = self.font.render(name, True, (255, 255, 255))
-                lrect = label.get_rect(midbottom=(rect.centerx, rect.top))
-                self.screen.blit(label, lrect)
+            self.draw_center_pile()
 
         if self.state == GameState.PLAYING:
             # Enable or disable Undo based on snapshot history
@@ -1793,6 +1811,24 @@ class GameView:
             for btn in self.action_buttons:
                 btn.draw(self.screen)
             self.settings_button.draw(self.screen)
+
+    def draw_center_pile(self) -> None:
+        """Draw the cards currently in the centre pile."""
+        center_x, y = self._pile_center()
+        w, _ = self.screen.get_size()
+        card_w = self.card_width
+        start_rel, overlap = calc_start_and_overlap(
+            w, len(self.current_trick), card_w, 25, card_w - 5
+        )
+        spacing = card_w - overlap
+        start = start_rel + card_w // 2
+        for i, (name, img) in enumerate(self.current_trick):
+            x = start + i * spacing
+            rect = img.get_rect(center=(int(x), int(y)))
+            self.screen.blit(img, rect)
+            label = self.font.render(name, True, (255, 255, 255))
+            lrect = label.get_rect(midbottom=(rect.centerx, rect.top))
+            self.screen.blit(label, lrect)
 
     def draw_score_overlay(self) -> None:
         """Render a scoreboard panel with last hands played."""
