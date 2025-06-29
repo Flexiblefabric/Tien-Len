@@ -45,6 +45,8 @@ OPTIONS_FILE = Path(__file__).with_name("options.json")
 
 # Default distance between cards in a player's hand
 HAND_SPACING = 20
+# Horizontal margin used when centring hands on screen
+HORIZONTAL_MARGIN = 20
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
 # Button dimensions and layout spacing
@@ -76,6 +78,20 @@ def calc_start_and_overlap(
     start_x = screen_width // 2 - int(total_w // 2)
     overlap = card_width - spacing
     return int(start_x), int(overlap)
+
+
+def calc_hand_layout(screen_width: int, card_width: int, count: int) -> tuple[int, int]:
+    """Return ``(start_x, spacing)`` for a horizontal hand."""
+
+    start_rel, overlap = calc_start_and_overlap(
+        screen_width - 2 * HORIZONTAL_MARGIN,
+        count,
+        card_width,
+        25,
+        card_width - 5,
+    )
+    spacing = card_width - overlap
+    return start_rel + HORIZONTAL_MARGIN, spacing
 
 
 # ---------------------------------------------------------------------------
@@ -1221,7 +1237,6 @@ class GameView:
         """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
         card_w = self.card_width
-        card_h = int(card_w * 1.4)
         margin = min(60, max(40, int(card_w * 0.75)))
         bottom_y = self.hand_y
         top_y = margin + card_h // 2
@@ -1757,13 +1772,7 @@ class GameView:
         # recalculated from scratch each call.
         _, y = self._player_pos(0)
         card_w = self.card_width
-        card_h = int(card_w * 1.4)
-        margin = min(60, max(40, int(card_w * 0.75)))
-        start_rel, overlap = calc_start_and_overlap(
-            w - 2 * margin, len(player.hand), card_w, 25, card_w - 5
-        )
-        spacing = card_w - overlap
-        start_x = start_rel + margin
+        start_x, spacing = calc_hand_layout(w, card_w, len(player.hand))
         for i, c in enumerate(player.hand):
             sprite = CardSprite(c, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
@@ -1774,11 +1783,7 @@ class GameView:
             opp = self.game.players[idx]
             x, y = self._player_pos(idx)
             if idx == 1:
-                start_rel, overlap = calc_start_and_overlap(
-                    w - 2 * margin, len(opp.hand), card_w, 25, card_w - 5
-                )
-                spacing = card_w - overlap
-                start = start_rel + margin
+                start, spacing = calc_hand_layout(w, card_w, len(opp.hand))
                 for i in range(len(opp.hand)):
                     sp = CardBackSprite(
                         (start + i * spacing, y), card_w, self.card_back_name
@@ -1786,6 +1791,7 @@ class GameView:
                     group.add(sp)
             else:
                 hand_h = card_w + (len(opp.hand) - 1) * spacing
+                margin = min(60, max(40, int(card_w * 0.75)))
                 start = h // 2 - hand_h // 2
                 start = max(margin, min(start, h - margin - hand_h))
                 rotation = 90 if idx == 2 else -90

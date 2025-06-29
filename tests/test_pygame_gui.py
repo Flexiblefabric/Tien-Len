@@ -615,23 +615,24 @@ def test_resize_keeps_sprites_within_margins():
 
                 w, h = view.screen.get_size()
                 card_w = view.card_width
-                margin = min(60, max(40, int(card_w * 0.75)))
+                margin_h = pygame_gui.HORIZONTAL_MARGIN
+                margin_v = min(60, max(40, int(card_w * 0.75)))
 
                 hand = view.hand_sprites.sprites()
-                assert hand[0].rect.left >= margin
-                assert hand[-1].rect.right <= w - margin
+                assert hand[0].rect.left >= margin_h
+                assert hand[-1].rect.right <= w - margin_h
 
                 top_group = view.ai_sprites[0].sprites()
-                assert top_group[0].rect.left >= margin
-                assert top_group[-1].rect.right <= w - margin
+                assert top_group[0].rect.left >= margin_h
+                assert top_group[-1].rect.right <= w - margin_h
 
                 left_group = view.ai_sprites[1].sprites()
-                assert min(sp.rect.top for sp in left_group) >= margin
-                assert max(sp.rect.bottom for sp in left_group) <= h - margin
+                assert min(sp.rect.top for sp in left_group) >= margin_v
+                assert max(sp.rect.bottom for sp in left_group) <= h - margin_v
 
                 right_group = view.ai_sprites[2].sprites()
-                assert min(sp.rect.top for sp in right_group) >= margin
-                assert max(sp.rect.bottom for sp in right_group) <= h - margin
+                assert min(sp.rect.top for sp in right_group) >= margin_v
+                assert max(sp.rect.bottom for sp in right_group) <= h - margin_v
 
     pygame.quit()
 
@@ -803,6 +804,22 @@ def test_draw_players_displays_trick_linearly():
         surf, rect = call.args
         assert rect.center == expected[surf]
     pygame.quit()
+
+
+def test_calc_hand_layout_wraps_start_and_spacing():
+    width = 200
+    card_w = 50
+    count = 3
+    start, spacing = pygame_gui.calc_hand_layout(width, card_w, count)
+    start_rel, overlap = pygame_gui.calc_start_and_overlap(
+        width - 2 * pygame_gui.HORIZONTAL_MARGIN,
+        count,
+        card_w,
+        25,
+        card_w - 5,
+    )
+    assert start == start_rel + pygame_gui.HORIZONTAL_MARGIN
+    assert spacing == card_w - overlap
 
 
 @pytest.mark.parametrize(
