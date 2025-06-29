@@ -210,6 +210,41 @@ def test_draw_players_uses_draw_shadow():
     pygame.quit()
 
 
+def test_draw_players_labels_use_padding():
+    view, _ = make_view()
+    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.ai_sprites = []
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (200, 200)
+
+    positions = {
+        0: (100, 150),
+        1: (100, 50),
+        2: (50, 100),
+        3: (150, 100),
+    }
+
+    def player_pos(idx):
+        return positions[idx]
+
+    with patch.object(view, "_player_pos", side_effect=player_pos):
+        view.draw_players()
+
+    calls = view.screen.blit.call_args_list
+    assert len(calls) == 4
+
+    card_w = view.card_width
+    card_h = int(card_w * 1.4)
+    spacing = min(40, card_w)
+    pad_v = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD
+    pad_h = card_w // 2 + spacing // 2 + pygame_gui.LABEL_PAD
+
+    assert calls[0].args[1].midbottom == (100, 150 - pad_v)
+    assert calls[1].args[1].midtop == (100, 50 + pad_v)
+    assert calls[2].args[1].midleft == (50 + pad_h, 100)
+    assert calls[3].args[1].midright == (150 - pad_h, 100)
+
+
 def test_animate_sprites_moves_to_destination():
     view, clock = make_view()
     sprite = DummySprite()
