@@ -521,13 +521,15 @@ def test_on_resize_repositions_layout():
             ):
                 view = pygame_gui.GameView(300, 200)
                 pos_small = view._player_pos(0)
-                btn_small = [b.rect.x for b in view.action_buttons]
+                btn_small_x = [b.rect.x for b in view.action_buttons]
+                btn_small_y = [b.rect.y for b in view.action_buttons]
                 settings_small = view.settings_button.rect.topright
 
                 view.on_resize(600, 400)
 
                 pos_large = view._player_pos(0)
-                btn_large = [b.rect.x for b in view.action_buttons]
+                btn_large_x = [b.rect.x for b in view.action_buttons]
+                btn_large_y = [b.rect.y for b in view.action_buttons]
                 settings_large = view.settings_button.rect.topright
 
                 card_w = view.card_width
@@ -537,15 +539,18 @@ def test_on_resize_repositions_layout():
                 spacing = max(10, card_w // 2)
                 total = 120 * 3 + spacing * 2
                 start_x = 600 // 2 - total // 2
+                expected_y = view._pile_center()[1] + card_h
                 setting_margin = min(60, max(40, card_w // 3))
                 expected_settings = (600 - setting_margin, setting_margin)
 
     pygame.quit()
     assert pos_large == expected_pos
-    assert btn_large[0] == start_x
+    assert btn_large_x[0] == start_x
+    assert btn_large_y[0] == expected_y
     assert settings_large == expected_settings
     assert pos_small != pos_large
-    assert btn_small[0] != btn_large[0]
+    assert btn_small_x[0] != btn_large_x[0]
+    assert btn_small_y[0] != btn_large_y[0]
     assert settings_small != settings_large
 
 

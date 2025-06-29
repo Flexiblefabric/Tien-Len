@@ -1172,12 +1172,10 @@ class GameView:
 
     def _pile_center(self) -> Tuple[int, int]:
         w, h = self.screen.get_size()
-        if self.action_buttons:
-            top = self.action_buttons[0].rect.top
-            card_h = int(self.card_width * 1.4)
-            y = top - card_h
-        else:
-            y = h // 2
+        card_h = int(self.card_width * 1.4)
+        spacing = max(10, self.card_width // 2)
+        _, hand_y = self._player_pos(0)
+        y = hand_y + spacing - card_h // 2
         return w // 2, y
 
     def _calc_card_width(self, win_width: int) -> int:
@@ -1206,16 +1204,14 @@ class GameView:
         total = btn_w * 3 + spacing * 2
         start_x = w // 2 - total // 2
 
-        # Position buttons relative to the player's hand
-        _, hand_y = self._player_pos(0)
+        # Position buttons relative to the pile location
+        _, pile_y = self._pile_center()
         sprites = getattr(self, "hand_sprites", None)
         if sprites:
             card_h = sprites.sprites()[0].rect.height
         else:
             card_h = int(self.card_width * 1.4)
-        hand_bottom_y = hand_y + card_h // 2
-        control_spacing = spacing
-        y = hand_bottom_y + control_spacing
+        y = pile_y + card_h
 
         font = self.font
         self.action_buttons = [
