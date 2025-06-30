@@ -88,10 +88,14 @@ Run the Pygame GUI from the project root so it can locate `assets/`. If any
 images are missing, the program will fall back to text and print a list
 of missing files.
 
-Optionally place a small image `table_img.png` in the `assets` directory
-to serve as the background of the playing area. The GUI will load this
-file automatically and tile the texture to fill the screen, resizing it
-whenever the window size changes.
+Additional assets can be organised in subdirectories:
+
+- `assets/card_backs/` for alternative card backs.
+- `assets/tables/` for table textures.
+- `assets/music/` for background tracks.
+
+Table textures will be tiled to fill the screen and can be switched at
+runtime from the graphics settings menu.
 
 ## Optional sound effects
 
@@ -99,7 +103,8 @@ Simple sound support is provided via the `pygame` mixer. Install
 `pygame` to enable it. If the mixer fails to initialise, the game
 silently skips all audio. Set the environment variable
 `SDL_AUDIODRIVER=dummy` (or any invalid driver) before launching to
-disable sound explicitly.
+disable sound explicitly. Place additional `.mp3` files in
+`assets/music/` to make them selectable as background tracks.
 
 
 ## Running tests
