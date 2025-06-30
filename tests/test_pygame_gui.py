@@ -825,6 +825,7 @@ def test_calc_hand_layout_wraps_start_and_spacing():
 @pytest.mark.parametrize(
     "cls, args",
     [
+        (pygame_gui.ProfileOverlay, ()),
         (pygame_gui.MainMenuOverlay, ()),
         (pygame_gui.InGameMenuOverlay, ()),
         (pygame_gui.SettingsOverlay, ()),
@@ -997,6 +998,7 @@ def test_options_persist_across_sessions(tmp_path):
         view.fullscreen = True
         view.score_visible = False
         view.score_pos = (30, 40)
+        view.win_counts["Player"] = 3
         view._save_options()
         # create new view that loads from same options file
         new_view, _ = make_view()
@@ -1012,6 +1014,7 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.fullscreen is True
     assert new_view.score_visible is False
     assert new_view.score_pos == (30, 40)
+    assert new_view.win_counts["Player"] == 3
 
 
 def test_rules_overlay_toggles_update_state():
@@ -1042,3 +1045,22 @@ def test_save_prompt_overlay_buttons():
         "Quit Without Saving",
         "Cancel",
     ]
+
+
+def test_profile_overlay_select_updates_name():
+    view, _ = make_view()
+    overlay = pygame_gui.ProfileOverlay(view)
+    with patch.object(view, "show_menu") as sm:
+        overlay.select(next(iter(view.win_counts)))
+        sm.assert_called_once()
+    assert view.player_name in view.win_counts
+
+
+def test_profile_overlay_new_profile_added():
+    view, _ = make_view()
+    overlay = pygame_gui.ProfileOverlay(view)
+    existing = set(view.win_counts)
+    with patch.object(view, "show_menu"):
+        overlay.new_profile()
+    assert set(view.win_counts) - existing
+

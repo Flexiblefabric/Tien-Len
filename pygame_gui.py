@@ -838,6 +838,57 @@ class SavePromptOverlay(Overlay):
         super().draw(surface)
 
 
+class ProfileOverlay(Overlay):
+    """Select or create a player profile."""
+
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view, None)
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        names = list(self.view.win_counts.keys())
+        bx = w // 2 - 100
+        start_y = h // 2 - (len(names) + 1) * 25
+        self.buttons = [
+            Button(
+                name,
+                pygame.Rect(bx, start_y + i * 50, 200, 40),
+                lambda n=name: self.select(n),
+                font,
+            )
+            for i, name in enumerate(names)
+        ]
+        self.buttons.append(
+            Button(
+                "New Profile",
+                pygame.Rect(bx, start_y + len(names) * 50, 200, 40),
+                self.new_profile,
+                font,
+            )
+        )
+
+    def select(self, name: str) -> None:
+        self.view.player_name = name
+        self.view.apply_options()
+        self.view._save_options()
+        self.view.show_menu()
+
+    def new_profile(self) -> None:
+        base = "Player"
+        idx = 1
+        names = set(self.view.win_counts)
+        while f"{base}{idx}" in names:
+            idx += 1
+        name = f"{base}{idx}"
+        self.view.win_counts[name] = 0
+        self.select(name)
+
+
 class GameOverOverlay(Overlay):
     def __init__(self, view: "GameView", winner: str) -> None:
         super().__init__(view, None)
@@ -1004,13 +1055,16 @@ class GameView:
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
         self.score_visible = opts.get("score_visible", self.score_visible)
         self.score_pos = tuple(opts.get("score_pos", list(self.score_pos)))
+        win_data = opts.get("win_counts", {})
+        self.win_counts: Dict[str, int] = {
+            p.name: int(win_data.get(p.name, 0)) for p in self.game.players
+        }
         if opts.get("fullscreen", False):
             self.toggle_fullscreen()
         self.apply_options()
         self.update_hand_sprites()
         self._create_action_buttons()
-        self.win_counts: Dict[str, int] = {p.name: 0 for p in self.game.players}
-        self.show_menu()
+        self.show_profile_select()
 
     # Animation helpers -------------------------------------------------
     def _draw_frame(self) -> None:
@@ -1371,6 +1425,9 @@ class GameView:
     def show_menu(self) -> None:
         self._activate_overlay(MainMenuOverlay(self), GameState.MENU)
 
+    def show_profile_select(self) -> None:
+        self._activate_overlay(ProfileOverlay(self), GameState.MENU)
+
     def show_in_game_menu(self) -> None:
         self._activate_overlay(InGameMenuOverlay(self), GameState.SETTINGS)
 
@@ -1506,6 +1563,10 @@ class GameView:
                 data = json.load(f)
             if "show_rules" in data and "show_rules_option" not in data:
                 data["show_rules_option"] = data["show_rules"]
+            if "win_counts" in data and isinstance(data["win_counts"], dict):
+                data["win_counts"] = {
+                    str(k): int(v) for k, v in data["win_counts"].items()
+                }
             return data
         except Exception as exc:
             logger.warning("Failed to load options: %s", exc)
@@ -1538,6 +1599,7 @@ class GameView:
             "fullscreen": self.fullscreen,
             "score_visible": self.score_visible,
             "score_pos": list(self.score_pos),
+            "win_counts": self.win_counts,
         }
         try:
             OPTIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
