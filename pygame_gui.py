@@ -104,6 +104,31 @@ _CARD_CACHE: Dict[Tuple[str, int], pygame.Surface] = {}
 _BASE_IMAGES: Dict[str, pygame.Surface] = {}
 
 
+def list_card_back_colors() -> List[str]:
+    """Return available card back color names."""
+    backs_dir = Path(__file__).with_name("assets") / "card_backs"
+    colors: List[str] = []
+    for img in backs_dir.glob("*.png"):
+        stem = img.stem
+        if stem == "card_back":
+            colors.append("blue")
+        elif stem.startswith("card_back_"):
+            colors.append(stem.replace("card_back_", ""))
+    return sorted(colors)
+
+
+def list_table_textures() -> List[str]:
+    """Return available table texture names."""
+    tex_dir = Path(__file__).with_name("assets") / "tables"
+    return sorted(p.stem for p in tex_dir.glob("*.png"))
+
+
+def list_music_tracks() -> List[str]:
+    """Return available music track filenames."""
+    mdir = Path(__file__).with_name("assets") / "music"
+    return sorted(p.name for p in mdir.glob("*.mp3"))
+
+
 class GameState(Enum):
     """Simple enum representing the game's current state."""
 
@@ -127,7 +152,8 @@ def load_card_images(width: int = 80) -> None:
         key = img.stem
         base = pygame.image.load(str(img)).convert_alpha()
         _BASE_IMAGES[key] = base
-    for img in assets.glob("card_back*.png"):
+    backs = assets / "card_backs"
+    for img in backs.glob("*.png"):
         _BASE_IMAGES[img.stem] = pygame.image.load(str(img)).convert_alpha()
     for key, base in _BASE_IMAGES.items():
         ratio = width / base.get_width()
@@ -588,7 +614,8 @@ class GraphicsOverlay(Overlay):
             return callback
 
         make_color = list(TABLE_THEMES.keys())
-        make_card_color = ["red", "blue", "green", "black"]
+        make_card_color = list_card_back_colors() or ["blue"]
+        make_table_tex = list_table_textures() or ["table_img"]
 
         self.buttons = []
 
@@ -604,13 +631,32 @@ class GraphicsOverlay(Overlay):
             self.buttons.append(btn)
 
         make_button(0, "table_color_name", make_color, "Table Color")
-        make_button(50, "card_color", make_card_color, "Card Color")
-        make_button(100, "colorblind_mode", [False, True], "Colorblind")
-        make_button(150, "fullscreen", [False, True], "Fullscreen")
+        make_button(50, "card_color", make_card_color, "Card Back")
+        make_button(100, "table_texture_name", make_table_tex, "Table Tex")
+        make_button(150, "colorblind_mode", [False, True], "Colorblind")
+        make_button(200, "fullscreen", [False, True], "Fullscreen")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
+
+        self.table_preview_rect = pygame.Rect(bx + 250, by, 60, 40)
+        self.back_preview_rect = pygame.Rect(bx + 250, by + 50, 40, 60)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        super().draw(surface)
+        if self.view.table_image:
+            tex = pygame.transform.smoothscale(
+                self.view.table_image, self.table_preview_rect.size
+            )
+            surface.blit(tex, self.table_preview_rect)
+        else:
+            pygame.draw.rect(surface, self.view.table_color, self.table_preview_rect)
+
+        back = get_card_back(self.view.card_back_name, self.back_preview_rect.width)
+        if back:
+            img = pygame.transform.smoothscale(back, self.back_preview_rect.size)
+            surface.blit(img, self.back_preview_rect)
 
 
 class AudioOverlay(Overlay):
@@ -660,8 +706,9 @@ class AudioOverlay(Overlay):
         make_button(50, "music_enabled", [True, False], "Music")
         make_button(100, "fx_volume", [0.5, 0.75, 1.0], "FX Vol")
         make_button(150, "music_volume", [0.5, 0.75, 1.0], "Music Vol")
+        make_button(200, "music_track", list_music_tracks() or [self.view.music_track], "Track")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 200, 240, 40), self.view.show_settings, font
+            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
 
@@ -948,11 +995,12 @@ class GameView:
         self._attach_reset_pile()
         self.font = pygame.font.SysFont(None, 24)
         load_card_images(self.card_width)
+        self.table_texture_name = list_table_textures()[0] if list_table_textures() else ""
         self.table_image: Optional[pygame.Surface] = None
-        img_path = Path(__file__).with_name("assets") / "table_img.png"
-        if img_path.exists():
+        tex_path = Path(__file__).with_name("assets") / "tables" / f"{self.table_texture_name}.png"
+        if tex_path.exists():
             try:
-                self.table_image = pygame.image.load(str(img_path)).convert()
+                self.table_image = pygame.image.load(str(tex_path)).convert()
             except Exception:
                 self.table_image = None
         self.main_menu_image: Optional[pygame.Surface] = None
@@ -972,8 +1020,9 @@ class GameView:
         sound.load("bomb", sdir / "bomb.wav")
         sound.load("shuffle", sdir / "shuffle.wav")
         sound.load("win", sdir / "win.wav")
-        if _mixer_ready():
-            music = sdir / "Ambush in Rattlesnake Gulch.mp3"
+        self.music_track = list_music_tracks()[0] if list_music_tracks() else ""
+        if _mixer_ready() and self.music_track:
+            music = Path(__file__).with_name("assets") / "music" / self.music_track
             try:
                 pygame.mixer.music.load(str(music))
                 pygame.mixer.music.play(-1)
@@ -1025,6 +1074,8 @@ class GameView:
         self.animation_speed = opts.get("animation_speed", self.animation_speed)
         self.table_color_name = opts.get("table_color", self.table_color_name)
         self.card_back_name = opts.get("card_back", self.card_back_name)
+        self.table_texture_name = opts.get("table_texture", self.table_texture_name)
+        self.music_track = opts.get("music_track", self.music_track)
         self.sort_mode = opts.get("sort_mode", self.sort_mode)
         self.player_name = opts.get("player_name", self.player_name)
         self.ai_level = opts.get("ai_level", self.ai_level)
@@ -1577,6 +1628,8 @@ class GameView:
             "animation_speed": self.animation_speed,
             "table_color": self.table_color_name,
             "card_back": self.card_back_name,
+            "table_texture": self.table_texture_name,
+            "music_track": self.music_track,
             "sort_mode": self.sort_mode,
             "player_name": self.player_name,
             "ai_level": self.ai_level,
@@ -1613,12 +1666,21 @@ class GameView:
             self.table_color_name, TABLE_THEMES["darkgreen"]
         )
         back_map = {
-            "red": "card_back",
-            "blue": "card_back",
+            "red": "card_back_red",
             "green": "card_back_green",
             "black": "card_back_black",
+            "blue": "card_back",
         }
-        self.card_back_name = back_map.get(self.card_color, "card_back")
+        self.card_back_name = back_map.get(self.card_color, self.card_back_name)
+        tex_path = Path(__file__).with_name("assets") / "tables" / f"{self.table_texture_name}.png"
+        if tex_path.exists():
+            try:
+                self.table_image = pygame.image.load(str(tex_path)).convert()
+            except Exception:
+                self.table_image = None
+        else:
+            self.table_image = None
+        self._update_table_surface()
         self.game.players[0].name = self.player_name
         self.game.players[0].sort_hand(self.sort_mode)
         self.game.set_ai_level(self.ai_level)
@@ -1636,6 +1698,13 @@ class GameView:
         if _mixer_ready():
             pygame.mixer.music.set_volume(self.music_volume)
             if self.music_enabled:
+                track = Path(__file__).with_name("assets") / "music" / self.music_track
+                if track.exists():
+                    try:
+                        pygame.mixer.music.load(str(track))
+                        pygame.mixer.music.play(-1)
+                    except Exception:
+                        pass
                 pygame.mixer.music.unpause()
             else:
                 pygame.mixer.music.pause()
