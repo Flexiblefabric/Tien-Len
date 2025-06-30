@@ -41,7 +41,9 @@ TABLE_THEMES = {
     "darkred": (139, 0, 0),
 }
 
-OPTIONS_FILE = Path(__file__).with_name("options.json")
+USER_DIR = Path.home() / ".tien_len"
+OPTIONS_FILE = USER_DIR / "options.json"
+SAVE_FILE = USER_DIR / "saved_game.json"
 
 # Default distance between cards in a player's hand
 HAND_SPACING = 20
@@ -1414,18 +1416,24 @@ class GameView:
 
     def save_game(self) -> None:
         try:
-            with open(
-                Path(__file__).with_name("saved_game.json"), "w", encoding="utf-8"
-            ) as f:
+            SAVE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.game.to_dict(), f, indent=2)
         except OSError as exc:
             logger.warning("Failed to save game: %s", exc)
 
     def load_game(self) -> None:
         try:
-            with open(
-                Path(__file__).with_name("saved_game.json"), "r", encoding="utf-8"
-            ) as f:
+            path = SAVE_FILE
+            if not path.exists():
+                legacy = Path(__file__).with_name("saved_game.json")
+                if legacy.exists():
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        legacy.replace(path)
+                    except OSError:
+                        path = legacy
+            with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except OSError as exc:
             logger.warning("Failed to load game: %s", exc)
@@ -1485,7 +1493,16 @@ class GameView:
     # Option helpers --------------------------------------------------
     def _load_options(self) -> dict:
         try:
-            with open(OPTIONS_FILE, "r", encoding="utf-8") as f:
+            path = OPTIONS_FILE
+            if not path.exists():
+                legacy = Path(__file__).with_name("options.json")
+                if legacy.exists():
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    try:
+                        legacy.replace(path)
+                    except OSError:
+                        path = legacy
+            with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if "show_rules" in data and "show_rules_option" not in data:
                 data["show_rules_option"] = data["show_rules"]
@@ -1523,6 +1540,7 @@ class GameView:
             "score_pos": list(self.score_pos),
         }
         try:
+            OPTIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
             with open(OPTIONS_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f)
         except Exception as exc:
