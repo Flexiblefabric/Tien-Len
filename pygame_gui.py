@@ -1237,6 +1237,7 @@ class GameView:
         """Return the centre position for player ``idx`` based on screen size."""
         w, h = self.screen.get_size()
         card_w = self.card_width
+        card_h = int(self.card_width * 1.4)
         margin = min(60, max(40, int(card_w * 0.75)))
         bottom_y = self.hand_y
         top_y = margin + card_h // 2
