@@ -531,7 +531,7 @@ class GameSettingsOverlay(Overlay):
             btn.callback = cycle(attr, opts, label)(btn)
             self.buttons.append(btn)
 
-        make_button(0, "ai_level", ["Easy", "Normal", "Hard"], "AI Level")
+        make_button(0, "ai_level", ["Easy", "Normal", "Hard", "Expert"], "AI Level")
         make_button(
             50,
             "ai_personality",

@@ -27,7 +27,7 @@ After installation launch the Pygame GUI with `tien-len`.
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py [--ai Easy|Normal|Hard]
+python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert]
 ```
 
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).

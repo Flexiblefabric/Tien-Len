@@ -280,7 +280,7 @@ class Game:
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier and adjust internal multiplier."""
 
-        mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0}
+        mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0, "Expert": 3.0}
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
 
@@ -527,6 +527,62 @@ class Game:
             rank_weight = 0.5
         return (base, finish * diff, rank_val * diff * rank_weight, low_cards)
 
+    # ------------------------------------------------------------------
+    # Minimax helper used for the Expert AI level
+    # ------------------------------------------------------------------
+    def _minimax(self, depth: int, max_name: str) -> float:
+        """Return a minimax evaluation score."""
+
+        if depth == 0 or all(not p.hand for p in self.players):
+            player = next(p for p in self.players if p.name == max_name)
+            return -float(len(player.hand))
+
+        current_player = self.players[self.current_idx]
+        moves = self.generate_valid_moves(current_player, self.current_combo)
+        if not moves:
+            g = self._clone()
+            g.process_pass(g.players[g.current_idx])
+            g.next_turn()
+            return g._minimax(depth - 1, max_name)
+
+        if current_player.name == max_name:
+            best = -float("inf")
+            for mv in moves:
+                g = self._clone()
+                g.process_play(g.players[g.current_idx], mv)
+                g.next_turn()
+                val = g._minimax(depth - 1, max_name)
+                best = max(best, val)
+            return best
+        else:
+            best = float("inf")
+            for mv in moves:
+                g = self._clone()
+                g.process_play(g.players[g.current_idx], mv)
+                g.next_turn()
+                val = g._minimax(depth - 1, max_name)
+                best = min(best, val)
+            return best
+
+    def _minimax_decision(self, player) -> list[Card]:
+        """Choose a move using a depth-limited minimax search."""
+
+        moves = self.generate_valid_moves(player, self.current_combo)
+        if not moves:
+            return []
+
+        best_move = moves[0]
+        best_score = -float("inf")
+        for mv in moves:
+            g = self._clone()
+            g.process_play(g.players[g.current_idx], mv)
+            g.next_turn()
+            score = g._minimax(1, player.name)
+            if score > best_score:
+                best_score = score
+                best_move = mv
+        return best_move
+
     def ai_play(self, current):
         """Choose a move for the current AI player."""
 
@@ -543,6 +599,9 @@ class Game:
 
         if self.ai_level == "Easy" or personality == "random":
             return random.choice(moves)
+
+        if self.ai_level == "Expert":
+            return self._minimax_decision(p)
 
         return max(moves, key=lambda m: self.score_move(p, m, current))
 
@@ -699,6 +758,17 @@ class Game:
 
         self.from_dict(json.loads(s))
 
+    def _clone(self) -> "Game":
+        """Return a deep copy of the current game state."""
+
+        g = Game()
+        g.from_dict(self.to_dict())
+        g.ai_level = self.ai_level
+        g.ai_difficulty = self.ai_difficulty
+        g.ai_personality = self.ai_personality
+        g.ai_lookahead = self.ai_lookahead
+        return g
+
     # New helper methods -------------------------------------------------
     def process_play(self, player: Player, cards: list[Card]) -> bool:
         """Apply ``cards`` as ``player``'s move.
@@ -833,7 +903,7 @@ class Game:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play Tiến Lên in the terminal')
-    parser.add_argument('--ai', default='Normal', choices=['Easy', 'Normal', 'Hard'],
+    parser.add_argument('--ai', default='Normal', choices=['Easy', 'Normal', 'Hard', 'Expert'],
                         help='AI difficulty level')
     args = parser.parse_args()
 
