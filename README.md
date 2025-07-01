@@ -67,6 +67,27 @@ are handled automatically.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 - Optional player avatars loaded from `assets/avatars/`.
 
+### AI personality and lookahead
+
+The **Options** menu exposes additional AI behaviour settings.  The
+*AI Personality* selector cycles through **aggressive**, **defensive**,
+**balanced** and **random** styles, altering how boldly opponents play.
+The *Lookahead* toggle makes the AI consider the next turn before
+committing to a move.
+
+### House Rules
+
+The *House Rules* screen contains optional rule switches:
+
+- **Allow 2 in straights** – permits sequences containing the rank 2.
+- **“Chặt” bomb** – four-of-a-kind bombs can always beat a single 2.
+- **Chain cutting** – lets a higher sequence interrupt an existing one.
+- **Tứ Quý hierarchy** – bombs outrank each other by rank.
+- **Flip Suit Rank** – reverses suit order so Hearts outranks Spades.
+
+All of these preferences persist between sessions via the `options.json`
+file.
+
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow
 for image support) with:
