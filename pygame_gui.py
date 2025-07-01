@@ -12,7 +12,7 @@ import types
 
 import pygame
 
-from tien_len_full import Game, Card, detect_combo
+from tien_len_full import Game, Card, detect_combo, Player
 import sound
 
 LOG_FILE = "tien_len_game.log"
@@ -62,6 +62,8 @@ LABEL_PAD = 10
 # Button dimensions and layout spacing
 BUTTON_HEIGHT = 40
 ZONE_GUTTER = 10
+AVATAR_DIR = Path(__file__).with_name("assets") / "avatars"
+AVATAR_SIZE = 40
 
 # Helper for positioning card sequences
 
@@ -1025,6 +1027,7 @@ class GameView:
         self.game.setup()
         self._attach_reset_pile()
         self.font = pygame.font.SysFont(None, 24)
+        self.avatars: Dict[str, pygame.Surface] = {}
         load_card_images(self.card_width)
         self.table_texture_name = list_table_textures()[0] if list_table_textures() else ""
         self.table_image: Optional[pygame.Surface] = None
@@ -1044,6 +1047,7 @@ class GameView:
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
         self._layout_zones()
+        self._load_avatars()
         # Load sound effects and background music
         sdir = Path(__file__).with_name("assets") / "sound"
         sound.load("click", sdir / "card-play.wav")
@@ -1412,6 +1416,35 @@ class GameView:
             y += line_height
         return panel
 
+    def _load_avatars(self) -> None:
+        """Load avatar images for all players if available."""
+        self.avatars.clear()
+        for p in self.game.players:
+            filename = p.name.lower().replace(" ", "_") + ".png"
+            path = AVATAR_DIR / filename
+            if path.exists():
+                try:
+                    img = pygame.image.load(str(path)).convert_alpha()
+                    img = pygame.transform.smoothscale(img, (AVATAR_SIZE, AVATAR_SIZE))
+                    self.avatars[p.name] = img
+                except Exception:
+                    continue
+
+    def _avatar_for(self, player: "Player") -> pygame.Surface:
+        """Return avatar image or a placeholder with player initials."""
+        img = self.avatars.get(player.name)
+        if img:
+            return img
+        initials = "".join(part[0] for part in player.name.split())[:2].upper()
+        surf = pygame.Surface((AVATAR_SIZE, AVATAR_SIZE), pygame.SRCALPHA)
+        pygame.draw.circle(surf, (80, 80, 80), (AVATAR_SIZE // 2, AVATAR_SIZE // 2), AVATAR_SIZE // 2)
+        font = pygame.font.SysFont(None, 20)
+        text = font.render(initials, True, (255, 255, 255))
+        rect = text.get_rect(center=(AVATAR_SIZE // 2, AVATAR_SIZE // 2))
+        surf.blit(text, rect)
+        self.avatars[player.name] = surf
+        return surf
+
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
@@ -1709,6 +1742,7 @@ class GameView:
             self.table_image = None
         self._update_table_surface()
         self.game.players[0].name = self.player_name
+        self._load_avatars()
         self.game.players[0].sort_hand(self.sort_mode)
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
@@ -2035,12 +2069,19 @@ class GameView:
             for sp in self.selected:
                 pygame.draw.rect(self.screen, color, sp.rect, width=3)
 
-        # Player labels
+        # Player labels and avatars
         for idx, p in enumerate(self.game.players):
             x, y = self._player_pos(idx)
             txt = f"{p.name} ({len(p.hand)})"
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
             panel = self._hud_box([txt], text_color=color, padding=3)
+            avatar = self._avatar_for(p)
+            aw, ah = avatar.get_size()
+            pw, ph = panel.get_size()
+            combined = pygame.Surface((aw + LABEL_PAD + pw, max(ah, ph)), pygame.SRCALPHA)
+            combined.blit(avatar, (0, (combined.get_height() - ah) // 2))
+            combined.blit(panel, (aw + LABEL_PAD, (combined.get_height() - ph) // 2))
+            panel = combined
             offset = card_h // 2 + spacing // 2 + LABEL_PAD
             if idx == 0:
                 rect = panel.get_rect(midbottom=(x, y - offset))

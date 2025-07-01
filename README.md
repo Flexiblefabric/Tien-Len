@@ -65,6 +65,7 @@ are handled automatically.
   The *Flip Suit Rank* rule reverses suit ordering and can only be
   enabled from the main menu.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
+- Optional player avatars loaded from `assets/avatars/`.
 
 Displaying card images requires the **Pillow** library, which is
 included in `requirements.txt`. Install dependencies (including Pillow
@@ -93,6 +94,7 @@ Additional assets can be organised in subdirectories:
 - `assets/card_backs/` for alternative card backs.
 - `assets/tables/` for table textures.
 - `assets/music/` for background tracks.
+- `assets/avatars/` for optional player avatars (initials are shown if no image is found).
 
 Table textures will be tiled to fill the screen and can be switched at
 runtime from the graphics settings menu.
