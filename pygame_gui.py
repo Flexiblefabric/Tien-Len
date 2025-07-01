@@ -41,6 +41,14 @@ TABLE_THEMES = {
     "darkred": (139, 0, 0),
 }
 
+# Color used for card glows by player index
+PLAYER_COLORS = [
+    (255, 255, 255),  # Human - white glow
+    (255, 100, 100),  # AI Left - red glow
+    (100, 100, 255),  # AI Top - blue glow
+    (100, 255, 100),  # AI Right - green glow
+]
+
 USER_DIR = Path.home() / ".tien_len"
 OPTIONS_FILE = USER_DIR / "options.json"
 SAVE_FILE = USER_DIR / "saved_game.json"
@@ -235,6 +243,27 @@ class CardSprite(pygame.sprite.Sprite):
             for dy in range(-blur, blur + 1):
                 rect = self.rect.move(offset[0] + dx, offset[1] + dy)
                 surface.blit(shadow, rect)
+
+
+def draw_glow(
+    surface: pygame.Surface,
+    rect: pygame.Rect,
+    color: Tuple[int, int, int],
+    radius: int = 8,
+    alpha: int = 100,
+) -> None:
+    """Draw a subtle glow effect behind a rect."""
+    glow = pygame.Surface(
+        (rect.width + radius * 2, rect.height + radius * 2), pygame.SRCALPHA
+    )
+    for dx in range(-radius, radius + 1):
+        for dy in range(-radius, radius + 1):
+            dist = dx * dx + dy * dy
+            if dist <= radius * radius:
+                glow_x = rect.x - radius + dx
+                glow_y = rect.y - radius + dy
+                glow.fill((*color, alpha // (1 + dist)), special_flags=pygame.BLEND_RGBA_ADD)
+                surface.blit(glow, (glow_x, glow_y))
 
 
 class CardBackSprite(pygame.sprite.Sprite):
@@ -2036,21 +2065,17 @@ class GameView:
         )
         spacing = card_w - overlap
         start = start_rel + card_w // 2
-        first_rect = last_rect = None
-        for i, (_, img) in enumerate(self.current_trick):
+        for i, (name, img) in enumerate(self.current_trick):
             x = start + i * spacing
             rect = img.get_rect(center=(int(x), int(y)))
+            player_idx = next(
+                (idx for idx, p in enumerate(self.game.players) if p.name == name),
+                0,
+            )
+            color = PLAYER_COLORS[player_idx]
+            draw_glow(self.screen, rect, color)
             self.screen.blit(img, rect)
-            if first_rect is None:
-                first_rect = rect
-            last_rect = rect
 
-        if first_rect:
-            name = self.current_trick[0][0]
-            label = self.font.render(name, True, (255, 255, 255))
-            center_x = (first_rect.left + last_rect.right) // 2
-            lrect = label.get_rect(midbottom=(center_x, first_rect.top))
-            self.screen.blit(label, lrect)
 
     def draw_score_overlay(self) -> None:
         """Render a scoreboard panel with last hands played."""
