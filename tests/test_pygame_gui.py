@@ -200,6 +200,15 @@ def test_card_sprite_draw_shadow_blits():
     pygame.quit()
 
 
+def test_draw_glow_blits():
+    pygame.display.init()
+    target = MagicMock()
+    rect = pygame.Rect(0, 0, 2, 2)
+    pygame_gui.draw_glow(target, rect, (255, 0, 0), radius=1, alpha=10)
+    assert target.blit.call_count > 0
+    pygame.quit()
+
+
 def test_draw_players_uses_draw_shadow():
     view, _ = make_view()
     with patch("pygame.font.SysFont", return_value=DummyFont()):
