@@ -1915,71 +1915,63 @@ class GameView:
 
     # Rendering -------------------------------------------------------
     def update_hand_sprites(self):
-        player = self.game.players[0]
-        self.hand_sprites = pygame.sprite.OrderedUpdates()
-        w, h = self.screen.get_size()
-        # Y-position is based solely on window height; X start is
-        # recalculated from scratch each call.
-        _, y = self._player_pos(0)
+        """Create card sprites for all players with a simple table layout."""
+
+        self.hand_sprites = pygame.sprite.Group()
+        self.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
+
         card_w = self.card_width
-        start_x, spacing = calc_hand_layout(w, card_w, len(player.hand))
-        for i, c in enumerate(player.hand):
-            sprite = CardSprite(c, (start_x + i * spacing, y), card_w)
+        card_h = int(card_w * 1.4)
+        screen_w, screen_h = self.screen.get_size()
+
+        # --- Human player at the bottom ---------------------------------
+        player = self.game.players[0]
+        start_x, spacing = calc_hand_layout(screen_w, card_w, len(player.hand))
+        y = screen_h - card_h - 20
+        for i, card in enumerate(player.hand):
+            sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
 
-        self.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
-        for idx in range(1, 4):
-            group = self.ai_sprites[idx - 1]
-            opp = self.game.players[idx]
-            x, y = self._player_pos(idx)
-            if idx == 1:
-                start, spacing = calc_hand_layout(w, card_w, len(opp.hand))
-                for i in range(len(opp.hand)):
-                    sp = CardBackSprite(
-                        (start + i * spacing, y), card_w, self.card_back_name
-                    )
-                    group.add(sp)
-            else:
-                hand_h = card_w + (len(opp.hand) - 1) * spacing
-                margin = min(60, max(40, int(card_w * 0.75)))
-                start = h // 2 - hand_h // 2
-                start = max(margin, min(start, h - margin - hand_h))
-                rotation = 90 if idx == 2 else -90
-                for i in range(len(opp.hand)):
-                    sp = CardBackSprite(
-                        (x, start + i * spacing),
-                        card_w,
-                        self.card_back_name,
-                        rotation=rotation,
-                    )
-                    group.add(sp)
+        vert_spacing = 20
+
+        # --- Left AI player (vertical) ----------------------------------
+        left_player = self.game.players[1]
+        total_h = card_h + (len(left_player.hand) - 1) * vert_spacing
+        y_start = screen_h // 2 - total_h // 2
+        for i in range(len(left_player.hand)):
+            pos = (20, y_start + i * vert_spacing)
+            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            self.ai_sprites[0].add(sprite)
+
+        # --- Top AI player (horizontal) ---------------------------------
+        top_player = self.game.players[2]
+        start_x, spacing = calc_hand_layout(screen_w, card_w, len(top_player.hand))
+        for i in range(len(top_player.hand)):
+            pos = (start_x + i * spacing, 40)
+            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            self.ai_sprites[1].add(sprite)
+
+        # --- Right AI player (vertical) ---------------------------------
+        right_player = self.game.players[3]
+        total_h = card_h + (len(right_player.hand) - 1) * vert_spacing
+        y_start = screen_h // 2 - total_h // 2
+        x = screen_w - card_w - 20
+        for i in range(len(right_player.hand)):
+            pos = (x, y_start + i * vert_spacing)
+            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            self.ai_sprites[2].add(sprite)
+
         self.update_play_button_state()
 
     def draw_players(self):
+        """Draw all players and their current hands."""
+
         card_w = self.card_width
         sprites = self.hand_sprites.sprites()
         card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
         spacing = min(40, card_w)
 
-        for idx, p in enumerate(self.game.players):
-            x, y = self._player_pos(idx)
-            txt = f"{p.name} ({len(p.hand)})"
-            color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
-            panel = self._hud_box([txt], text_color=color, padding=3)
-            if idx == 0:
-                offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = panel.get_rect(midbottom=(x, y - offset))
-            elif idx == 1:
-                offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = panel.get_rect(midtop=(x, y + offset))
-            elif idx == 2:
-                offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = panel.get_rect(midleft=(x + offset, y))
-            else:
-                offset = card_h // 2 + spacing // 2 + LABEL_PAD
-                rect = panel.get_rect(midright=(x - offset, y))
-            self.screen.blit(panel, rect)
-
+        # Draw shadows first for a little depth
         for sp in self.hand_sprites.sprites():
             if isinstance(sp, CardSprite):
                 sp.draw_shadow(self.screen)
@@ -1988,9 +1980,12 @@ class GameView:
                 if isinstance(sp, CardSprite):
                     sp.draw_shadow(self.screen)
 
+        # Draw the cards themselves
         self.hand_sprites.draw(self.screen)
         for group in self.ai_sprites:
             group.draw(self.screen)
+
+        # Highlight currently selected cards
         if self.selected:
             player = self.game.players[self.game.current_idx]
             cards = [sp.card for sp in self.selected if hasattr(sp, "card")]
@@ -1998,10 +1993,27 @@ class GameView:
             color = (0, 255, 0) if valid else (255, 0, 0)
             for sp in self.selected:
                 pygame.draw.rect(self.screen, color, sp.rect, width=3)
+
+        # Player labels
+        for idx, p in enumerate(self.game.players):
+            x, y = self._player_pos(idx)
+            txt = f"{p.name} ({len(p.hand)})"
+            color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
+            panel = self._hud_box([txt], text_color=color, padding=3)
+            offset = card_h // 2 + spacing // 2 + LABEL_PAD
+            if idx == 0:
+                rect = panel.get_rect(midbottom=(x, y - offset))
+            elif idx == 1:
+                rect = panel.get_rect(midtop=(x, y + offset))
+            elif idx == 2:
+                rect = panel.get_rect(midleft=(x + offset, y))
+            else:
+                rect = panel.get_rect(midright=(x - offset, y))
+            self.screen.blit(panel, rect)
+
         self.draw_center_pile()
 
         if self.state == GameState.PLAYING:
-            # Enable or disable Undo based on snapshot history
             undo_btn = next((b for b in self.action_buttons if b.text == "Undo"), None)
             if undo_btn:
                 undo_btn.enabled = len(self.game.snapshots) > 1
