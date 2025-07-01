@@ -64,6 +64,8 @@ BUTTON_HEIGHT = 40
 ZONE_GUTTER = 10
 
 # Helper for positioning card sequences
+
+
 def calc_start_and_overlap(
     screen_width: int,
     count: int,
@@ -1276,10 +1278,6 @@ class GameView:
     def _highlight_turn(self, idx: int, frames: int = 10) -> None:
         """Flash the active player's name for visual emphasis."""
         x, y = self._player_pos(idx)
-        card_w = self.card_width
-        sprites = self.hand_sprites.sprites()
-        card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
-        spacing = min(40, card_w)
         rect = pygame.Rect(0, 0, 140, 30)
         if idx == 0:
             rect.midbottom = (x, y)
@@ -2075,7 +2073,6 @@ class GameView:
             color = PLAYER_COLORS[player_idx]
             draw_glow(self.screen, rect, color)
             self.screen.blit(img, rect)
-
 
     def draw_score_overlay(self) -> None:
         """Render a scoreboard panel with last hands played."""
