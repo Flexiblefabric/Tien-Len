@@ -1959,14 +1959,21 @@ class GameView:
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
 
-        vert_spacing = 20
+        margin_v = min(60, max(40, int(card_w * 0.75)))
 
         # --- Left AI player (vertical) ----------------------------------
         left_player = self.game.players[1]
-        total_h = card_h + (len(left_player.hand) - 1) * vert_spacing
-        y_start = screen_h // 2 - total_h // 2
+        start_rel, overlap_v = calc_start_and_overlap(
+            screen_h - 2 * margin_v,
+            len(left_player.hand),
+            card_h,
+            25,
+            card_h - 5,
+        )
+        vert_spacing = card_h - overlap_v
+        y_start = start_rel + margin_v
         for i in range(len(left_player.hand)):
-            pos = (20, y_start + i * vert_spacing)
+            pos = (HORIZONTAL_MARGIN, y_start + i * vert_spacing)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
             self.ai_sprites[0].add(sprite)
 
@@ -1980,9 +1987,16 @@ class GameView:
 
         # --- Right AI player (vertical) ---------------------------------
         right_player = self.game.players[3]
-        total_h = card_h + (len(right_player.hand) - 1) * vert_spacing
-        y_start = screen_h // 2 - total_h // 2
-        x = screen_w - card_w - 20
+        start_rel, overlap_v = calc_start_and_overlap(
+            screen_h - 2 * margin_v,
+            len(right_player.hand),
+            card_h,
+            25,
+            card_h - 5,
+        )
+        vert_spacing = card_h - overlap_v
+        y_start = start_rel + margin_v
+        x = screen_w - card_w - HORIZONTAL_MARGIN
         for i in range(len(right_player.hand)):
             pos = (x, y_start + i * vert_spacing)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
