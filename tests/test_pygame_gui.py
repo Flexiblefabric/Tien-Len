@@ -646,6 +646,41 @@ def test_resize_keeps_sprites_within_margins():
     pygame.quit()
 
 
+def test_vertical_spacing_changes_on_resize():
+    pygame.display.init()
+    surf_small = pygame.Surface((300, 200))
+    surf_large = pygame.Surface((600, 600))
+    set_mode = MagicMock(side_effect=[surf_small, surf_large])
+    with patch("pygame.display.set_mode", set_mode):
+        with patch("pygame.font.SysFont", return_value=DummyFont()):
+            with patch.object(
+                pygame_gui, "load_card_images"
+            ), patch.object(
+                pygame_gui,
+                "get_card_image",
+                side_effect=lambda c, w: pygame.Surface((w, int(w * 1.4))),
+            ), patch.object(
+                pygame_gui,
+                "get_card_back",
+                side_effect=lambda name, w=1: pygame.Surface((w, int(w * 1.4))),
+            ):
+                view = pygame_gui.GameView(300, 200)
+                left_small = view.ai_sprites[1].sprites()
+                spacing_small = (
+                    left_small[1].rect.centery - left_small[0].rect.centery
+                )
+
+                view.on_resize(600, 600)
+
+                left_large = view.ai_sprites[1].sprites()
+                spacing_large = (
+                    left_large[1].rect.centery - left_large[0].rect.centery
+                )
+
+    pygame.quit()
+    assert spacing_large != spacing_small
+
+
 def test_overlay_instances_created():
     view, _ = make_view()
     with patch("pygame.display.flip"), patch("pygame.event.pump"):
