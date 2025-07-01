@@ -42,10 +42,12 @@ if not logger.handlers:
     logger.setLevel(logging.INFO)
     logger.propagate = False
 
+
 def log_action(action: str) -> None:
     """Log a game action."""
 
     logger.info(action)
+
 
 # Card constants
 # Mapping from suit symbol to its full name.  The order of ``SUITS`` and
@@ -70,6 +72,7 @@ FLIP_SUIT_RANK = False
 
 # Helper --------------------------------------------------------------
 
+
 def suit_index(suit: str) -> int:
     """Return the index of ``suit`` respecting ``FLIP_SUIT_RANK``."""
 
@@ -91,6 +94,7 @@ def opening_card_str() -> str:
     symbol = next(sym for sym, name in SUIT_SYMBOLS.items() if name == opening_suit())
     return f"3{symbol}"
 
+
 # Rough ranking used by the very simple AI to choose which move to play.  Higher
 # values are better.
 TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
@@ -98,6 +102,7 @@ TYPE_PRIORITY = {'bomb': 5, 'sequence': 4, 'triple': 3, 'pair': 2, 'single': 1}
 # Names used for AI opponents.  The list length exceeds the number of AI
 # players so ``random.sample`` can pick distinct names for each game.
 AI_NAMES = ["Linh", "Phong", "Bao", "Trang", "My", "Tuan", "Nam", "Duy", "Ha", "Minh"]
+
 
 class Card:
     """Simple container for a playing card."""
@@ -137,6 +142,7 @@ class Card:
 
         return Card(d["suit"], d["rank"])
 
+
 class Deck:
     """A standard 52-card deck."""
 
@@ -166,25 +172,30 @@ class Deck:
 # game.  Each function accepts a list of :class:`Card` objects and returns a
 # boolean indicating whether the list forms that combination.
 
+
 def is_single(cards) -> bool:
     """Return ``True`` if the list contains exactly one card."""
 
     return len(cards) == 1
+
 
 def is_pair(cards) -> bool:
     """Return ``True`` if the list is two cards of the same rank."""
 
     return len(cards) == 2 and cards[0].rank == cards[1].rank
 
+
 def is_triple(cards) -> bool:
     """Return ``True`` if the list is three cards of the same rank."""
 
     return len(cards) == 3 and len({c.rank for c in cards}) == 1
 
+
 def is_bomb(cards) -> bool:
     """Return ``True`` if the list is four cards of the same rank."""
 
     return len(cards) == 4 and len({c.rank for c in cards}) == 1
+
 
 def is_sequence(cards) -> bool:
     """Return ``True`` if ``cards`` form a valid straight."""
@@ -200,6 +211,7 @@ def is_sequence(cards) -> bool:
         return False
     return all(idx[i] + 1 == idx[i + 1] for i in range(len(idx) - 1))
 
+
 def detect_combo(cards):
     """Return the combo type for ``cards`` or ``None`` if invalid."""
 
@@ -214,6 +226,7 @@ def detect_combo(cards):
     if is_single(cards):
         return 'single'
     return None
+
 
 class Player:
     """Represents a human or AI participant."""
@@ -243,6 +256,7 @@ class Player:
 
         cnt = Counter(c.rank for c in self.hand)
         return [[c for c in self.hand if c.rank == r] for r, v in cnt.items() if v == 4]
+
 
 class Game:
     """Encapsulates the rules and state of a single game."""
@@ -459,10 +473,17 @@ class Game:
                 continue
             if cmd == 'pass':
                 if player.is_human and self.first_turn and self.current_idx == self.start_idx:
-                    logger.info('You must play a combo including %s on your first turn; cannot pass.', opening_card_str())
+                    logger.info(
+                        'You must play a combo including %s on your first turn; cannot pass.',
+                        opening_card_str(),
+                    )
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
+                        logger.info(
+                            "Reminder: your opening play must contain %s. Example: '%s'",
+                            opening_card_str(),
+                            opening_card_str(),
+                        )
                     continue
                 return []
             if cmd == 'error':
@@ -470,7 +491,11 @@ class Game:
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
+                        logger.info(
+                            "Reminder: your opening play must contain %s. Example: '%s'",
+                            opening_card_str(),
+                            opening_card_str(),
+                        )
                 continue
             if cmd == 'play':
                 cards = res
@@ -481,7 +506,11 @@ class Game:
                 if self.first_turn and self.current_idx == self.start_idx:
                     failures += 1
                     if failures == 3:
-                        logger.info("Reminder: your opening play must contain %s. Example: '%s'", opening_card_str(), opening_card_str())
+                        logger.info(
+                            "Reminder: your opening play must contain %s. Example: '%s'",
+                            opening_card_str(),
+                            opening_card_str(),
+                        )
 
     # AI helper functions
     def generate_valid_moves(self, player, current):
@@ -900,6 +929,7 @@ class Game:
         """Advance ``current_idx`` to the next active player."""
 
         self.current_idx = (self.current_idx + 1) % len(self.players)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play Tiến Lên in the terminal')

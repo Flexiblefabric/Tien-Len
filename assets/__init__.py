@@ -1,1 +1,1 @@
-
+"""Asset package."""
