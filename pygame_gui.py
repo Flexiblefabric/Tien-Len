@@ -1995,6 +1995,14 @@ class GameView:
 
         margin_v = min(60, max(40, int(card_w * 0.75)))
 
+        # --- Top AI player (horizontal) ---------------------------------
+        top_player = self.game.players[2]
+        start_x, spacing = calc_hand_layout(screen_w, card_w, len(top_player.hand))
+        for i in range(len(top_player.hand)):
+            pos = (start_x + i * spacing, 40)
+            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            self.ai_sprites[0].add(sprite)
+
         # --- Left AI player (vertical) ----------------------------------
         left_player = self.game.players[1]
         start_rel, overlap_v = calc_start_and_overlap(
@@ -2008,14 +2016,6 @@ class GameView:
         y_start = start_rel + margin_v
         for i in range(len(left_player.hand)):
             pos = (HORIZONTAL_MARGIN, y_start + i * vert_spacing)
-            sprite = CardBackSprite(pos, card_w, self.card_back_name)
-            self.ai_sprites[0].add(sprite)
-
-        # --- Top AI player (horizontal) ---------------------------------
-        top_player = self.game.players[2]
-        start_x, spacing = calc_hand_layout(screen_w, card_w, len(top_player.hand))
-        for i in range(len(top_player.hand)):
-            pos = (start_x + i * spacing, 40)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
             self.ai_sprites[1].add(sprite)
 
