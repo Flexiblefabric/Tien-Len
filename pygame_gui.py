@@ -12,7 +12,7 @@ import types
 
 import pygame
 
-from tien_len_full import Game, Card, detect_combo
+from tien_len_full import Game, Card, detect_combo, Player
 import sound
 
 LOG_FILE = "tien_len_game.log"
