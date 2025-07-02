@@ -56,38 +56,31 @@ SUIT_SYMBOLS = {'♠': 'Spades', '♥': 'Hearts', '♦': 'Diamonds', '♣': 'Clu
 SUITS = list(SUIT_SYMBOLS.values())
 RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
 
-# Global rule toggles
-# ``ALLOW_2_IN_SEQUENCE`` controls whether sequences may contain a ``2``.
-# Sequences do not require matching suits—only consecutive ranks—so this
-# toggle merely determines if a ``2`` can appear in such mixed-suit runs.
-# The default preserves the house rule used by the tests which forbids
-# ``2`` in sequences.
-ALLOW_2_IN_SEQUENCE = False
-# Additional optional rule toggles used by the tests and GUI.
-FLIP_SUIT_RANK = False
+# Global rule toggles were previously defined here. They are now stored on the
+# :class:`Game` instance so multiple games can run with independent settings.
 
 # Helper --------------------------------------------------------------
 
 
-def suit_index(suit: str) -> int:
-    """Return the index of ``suit`` respecting ``FLIP_SUIT_RANK``."""
+def suit_index(suit: str, flip_suit_rank: bool = False) -> int:
+    """Return the index of ``suit`` respecting ``flip_suit_rank``."""
 
     idx = SUITS.index(suit)
-    if FLIP_SUIT_RANK:
+    if flip_suit_rank:
         idx = len(SUITS) - idx - 1
     return idx
 
 
-def opening_suit() -> str:
+def opening_suit(flip_suit_rank: bool = False) -> str:
     """Return the suit required for the first play."""
 
-    return "Hearts" if FLIP_SUIT_RANK else "Spades"
+    return "Hearts" if flip_suit_rank else "Spades"
 
 
-def opening_card_str() -> str:
+def opening_card_str(flip_suit_rank: bool = False) -> str:
     """Return the opening card notation, e.g. ``3♠`` or ``3♥``."""
 
-    symbol = next(sym for sym, name in SUIT_SYMBOLS.items() if name == opening_suit())
+    symbol = next(sym for sym, name in SUIT_SYMBOLS.items() if name == opening_suit(flip_suit_rank))
     return f"3{symbol}"
 
 
@@ -142,11 +135,11 @@ class Card:
 class Deck:
     """A standard 52-card deck."""
 
-    def __init__(self) -> None:
+    def __init__(self, flip_suit_rank: bool = False) -> None:
         # Generate cards in canonical order so tests can seed ``random`` and
         # reproduce games deterministically.  Suit ordering respects the
-        # ``FLIP_SUIT_RANK`` rule.
-        ordered = sorted(SUITS, key=suit_index)
+        # ``flip_suit_rank`` rule.
+        ordered = sorted(SUITS, key=lambda s: suit_index(s, flip_suit_rank))
         self.cards = [Card(s, r) for s in ordered for r in RANKS]
 
     def shuffle(self) -> None:
@@ -193,13 +186,13 @@ def is_bomb(cards) -> bool:
     return len(cards) == 4 and len({c.rank for c in cards}) == 1
 
 
-def is_sequence(cards) -> bool:
+def is_sequence(cards, allow_2_in_sequence: bool = False) -> bool:
     """Return ``True`` if ``cards`` form a valid straight."""
 
     if len(cards) < 3:
         return False
     # Optionally disallow sequences containing a 2
-    if not ALLOW_2_IN_SEQUENCE and any(c.rank == '2' for c in cards):
+    if not allow_2_in_sequence and any(c.rank == '2' for c in cards):
         return False
     idx = sorted(RANKS.index(c.rank) for c in cards)
     # Ranks must be unique and consecutive
@@ -208,12 +201,12 @@ def is_sequence(cards) -> bool:
     return all(idx[i] + 1 == idx[i + 1] for i in range(len(idx) - 1))
 
 
-def detect_combo(cards):
+def detect_combo(cards, allow_2_in_sequence: bool = False):
     """Return the combo type for ``cards`` or ``None`` if invalid."""
 
     if is_bomb(cards):
         return 'bomb'
-    if is_sequence(cards):
+    if is_sequence(cards, allow_2_in_sequence):
         return 'sequence'
     if is_triple(cards):
         return 'triple'
@@ -232,7 +225,7 @@ class Player:
         self.hand: list[Card] = []
         self.is_human = is_human
 
-    def sort_hand(self, mode: str = "rank") -> None:
+    def sort_hand(self, mode: str = "rank", flip_suit_rank: bool = False) -> None:
         """Sort the player's hand.
 
         Parameters
@@ -243,9 +236,13 @@ class Player:
         """
 
         if mode == "suit":
-            self.hand.sort(key=lambda c: (suit_index(c.suit), RANKS.index(c.rank)))
+            self.hand.sort(
+                key=lambda c: (suit_index(c.suit, flip_suit_rank), RANKS.index(c.rank))
+            )
         else:
-            self.hand.sort(key=lambda c: (RANKS.index(c.rank), suit_index(c.suit)))
+            self.hand.sort(
+                key=lambda c: (RANKS.index(c.rank), suit_index(c.suit, flip_suit_rank))
+            )
 
     def find_bombs(self):
         """Return all four-of-a-kind sets in the player's hand."""
@@ -257,14 +254,17 @@ class Player:
 class Game:
     """Encapsulates the rules and state of a single game."""
 
-    def __init__(self) -> None:
+    def __init__(self, allow_2_in_sequence: bool = False, flip_suit_rank: bool = False) -> None:
         """Initialise a new game instance."""
+
+        self.allow_2_in_sequence = allow_2_in_sequence
+        self.flip_suit_rank = flip_suit_rank
 
         # Create one human player followed by three AI opponents chosen from a
         # predefined pool of names.
         used = random.sample(AI_NAMES, 3)
         self.players = [Player('Player', True)] + [Player(n) for n in used]
-        self.deck = Deck()
+        self.deck = Deck(self.flip_suit_rank)
         self.pile: list[tuple[Player, list[Card]]] = []
         self.current_idx = 0
         self.first_turn = True
@@ -286,6 +286,18 @@ class Game:
         self.bluff_chance = 0.0
         # Snapshots of the game state for undo functionality
         self.snapshots: list[str] = []
+
+    # ------------------------------------------------------------------
+    # Helper wrappers using instance rule settings
+    # ------------------------------------------------------------------
+    def suit_index(self, suit: str) -> int:
+        return suit_index(suit, self.flip_suit_rank)
+
+    def opening_suit(self) -> str:
+        return opening_suit(self.flip_suit_rank)
+
+    def opening_card_str(self) -> str:
+        return opening_card_str(self.flip_suit_rank)
 
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier and adjust internal multiplier."""
@@ -323,7 +335,7 @@ class Game:
         for p, h in zip(self.players, hands):
             # Assign and sort each player's hand
             p.hand = h
-            p.sort_hand()
+            p.sort_hand(flip_suit_rank=self.flip_suit_rank)
             # Log any four-of-a-kind sets for debugging
             b = p.find_bombs()
             if b:
@@ -332,10 +344,10 @@ class Game:
 
         # The player holding the 3♠ (or 3♥) must start the game
         for i, p in enumerate(self.players):
-            if any(c.rank == '3' and c.suit == opening_suit() for c in p.hand):
+            if any(c.rank == '3' and c.suit == self.opening_suit() for c in p.hand):
                 self.current_idx = i
                 self.start_idx = i
-                logger.info("%s starts (holds %s)", p.name, opening_card_str())
+                logger.info("%s starts (holds %s)", p.name, self.opening_card_str())
                 log_action(f"Start: {p.name}")
                 break
 
@@ -360,23 +372,23 @@ class Game:
         # Prevent passing on the opening turn if you started the game
         if not cards:
             if self.first_turn and self.current_idx == self.start_idx:
-                return False, f'Must include {opening_card_str()} first'
+                return False, f'Must include {self.opening_card_str()} first'
             return True, ''
 
-        combo = detect_combo(cards)
+        combo = detect_combo(cards, self.allow_2_in_sequence)
         if not combo:
             return False, 'Invalid combo'
 
         # The starting player must include the required suit in their very first play
         if self.first_turn and self.current_idx == self.start_idx:
-            if not any(c.rank == '3' and c.suit == opening_suit() for c in cards):
-                return False, f'Must include {opening_card_str()} first'
+            if not any(c.rank == '3' and c.suit == self.opening_suit() for c in cards):
+                return False, f'Must include {self.opening_card_str()} first'
 
         # If the pile is empty any combo is valid at this point
         if not current:
             return True, ''
 
-        prev = detect_combo(current)
+        prev = detect_combo(current, self.allow_2_in_sequence)
 
         # Bombs beat everything except a higher bomb
         if combo == 'bomb' and prev != 'bomb':
@@ -471,14 +483,14 @@ class Game:
                 if player.is_human and self.first_turn and self.current_idx == self.start_idx:
                     logger.info(
                         'You must play a combo including %s on your first turn; cannot pass.',
-                        opening_card_str(),
+                        self.opening_card_str(),
                     )
                     failures += 1
                     if failures == 3:
                         logger.info(
                             "Reminder: your opening play must contain %s. Example: '%s'",
-                            opening_card_str(),
-                            opening_card_str(),
+                            self.opening_card_str(),
+                            self.opening_card_str(),
                         )
                     continue
                 return []
@@ -489,8 +501,8 @@ class Game:
                     if failures == 3:
                         logger.info(
                             "Reminder: your opening play must contain %s. Example: '%s'",
-                            opening_card_str(),
-                            opening_card_str(),
+                            self.opening_card_str(),
+                            self.opening_card_str(),
                         )
                 continue
             if cmd == 'play':
@@ -504,8 +516,8 @@ class Game:
                     if failures == 3:
                         logger.info(
                             "Reminder: your opening play must contain %s. Example: '%s'",
-                            opening_card_str(),
-                            opening_card_str(),
+                            self.opening_card_str(),
+                            self.opening_card_str(),
                         )
 
     # AI helper functions
@@ -524,7 +536,7 @@ class Game:
     def score_move(self, player, move, current, lookahead=True):
         """Heuristic scoring used by the AI when comparing moves."""
 
-        t = detect_combo(move)
+        t = detect_combo(move, self.allow_2_in_sequence)
         base = TYPE_PRIORITY.get(t, 0)
         rank_val = max(RANKS.index(c.rank) for c in move)
         remaining = [c for c in player.hand if c not in move]
@@ -638,7 +650,7 @@ class Game:
             logger.info('Pile: empty')
         else:
             p, c = self.pile[-1]
-            logger.info("Pile: %s -> %s (%s)", p.name, c, detect_combo(c))
+            logger.info("Pile: %s -> %s (%s)", p.name, c, detect_combo(c, self.allow_2_in_sequence))
 
     def display_hand(self, player):
         """Print ``player``'s hand with 1-based indices."""
