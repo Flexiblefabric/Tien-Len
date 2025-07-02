@@ -20,10 +20,10 @@ tien-len-cli = "tien_len_full:main"
 py-modules = [
     "tien_len_full",
     "sound",
-    "pygame_gui",
 ]
 packages = [
     "assets",
+    "pygame_gui",
 ]
 include-package-data = true
 
