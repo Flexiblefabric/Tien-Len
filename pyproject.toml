@@ -13,6 +13,9 @@ dependencies = ["pillow", "pygame-ce"]
 [project.gui-scripts]
 tien-len = "pygame_gui:main"
 
+[project.scripts]
+tien-len-cli = "tien_len_full:main"
+
 [tool.setuptools]
 py-modules = [
     "tien_len_full",
