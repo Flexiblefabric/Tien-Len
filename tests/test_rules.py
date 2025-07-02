@@ -73,8 +73,7 @@ def test_player_sort_and_bombs():
 def test_is_valid_basic_rules():
     import tien_len_full as tl
 
-    tl.FLIP_SUIT_RANK = False
-    game = Game()
+    game = Game(flip_suit_rank=False)
     starter = game.players[0]
     game.current_idx = 0
     game.start_idx = 0
@@ -116,46 +115,38 @@ def test_is_valid_basic_rules():
     ok, msg = game.is_valid(starter, bomb, current)
     assert ok
 
-    tl.FLIP_SUIT_RANK = False
 
 
 def test_is_valid_first_card_flip_suit():
     import tien_len_full as tl
 
-    tl.FLIP_SUIT_RANK = True
-    game = tl.Game()
-    starter = game.players[0]
-    game.current_idx = 0
-    game.start_idx = 0
-    game.first_turn = True
+    tl_game = tl.Game(flip_suit_rank=True)
+    starter = tl_game.players[0]
+    tl_game.current_idx = 0
+    tl_game.start_idx = 0
+    tl_game.first_turn = True
 
-    ok, msg = game.is_valid(starter, [], None)
+    ok, msg = tl_game.is_valid(starter, [], None)
     assert not ok and msg == 'Must include 3\u2665 first'
 
     card3h = tl.Card('Hearts', '3')
-    ok, msg = game.is_valid(starter, [card3h], None)
+    ok, msg = tl_game.is_valid(starter, [card3h], None)
     assert ok
-
-    tl.FLIP_SUIT_RANK = False
-
 
 def test_flip_suit_rank_sorting_and_deck_order():
     import tien_len_full as tl
 
-    tl.FLIP_SUIT_RANK = False
     p = tl.Player('Tester')
     p.hand = [tl.Card(s, '3') for s in tl.SUITS]
     p.sort_hand()
     assert [c.suit for c in p.hand] == tl.SUITS
 
-    tl.FLIP_SUIT_RANK = True
     p2 = tl.Player('Tester2')
     p2.hand = [tl.Card(s, '3') for s in tl.SUITS]
-    p2.sort_hand()
+    p2.sort_hand(flip_suit_rank=True)
     assert [c.suit for c in p2.hand] == list(reversed(tl.SUITS))
 
-    deck = tl.Deck()
+    deck = tl.Deck(flip_suit_rank=True)
     block = len(tl.RANKS)
     suits = [deck.cards[i * block].suit for i in range(len(tl.SUITS))]
     assert suits == list(reversed(tl.SUITS))
-    tl.FLIP_SUIT_RANK = False

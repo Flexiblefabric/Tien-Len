@@ -1727,14 +1727,12 @@ class GameView:
         self._update_table_surface()
         self.game.players[0].name = self.player_name
         self._load_avatars()
-        self.game.players[0].sort_hand(self.sort_mode)
+        self.game.players[0].sort_hand(self.sort_mode, self.game.flip_suit_rank)
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
-        import tien_len_full as tl
-
-        tl.ALLOW_2_IN_SEQUENCE = not self.rule_no_2s
-        tl.FLIP_SUIT_RANK = self.rule_flip_suit_rank
+        self.game.allow_2_in_sequence = not self.rule_no_2s
+        self.game.flip_suit_rank = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)
         if _mixer_ready():
