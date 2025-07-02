@@ -785,13 +785,10 @@ class RulesOverlay(Overlay):
             btn.callback = toggle(attr, label)(btn)
             self.buttons.append(btn)
 
-        make_button(0, "rule_chat_bomb", "“Chặt” Bomb")
-        make_button(50, "rule_chain_cutting", "Chain Cutting")
-        make_button(100, "rule_tu_quy_hierarchy", "Tứ Quý Hierarchy")
-        make_button(150, "rule_flip_suit_rank", "Flip Suit Rank")
-        make_button(200, "rule_no_2s", "No 2s in straights")
+        make_button(0, "rule_flip_suit_rank", "Flip Suit Rank")
+        make_button(50, "rule_no_2s", "No 2s in straights")
         self.buttons.append(
-            Button("Back", pygame.Rect(bx, by + 250, 240, 40), self.back_callback, font)
+            Button("Back", pygame.Rect(bx, by + 100, 240, 40), self.back_callback, font)
         )
 
 
@@ -1089,9 +1086,6 @@ class GameView:
         self.tutorial_mode = False
         self.show_rules_option = False
         # Additional house rule toggles
-        self.rule_chat_bomb = False
-        self.rule_chain_cutting = False
-        self.rule_tu_quy_hierarchy = False
         self.rule_flip_suit_rank = False
         self.rule_no_2s = True
         self.score_visible = True
@@ -1127,13 +1121,6 @@ class GameView:
         self.show_rules_option = opts.get(
             "show_rules_option",
             opts.get("show_rules", self.show_rules_option),
-        )
-        self.rule_chat_bomb = opts.get("rule_chat_bomb", self.rule_chat_bomb)
-        self.rule_chain_cutting = opts.get(
-            "rule_chain_cutting", self.rule_chain_cutting
-        )
-        self.rule_tu_quy_hierarchy = opts.get(
-            "rule_tu_quy_hierarchy", self.rule_tu_quy_hierarchy
         )
         self.rule_flip_suit_rank = opts.get(
             "rule_flip_suit_rank", self.rule_flip_suit_rank
@@ -1704,9 +1691,6 @@ class GameView:
             "house_rules": self.house_rules,
             "tutorial_mode": self.tutorial_mode,
             "show_rules_option": self.show_rules_option,
-            "rule_chat_bomb": self.rule_chat_bomb,
-            "rule_chain_cutting": self.rule_chain_cutting,
-            "rule_tu_quy_hierarchy": self.rule_tu_quy_hierarchy,
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
             "fullscreen": self.fullscreen,
@@ -1750,9 +1734,6 @@ class GameView:
         import tien_len_full as tl
 
         tl.ALLOW_2_IN_SEQUENCE = not self.rule_no_2s
-        tl.CHAT_BOMB = self.rule_chat_bomb
-        tl.CHAIN_CUTTING = self.rule_chain_cutting
-        tl.TU_QUY_HIERARCHY = self.rule_tu_quy_hierarchy
         tl.FLIP_SUIT_RANK = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)

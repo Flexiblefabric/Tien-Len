@@ -63,11 +63,7 @@ RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2']
 # The default preserves the house rule used by the tests which forbids
 # ``2`` in sequences.
 ALLOW_2_IN_SEQUENCE = False
-# Additional optional rules toggles.  These defaults match the behaviour
-# used by the tests and GUI unless overridden.
-CHAT_BOMB = False
-CHAIN_CUTTING = False
-TU_QUY_HIERARCHY = False
+# Additional optional rule toggles used by the tests and GUI.
 FLIP_SUIT_RANK = False
 
 # Helper --------------------------------------------------------------

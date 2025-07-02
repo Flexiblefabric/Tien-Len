@@ -1034,9 +1034,6 @@ def test_options_persist_across_sessions(tmp_path):
         view.colorblind_mode = True
         view.fx_volume = 0.5
         view.music_volume = 0.25
-        view.rule_chat_bomb = True
-        view.rule_chain_cutting = True
-        view.rule_tu_quy_hierarchy = True
         view.rule_flip_suit_rank = True
         view.rule_no_2s = False
         view.fullscreen = True
@@ -1050,9 +1047,6 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.colorblind_mode is True
     assert new_view.fx_volume == 0.5
     assert new_view.music_volume == 0.25
-    assert new_view.rule_chat_bomb is True
-    assert new_view.rule_chain_cutting is True
-    assert new_view.rule_tu_quy_hierarchy is True
     assert new_view.rule_flip_suit_rank is True
     assert new_view.rule_no_2s is False
     assert new_view.fullscreen is True
@@ -1067,9 +1061,6 @@ def test_rules_overlay_toggles_update_state():
         pygame_gui.GameView.show_rules(view)
     overlay = view.overlay
     attrs = [
-        "rule_chat_bomb",
-        "rule_chain_cutting",
-        "rule_tu_quy_hierarchy",
         "rule_flip_suit_rank",
         "rule_no_2s",
     ]
