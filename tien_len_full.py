@@ -927,12 +927,43 @@ class Game:
         self.current_idx = (self.current_idx + 1) % len(self.players)
 
 
-if __name__ == '__main__':
+def create_parser() -> argparse.ArgumentParser:
+    """Return the command line argument parser used by the CLI."""
+
     parser = argparse.ArgumentParser(description='Play Tiến Lên in the terminal')
-    parser.add_argument('--ai', default='Normal', choices=['Easy', 'Normal', 'Hard', 'Expert'],
-                        help='AI difficulty level')
-    args = parser.parse_args()
+    parser.add_argument(
+        '--ai',
+        default='Normal',
+        choices=['Easy', 'Normal', 'Hard', 'Expert'],
+        help='AI difficulty level',
+    )
+    parser.add_argument(
+        '--personality',
+        default='balanced',
+        choices=['aggressive', 'defensive', 'balanced', 'random'],
+        help='AI personality style',
+    )
+    parser.add_argument(
+        '--lookahead',
+        action='store_true',
+        help='Enable AI lookahead when scoring moves',
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> Game:
+    """Run the CLI game and return the :class:`Game` instance used."""
+
+    parser = create_parser()
+    args = parser.parse_args(argv)
 
     game = Game()
     game.set_ai_level(args.ai)
+    game.set_personality(args.personality)
+    game.ai_lookahead = args.lookahead
     game.play()
+    return game
+
+
+if __name__ == '__main__':
+    main()
