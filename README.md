@@ -27,11 +27,15 @@ After installation launch the Pygame GUI with `tien-len`.
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert]
+python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert] \
+                        [--personality aggressive|defensive|balanced|random] \
+                        [--lookahead]
 ```
 
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).
-The game logs actions to `tien_len_game.log`.
+Use `--personality` to choose how boldly opponents play and `--lookahead`
+to enable the extra search step used by the AI.  The game logs actions to
+`tien_len_game.log`.
 
 ## Card notation
 
