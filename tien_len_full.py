@@ -7,6 +7,7 @@ compact so that it can be easily read and used in tests.  A few key design
 decisions:
 
 * The module logs actions to ``tien_len_game.log`` for easier debugging.
+  Log rotation prevents this file from growing without bound.
 * Only the human player is forbidden from passing on the very first turn when
   they hold the ``3♠`` (or ``3♥`` when suit ranking is flipped).  This mirrors
   the behaviour of the original proof of
@@ -18,6 +19,7 @@ import random
 import sys
 import argparse
 import logging
+from logging.handlers import RotatingFileHandler
 import sound
 from collections import Counter
 from itertools import combinations
@@ -33,7 +35,9 @@ LOG_FILE = 'tien_len_game.log'
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:
-    handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
+    handler = RotatingFileHandler(
+        LOG_FILE, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+    )
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )

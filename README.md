@@ -36,7 +36,8 @@ After installation the same game can be started with the `tien-len-cli` command.
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).
 Use `--personality` to choose how boldly opponents play and `--lookahead`
 to enable the extra search step used by the AI.  The game logs actions to
-`tien_len_game.log`.
+`tien_len_game.log`. Log rotation keeps the file from growing
+indefinitely by capping it at roughly 1&nbsp;MB with a few backups.
 
 ## Card notation
 
