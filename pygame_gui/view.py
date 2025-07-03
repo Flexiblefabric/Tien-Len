@@ -21,6 +21,7 @@ from .helpers import (
     ZONE_GUTTER,
     AVATAR_DIR,
     AVATAR_SIZE,
+    ASSETS_DIR,
     SAVE_FILE,
     GameState,
     calc_start_and_overlap,
@@ -73,14 +74,14 @@ class GameView(AnimationMixin):
         pygame_gui.load_card_images(self.card_width)
         self.table_texture_name = list_table_textures()[0] if list_table_textures() else ""
         self.table_image: Optional[pygame.Surface] = None
-        tex_path = Path(__file__).with_name("assets") / "tables" / f"{self.table_texture_name}.png"
+        tex_path = ASSETS_DIR / "tables" / f"{self.table_texture_name}.png"
         if tex_path.exists():
             try:
                 self.table_image = pygame.image.load(str(tex_path)).convert()
             except Exception:
                 self.table_image = None
         self.main_menu_image: Optional[pygame.Surface] = None
-        menu_path = Path(__file__).with_name("assets") / "imgs" / "main_menu.png"
+        menu_path = ASSETS_DIR / "imgs" / "main_menu.png"
         if menu_path.exists():
             try:
                 self.main_menu_image = pygame.image.load(str(menu_path)).convert()
@@ -91,7 +92,7 @@ class GameView(AnimationMixin):
         self._layout_zones()
         self._load_avatars()
         # Load sound effects and background music
-        sdir = Path(__file__).with_name("assets") / "sound"
+        sdir = ASSETS_DIR / "sound"
         sound.load("click", sdir / "card-play.wav")
         sound.load("pass", sdir / "pass.wav")
         sound.load("bomb", sdir / "bomb.wav")
@@ -101,7 +102,7 @@ class GameView(AnimationMixin):
         import pygame_gui
 
         if pygame_gui._mixer_ready() and self.music_track:
-            music = Path(__file__).with_name("assets") / "music" / self.music_track
+            music = ASSETS_DIR / "music" / self.music_track
             try:
                 pygame.mixer.music.load(str(music))
                 pygame.mixer.music.play(-1)
@@ -581,14 +582,12 @@ class GameView(AnimationMixin):
         self.table_color = TABLE_THEMES.get(
             self.table_color_name, TABLE_THEMES["darkgreen"]
         )
-        back_map = {
-            "red": "card_back_red",
-            "green": "card_back_green",
-            "black": "card_back_black",
-            "blue": "card_back",
-        }
-        self.card_back_name = back_map.get(self.card_color, self.card_back_name)
-        tex_path = Path(__file__).with_name("assets") / "tables" / f"{self.table_texture_name}.png"
+        if self.card_color == "blue":
+            self.card_back_name = "card_back"
+        else:
+            self.card_back_name = f"card_back_{self.card_color}"
+
+        tex_path = ASSETS_DIR / "tables" / f"{self.table_texture_name}.png"
         if tex_path.exists():
             try:
                 self.table_image = pygame.image.load(str(tex_path)).convert()
@@ -612,7 +611,7 @@ class GameView(AnimationMixin):
         if pygame_gui._mixer_ready():
             pygame.mixer.music.set_volume(self.music_volume)
             if self.music_enabled:
-                track = Path(__file__).with_name("assets") / "music" / self.music_track
+                track = ASSETS_DIR / "music" / self.music_track
                 if track.exists():
                     try:
                         pygame.mixer.music.load(str(track))

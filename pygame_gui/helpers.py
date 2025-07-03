@@ -9,6 +9,9 @@ import logging
 
 import pygame
 
+# Path to the installed assets directory
+ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+
 from tien_len_full import Card
 
 LOG_FILE = "tien_len_game.log"
@@ -58,7 +61,7 @@ LABEL_PAD = 10
 # Button dimensions and layout spacing
 BUTTON_HEIGHT = 40
 ZONE_GUTTER = 10
-AVATAR_DIR = Path(__file__).with_name("assets") / "avatars"
+AVATAR_DIR = ASSETS_DIR / "avatars"
 AVATAR_SIZE = 40
 
 # Helper for positioning card sequences
@@ -114,7 +117,7 @@ _BASE_IMAGES: Dict[str, pygame.Surface] = {}
 
 def list_card_back_colors() -> List[str]:
     """Return available card back color names."""
-    backs_dir = Path(__file__).with_name("assets") / "card_backs"
+    backs_dir = ASSETS_DIR / "card_backs"
     colors: List[str] = []
     for img in backs_dir.glob("*.png"):
         stem = img.stem
@@ -127,13 +130,13 @@ def list_card_back_colors() -> List[str]:
 
 def list_table_textures() -> List[str]:
     """Return available table texture names."""
-    tex_dir = Path(__file__).with_name("assets") / "tables"
+    tex_dir = ASSETS_DIR / "tables"
     return sorted(p.stem for p in tex_dir.glob("*.png"))
 
 
 def list_music_tracks() -> List[str]:
     """Return available music track filenames."""
-    mdir = Path(__file__).with_name("assets") / "music"
+    mdir = ASSETS_DIR / "music"
     return sorted(p.name for p in mdir.glob("*.mp3"))
 
 
@@ -155,13 +158,12 @@ def _image_key(card: Card) -> str:
 
 def load_card_images(width: int = 80) -> None:
     """Load all card images scaled to ``width`` pixels."""
-    assets = Path(__file__).with_name("assets")
-    cards = assets / "cards"
+    cards = ASSETS_DIR / "cards"
     for img in cards.glob("*_of_*.png"):
         key = img.stem
         base = pygame.image.load(str(img)).convert_alpha()
         _BASE_IMAGES[key] = base
-    backs = assets / "card_backs"
+    backs = ASSETS_DIR / "card_backs"
     for img in backs.glob("*.png"):
         _BASE_IMAGES[img.stem] = pygame.image.load(str(img)).convert_alpha()
     for key, base in _BASE_IMAGES.items():
