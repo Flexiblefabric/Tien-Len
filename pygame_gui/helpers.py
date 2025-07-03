@@ -9,10 +9,10 @@ import logging
 
 import pygame
 
+from tien_len_full import Card
+
 # Path to the installed assets directory
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
-
-from tien_len_full import Card
 
 LOG_FILE = "tien_len_game.log"
 
