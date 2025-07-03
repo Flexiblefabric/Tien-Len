@@ -3,7 +3,13 @@ from __future__ import annotations
 import pygame
 from typing import List, Callable, Optional, TYPE_CHECKING
 
-from .helpers import list_card_back_colors, list_table_textures, get_card_back, TABLE_THEMES
+from .helpers import (
+    list_card_back_colors,
+    list_table_textures,
+    get_card_back,
+    list_music_tracks,
+    TABLE_THEMES,
+)
 
 if TYPE_CHECKING:
     from .view import GameView
@@ -716,4 +722,3 @@ class GameOverOverlay(Overlay):
             surface.blit(img, img.get_rect(center=(w // 2, y)))
             y += 30
         super().draw(surface)
-
