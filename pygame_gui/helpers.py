@@ -156,7 +156,8 @@ def _image_key(card: Card) -> str:
 def load_card_images(width: int = 80) -> None:
     """Load all card images scaled to ``width`` pixels."""
     assets = Path(__file__).with_name("assets")
-    for img in assets.glob("*_of_*.png"):
+    cards = assets / "cards"
+    for img in cards.glob("*_of_*.png"):
         key = img.stem
         base = pygame.image.load(str(img)).convert_alpha()
         _BASE_IMAGES[key] = base
