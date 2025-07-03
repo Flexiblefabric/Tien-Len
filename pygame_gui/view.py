@@ -20,6 +20,8 @@ from .helpers import (
     ZONE_GUTTER,
     AVATAR_DIR,
     AVATAR_SIZE,
+    OPTIONS_FILE,
+    SAVE_FILE,
     GameState,
     calc_start_and_overlap,
     calc_hand_layout,
