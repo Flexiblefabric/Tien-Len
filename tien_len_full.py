@@ -1,3 +1,4 @@
+from __future__ import annotations
 # tien_len_full.py
 """Tiến Lên full game implementation.
 
@@ -15,6 +16,7 @@ decisions:
 * The :class:`Game` class encapsulates all state and can be reused by the GUI
   implemented in ``pygame_gui.py``.
 """
+
 import random
 import sys
 import argparse
@@ -23,6 +25,7 @@ from logging.handlers import RotatingFileHandler
 import sound
 from collections import Counter
 from itertools import combinations
+from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Logging utilities
@@ -274,7 +277,7 @@ class Game:
         self.first_turn = True
         self.start_idx = 0
         self.pass_count = 0
-        self.current_combo: list[Card] | None = None
+        self.current_combo: Optional[list[Card]] = None
         self.history: list[tuple[int, str]] = []
         # Log of moves in each round using simple serialisable card dictionaries
         self.move_log: dict[int, list[tuple[str, int, list[dict]]]] = {}
@@ -369,7 +372,7 @@ class Game:
             The player attempting the move.
         cards : list[Card]
             The cards they wish to play.  An empty list represents a pass.
-        current : list[Card] | None
+        current : Optional[list[Card]]
             The combination currently on the pile.
         """
 
@@ -967,7 +970,7 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> Game:
+def main(argv: Optional[list[str]] = None) -> Game:
     """Run the CLI game and return the :class:`Game` instance used."""
 
     parser = create_parser()
