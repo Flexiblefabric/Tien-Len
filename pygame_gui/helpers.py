@@ -204,7 +204,10 @@ def get_card_image(card: Card, width: int) -> pygame.Surface:
 class CardSprite(pygame.sprite.Sprite):
     def __init__(self, card: Card, pos: Tuple[int, int], width: int = 80) -> None:
         super().__init__()
-        img = get_card_image(card, width)
+        # Import at runtime to allow tests to patch the public helper
+        import pygame_gui
+
+        img = pygame_gui.get_card_image(card, width)
         if img is None:
             # Render a text fallback
             font = pygame.font.SysFont(None, 20)
@@ -275,7 +278,10 @@ class CardBackSprite(pygame.sprite.Sprite):
         rotation: int = 0,
     ) -> None:
         super().__init__()
-        img = get_card_back(name, width)
+        # Import at runtime so tests can patch the function via the package
+        import pygame_gui
+
+        img = pygame_gui.get_card_back(name, width)
         if img is None:
             font = pygame.font.SysFont(None, 20)
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
