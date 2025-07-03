@@ -1098,3 +1098,61 @@ def test_profile_overlay_new_profile_added():
         overlay.new_profile()
     assert set(view.win_counts) - existing
 
+
+
+def test_handle_score_event_dragging():
+    view, _ = make_view()
+    view.score_visible = True
+    view.score_rect = pygame.Rect(10, 10, 20, 20)
+    with patch.object(view, "_save_options") as save:
+        down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (15, 15)})
+        assert view._handle_score_event(down) is True
+        move = pygame.event.Event(pygame.MOUSEMOTION, {"pos": (20, 25)})
+        assert view._handle_score_event(move) is True
+        assert view.score_pos == (15, 20)
+        up = pygame.event.Event(pygame.MOUSEBUTTONUP, {"pos": (20, 25)})
+        assert view._handle_score_event(up) is True
+        save.assert_called_once()
+    pygame.quit()
+
+
+def test_close_overlay_restores_state_and_ai():
+    view, _ = make_view()
+    view.overlay = MagicMock()
+    view.state = pygame_gui.GameState.SETTINGS
+    with patch.object(view, "_save_options") as save, patch.object(view, "ai_turns") as ai:
+        view.close_overlay()
+    assert view.overlay is None
+    assert view.state == pygame_gui.GameState.PLAYING
+    save.assert_called_once()
+    ai.assert_called_once()
+    pygame.quit()
+
+
+def test_save_game_warning_on_oserror(tmp_path, caplog):
+    view, _ = make_view()
+    save_path = tmp_path / "save.json"
+    with patch.object(pygame_gui, "SAVE_FILE", save_path):
+        with patch("builtins.open", side_effect=OSError("nope")):
+            before = view.game.to_dict()
+            with caplog.at_level(logging.WARNING):
+                view.save_game()
+    assert "Failed to save game" in caplog.text
+    assert view.game.to_dict() == before
+    pygame.quit()
+
+
+def test_load_game_warning_on_oserror(tmp_path, caplog):
+    view, _ = make_view()
+    load_path = tmp_path / "save.json"
+    with patch.object(pygame_gui, "SAVE_FILE", load_path):
+        with patch("pathlib.Path.exists", return_value=True), patch(
+            "builtins.open", side_effect=OSError("nope")
+        ):
+            before = view.game.to_dict()
+            with caplog.at_level(logging.WARNING):
+                view.load_game()
+    assert "Failed to load game" in caplog.text
+    assert view.game.to_dict() == before
+    pygame.quit()
+
