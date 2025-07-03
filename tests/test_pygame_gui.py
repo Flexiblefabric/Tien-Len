@@ -273,12 +273,11 @@ def test_animate_sprites_moves_to_destination():
 def test_animate_back_moves_to_destination():
     view, clock = make_view()
     view.screen = MagicMock()
-    rect = pygame.Rect(0, 0, 1, 1)
-    img = MagicMock()
-    img.get_rect.return_value = rect
-    with patch.object(pygame_gui, "get_card_back", return_value=img):
+    img = pygame.Surface((1, 1))
+    with patch.object(pygame_gui.animations, "get_card_back", return_value=img):
         with patch("pygame.event.pump"), patch("pygame.display.flip"):
             view._animate_back((0, 0), (10, 5), frames=4)
+    rect = view.screen.blit.call_args_list[-1].args[1]
     assert rect.center == (10, 5)
     assert clock.count == 10
     pygame.quit()
