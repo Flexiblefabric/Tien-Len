@@ -20,6 +20,8 @@ from .helpers import (
     ZONE_GUTTER,
     AVATAR_DIR,
     AVATAR_SIZE,
+    OPTIONS_FILE,
+    SAVE_FILE,
     GameState,
     calc_start_and_overlap,
     calc_hand_layout,
@@ -27,7 +29,6 @@ from .helpers import (
     list_table_textures,
     load_card_images,
     get_card_image,
-    get_card_back,
     CardSprite,
     CardBackSprite,
     draw_glow,
@@ -53,10 +54,8 @@ from .animations import AnimationMixin
 
 logger = logging.getLogger(__name__)
 
-
 class GameView(AnimationMixin):
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
-
 
     def __init__(self, width: int = 1024, height: int = 768) -> None:
         pygame.init()

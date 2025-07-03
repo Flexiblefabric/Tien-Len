@@ -3,17 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Tuple, List, Callable, Optional
+from typing import Dict, Tuple, List, Optional
 from enum import Enum, auto
-import json
 import logging
-import math
-import types
 
 import pygame
 
-from tien_len_full import Game, Card, detect_combo, Player
-import sound
+from tien_len_full import Card
 
 LOG_FILE = "tien_len_game.log"
 
@@ -292,5 +288,3 @@ class CardBackSprite(pygame.sprite.Sprite):
 # ---------------------------------------------------------------------------
 # Simple button and overlay helpers
 # ---------------------------------------------------------------------------
-
-
