@@ -6,7 +6,13 @@ from typing import List, Tuple, Optional
 
 import pygame
 
-from .helpers import CardSprite, get_card_back
+from .helpers import CardSprite
+
+def get_card_back(*args, **kwargs):
+    """Proxy to pygame_gui.get_card_back for easy patching in tests."""
+    import pygame_gui
+
+    return pygame_gui.get_card_back(*args, **kwargs)
 from .overlays import Overlay
 
 
