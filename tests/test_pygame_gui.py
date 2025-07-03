@@ -1104,6 +1104,7 @@ def test_handle_score_event_dragging():
     view, _ = make_view()
     view.score_visible = True
     view.score_rect = pygame.Rect(10, 10, 20, 20)
+    view.draw_score_overlay()
     with patch.object(view, "_save_options") as save:
         down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (15, 15)})
         assert view._handle_score_event(down) is True
