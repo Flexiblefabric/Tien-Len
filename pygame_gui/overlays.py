@@ -465,7 +465,6 @@ class AudioOverlay(Overlay):
         )
         self.buttons.append(btn)
 
-
 class RulesOverlay(Overlay):
     """Overlay providing toggles for optional house rules."""
 

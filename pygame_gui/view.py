@@ -54,7 +54,6 @@ from .animations import AnimationMixin
 
 logger = logging.getLogger(__name__)
 
-
 class GameView(AnimationMixin):
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
 
