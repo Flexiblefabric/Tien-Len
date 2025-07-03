@@ -6,6 +6,8 @@ This repository contains a simple command line implementation of the
 Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
 interface implemented in `pygame_gui.py`.
 
+This project requires **Python 3.8** or later.
+
 ## Installation
 
 Install the project with `pip` to make the Pygame GUI entry point available:

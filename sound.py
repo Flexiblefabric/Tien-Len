@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Union
 import warnings
 
 try:
@@ -16,7 +17,7 @@ _SOUNDS: dict[str, "pygame.mixer.Sound"] = {}
 _VOLUME = 1.0
 
 
-def load(name: str, path: str | Path) -> bool:
+def load(name: str, path: Union[str, Path]) -> bool:
     """Load a sound effect from ``path`` under ``name``.
 
     Returns ``True`` on success.  Loading does nothing if the mixer is
