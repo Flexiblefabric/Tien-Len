@@ -4,6 +4,7 @@ pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
 import os
+import logging
 from unittest.mock import patch, MagicMock
 
 # Use dummy video driver so no window is opened
@@ -1103,15 +1104,23 @@ def test_profile_overlay_new_profile_added():
 def test_handle_score_event_dragging():
     view, _ = make_view()
     view.score_visible = True
-    view.score_rect = pygame.Rect(10, 10, 20, 20)
+    # Position the score panel so it does not overlap the toggle button.
+    view.score_pos = (50, 10)
     view.draw_score_overlay()
+    start_x, start_y = view.score_pos
     with patch.object(view, "_save_options") as save:
-        down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (15, 15)})
+        down = pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN, {"pos": (start_x + 5, start_y + 5)}
+        )
         assert view._handle_score_event(down) is True
-        move = pygame.event.Event(pygame.MOUSEMOTION, {"pos": (20, 25)})
+        move = pygame.event.Event(
+            pygame.MOUSEMOTION, {"pos": (start_x + 10, start_y + 15)}
+        )
         assert view._handle_score_event(move) is True
-        assert view.score_pos == (15, 20)
-        up = pygame.event.Event(pygame.MOUSEBUTTONUP, {"pos": (20, 25)})
+        assert view.score_pos == (start_x + 5, start_y + 10)
+        up = pygame.event.Event(
+            pygame.MOUSEBUTTONUP, {"pos": (start_x + 10, start_y + 15)}
+        )
         assert view._handle_score_event(up) is True
         save.assert_called_once()
     pygame.quit()
