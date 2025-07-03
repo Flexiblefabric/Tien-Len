@@ -21,7 +21,6 @@ from .helpers import (
     ZONE_GUTTER,
     AVATAR_DIR,
     AVATAR_SIZE,
-    OPTIONS_FILE,
     SAVE_FILE,
     GameState,
     calc_start_and_overlap,
@@ -31,7 +30,6 @@ from .helpers import (
     CardSprite,
     CardBackSprite,
     draw_glow,
-    _mixer_ready,
 )
 from .overlays import (
     Button,
