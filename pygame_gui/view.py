@@ -80,7 +80,7 @@ class GameView(AnimationMixin):
             except Exception:
                 self.table_image = None
         self.main_menu_image: Optional[pygame.Surface] = None
-        menu_path = Path(__file__).with_name("assets") / "main_menu.png"
+        menu_path = Path(__file__).with_name("assets") / "imgs" / "main_menu.png"
         if menu_path.exists():
             try:
                 self.main_menu_image = pygame.image.load(str(menu_path)).convert()

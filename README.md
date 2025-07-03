@@ -105,9 +105,10 @@ pip install -r requirements.txt
 
 ### Showing card images
 
-If an `assets` directory containing PNG card images is present next to
+If an `assets/cards` directory containing PNG card images is present next to
 `pygame_gui.py`, the interface will show graphical cards instead of simple
-text buttons. The repository ships with the required files:
+text buttons. The repository ships with the required files (stored in
+`assets/cards/`):
 
 - `card_back.png` for the back of a card
 - `red_joker.png` and `black_joker.png` for jokers (optional)

@@ -1,1 +1,2 @@
-This directory will store card images for the game.
+This directory stores game assets. Card images are located in the
+`cards/` subdirectory.
