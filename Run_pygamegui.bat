@@ -1,3 +1,3 @@
 @echo off
-python -m pygame_gui %*
+python -m pygame_gui.view %*
 
