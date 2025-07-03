@@ -14,6 +14,7 @@ from .helpers import (
 if TYPE_CHECKING:
     from .view import GameView
 
+
 class Button:
     """Basic rectangular button used by overlays."""
 
@@ -464,6 +465,7 @@ class AudioOverlay(Overlay):
             "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
         )
         self.buttons.append(btn)
+
 
 class RulesOverlay(Overlay):
     """Overlay providing toggles for optional house rules."""
