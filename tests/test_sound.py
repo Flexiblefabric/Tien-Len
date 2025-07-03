@@ -88,3 +88,17 @@ def test_play_handles_errors():
     sound.set_enabled(True)
     sound.play("explode")  # should not raise
     mock_sound.play.assert_called_once()
+
+
+
+def test_load_handles_sound_error(tmp_path):
+    wav = tmp_path / "err.wav"
+    wav.write_text("data")
+    mock_cls = MagicMock(side_effect=Exception("boom"))
+    with patch.object(sound, "pygame", _stub_pygame(mock_cls)):
+        with patch("sound.Path.is_file", return_value=True):
+            sound.set_enabled(True)
+            sound._SOUNDS.clear()
+            assert not sound.load("bad", wav)
+            assert "bad" not in sound._SOUNDS
+
