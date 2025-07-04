@@ -26,6 +26,9 @@ from .helpers import (
     draw_surface_shadow,
     draw_glow,
     _mixer_ready,
+    SHADOW_OFFSET,
+    SHADOW_BLUR,
+    SHADOW_ALPHA,
 )
 from .animations import AnimationMixin
 from .overlays import (
@@ -55,5 +58,6 @@ __all__ = [
     'draw_surface_shadow', 'draw_glow', '_mixer_ready', 'AnimationMixin', 'Button', 'Overlay', 'MainMenuOverlay',
     'InGameMenuOverlay', 'SettingsOverlay', 'GameSettingsOverlay', 'GraphicsOverlay',
     'AudioOverlay', 'RulesOverlay', 'HowToPlayOverlay', 'TutorialOverlay', 'SavePromptOverlay',
-    'ProfileOverlay', 'GameOverOverlay', 'GameView', 'main'
+    'ProfileOverlay', 'GameOverOverlay', 'GameView', 'main',
+    'SHADOW_OFFSET', 'SHADOW_BLUR', 'SHADOW_ALPHA'
 ]
