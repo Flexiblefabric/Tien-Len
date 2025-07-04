@@ -46,6 +46,11 @@ def get_font(size: int) -> pygame.font.Font:
     return _FONT_CACHE[size]
 
 
+def clear_font_cache() -> None:
+    """Clear any cached fonts."""
+    _FONT_CACHE.clear()
+
+
 TABLE_THEMES = {
     "darkgreen": (0, 100, 0),
     "saddlebrown": (139, 69, 19),

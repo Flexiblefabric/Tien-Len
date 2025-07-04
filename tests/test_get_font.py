@@ -19,7 +19,7 @@ def test_get_font_initializes_pygame_font(monkeypatch):
     monkeypatch.setattr(pygame.font, "SysFont", lambda name, size: DummyFont())
 
     # Clear any cached fonts so the function creates a new one
-    pygame_gui._FONT_CACHE.clear()
+    pygame_gui.clear_font_cache()
 
     pygame_gui.get_font(12)
     assert calls == [True]
