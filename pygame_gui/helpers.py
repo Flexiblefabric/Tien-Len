@@ -119,6 +119,10 @@ def calc_hand_layout(screen_width: int, card_width: int, count: int) -> tuple[in
 
 _CARD_CACHE: Dict[Tuple[str, int], pygame.Surface] = {}
 _BASE_IMAGES: Dict[str, pygame.Surface] = {}
+# Cache for card shadow surfaces keyed by (width, height)
+_SHADOW_CACHE: Dict[Tuple[int, int], pygame.Surface] = {}
+# Track the size currently used to build cached shadows
+_SHADOW_SIZE: Tuple[int, int] | None = None
 
 
 def list_card_back_colors() -> List[str]:
@@ -177,6 +181,16 @@ def load_card_images(width: int = 80) -> None:
         _CARD_CACHE[(key, width)] = pygame.transform.smoothscale(
             base, (width, int(base.get_height() * ratio))
         )
+
+    # Rebuild the shadow cache when card sizes change
+    global _SHADOW_CACHE, _SHADOW_SIZE
+    if _BASE_IMAGES:
+        sample = next(iter(_BASE_IMAGES.values()))
+        ratio = sample.get_height() / sample.get_width()
+        size = (width, int(width * ratio))
+        if size != _SHADOW_SIZE:
+            _SHADOW_CACHE.clear()
+            _SHADOW_SIZE = size
 
 
 def get_card_back(name: str = "card_back", width: int = 80) -> Optional[pygame.Surface]:
@@ -248,8 +262,14 @@ class CardSprite(pygame.sprite.Sprite):
         alpha: int = 80,
     ) -> None:
         """Draw a simple blurred shadow beneath the card."""
-        shadow = pygame.Surface(self.image.get_size(), pygame.SRCALPHA)
-        shadow.fill((0, 0, 0))
+        global _SHADOW_CACHE
+        size = self.image.get_size()
+        base = _SHADOW_CACHE.get(size)
+        if base is None:
+            base = pygame.Surface(size, pygame.SRCALPHA)
+            base.fill((0, 0, 0))
+            _SHADOW_CACHE[size] = base
+        shadow = base.copy()
         shadow.set_alpha(alpha)
         for dx in range(-blur, blur + 1):
             for dy in range(-blur, blur + 1):
