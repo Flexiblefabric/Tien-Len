@@ -24,6 +24,8 @@ from .helpers import (
     AVATAR_SIZE,
     ASSETS_DIR,
     SAVE_FILE,
+    ZONE_BG,
+    ZONE_HIGHLIGHT,
     GameState,
     calc_start_and_overlap,
     calc_hand_layout,
@@ -244,6 +246,23 @@ class GameView(AnimationMixin):
     def _pile_center(self) -> Tuple[int, int]:
         w, h = self.screen.get_size()
         return w // 2, self.pile_y
+
+    def _player_zone_rect(self, idx: int) -> pygame.Rect:
+        """Return a rect covering the on-screen zone for player ``idx``."""
+        if idx == 0:
+            sprites = self.hand_sprites.sprites()
+        else:
+            if idx - 1 < len(self.ai_sprites):
+                sprites = self.ai_sprites[idx - 1].sprites()
+            else:
+                sprites = []
+        if not sprites:
+            return pygame.Rect(0, 0, 0, 0)
+        left = min(sp.rect.left for sp in sprites)
+        top = min(sp.rect.top for sp in sprites)
+        right = max(sp.rect.right for sp in sprites)
+        bottom = max(sp.rect.bottom for sp in sprites)
+        return pygame.Rect(left, top, right - left, bottom - top)
 
     def _hud_box(
         self,
@@ -911,6 +930,16 @@ class GameView(AnimationMixin):
         sprites = self.hand_sprites.sprites()
         card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
         spacing = min(40, card_w)
+
+        # Draw semi-transparent zones behind each player's hand
+        for idx in range(len(self.game.players)):
+            rect = self._player_zone_rect(idx)
+            if rect.width and rect.height:
+                zone = pygame.Surface(rect.size, pygame.SRCALPHA)
+                zone.fill(ZONE_BG)
+                self.screen.blit(zone, rect.topleft)
+                if idx == self.game.current_idx:
+                    draw_glow(self.screen, rect, ZONE_HIGHLIGHT)
 
         # Draw shadows first for a little depth
         for sp in self.hand_sprites.sprites():
