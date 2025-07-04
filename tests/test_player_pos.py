@@ -20,8 +20,11 @@ def make_view(width=200, height=200):
     pygame.init()
     pygame.font.init()
     pygame.display.init()
+    pygame_gui.clear_font_cache()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(width, height)
     # Avoid GUI operations during tests

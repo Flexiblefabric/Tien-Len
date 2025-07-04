@@ -23,3 +23,26 @@ def test_get_font_initializes_pygame_font(monkeypatch):
 
     pygame_gui.get_font(12)
     assert calls == [True]
+
+
+def test_get_font_reinitializes_after_quit(monkeypatch):
+    pygame.font.init()
+    monkeypatch.setattr(pygame.font, "SysFont", lambda name, size: DummyFont())
+    pygame_gui.clear_font_cache()
+
+    first = pygame_gui.get_font(12)
+    pygame.font.quit()
+
+    calls = []
+    orig_init = pygame.font.init
+
+    def fake_init():
+        calls.append(True)
+        orig_init()
+
+    monkeypatch.setattr(pygame.font, "init", fake_init)
+
+    second = pygame_gui.get_font(12)
+
+    assert calls == [True]
+    assert second is not first

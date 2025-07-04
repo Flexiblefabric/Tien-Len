@@ -26,9 +26,12 @@ def make_view():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
+    pygame_gui.clear_font_cache()
     clock = DummyClock()
     with patch('pygame.display.set_mode', return_value=pygame.Surface((1, 1))):
-        with patch('pygame_gui.get_font', return_value=DummyFont()):
+        with patch('pygame_gui.view.get_font', return_value=DummyFont()), patch(
+            'pygame_gui.helpers.get_font', return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, 'load_card_images'):
                 with patch('pygame.time.Clock', return_value=clock):
                     with patch.object(pygame_gui.GameView, '_highlight_turn'):
