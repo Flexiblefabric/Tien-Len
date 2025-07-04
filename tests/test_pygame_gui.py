@@ -5,6 +5,7 @@ pytest.importorskip("pygame")
 
 import os
 import logging
+import math
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
@@ -439,9 +440,10 @@ def test_animate_sprites_moves_to_destination():
     view, clock = make_view()
     sprite = DummySprite()
     with patch("pygame.event.pump"), patch("pygame.display.flip"):
-        view._animate_sprites([sprite], (10, 15), frames=3)
+        view._draw_frame = MagicMock()
+        view._animate_sprites([sprite], (10, 15), frames=3, dt=1 / 60)
     assert sprite.rect.center == (10, 15)
-    assert clock.count == 3
+    assert view._draw_frame.call_count == 3
     pygame.quit()
 
 
@@ -451,10 +453,11 @@ def test_animate_back_moves_to_destination():
     img = pygame.Surface((1, 1))
     with patch.object(pygame_gui.animations, "get_card_back", return_value=img):
         with patch("pygame.event.pump"), patch("pygame.display.flip"):
-            view._animate_back((0, 0), (10, 5), frames=4)
+            view._draw_frame = MagicMock()
+            view._animate_back((0, 0), (10, 5), frames=4, dt=1 / 60)
     rect = view.screen.blit.call_args_list[-1].args[1]
     assert rect.center == (10, 5)
-    assert clock.count == 10
+    assert view._draw_frame.call_count == 10
     pygame.quit()
 
 
@@ -465,9 +468,10 @@ def test_animate_flip_moves_to_destination():
     with patch.object(
         pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))
     ), patch("pygame.event.pump"), patch("pygame.display.flip"):
-        view._animate_flip([sprite], (10, 5), frames=4)
+        view._draw_frame = MagicMock()
+        view._animate_flip([sprite], (10, 5), frames=4, dt=1 / 60)
     assert sprite.rect.center == (10, 5)
-    assert clock.count == 10
+    assert view._draw_frame.call_count == 10
     pygame.quit()
 
 
@@ -481,11 +485,12 @@ def test_highlight_turn_draws_at_player_position():
     ), patch("pygame.display.flip"), patch("pygame.draw.circle"), patch.object(
         view, "_player_pos", return_value=(50, 100)
     ) as pos:
-        view._highlight_turn(0, frames=2)
+        view._draw_frame = MagicMock()
+        view._highlight_turn(0, frames=2, dt=1 / 60)
     pos.assert_called_with(0)
     topleft = (50 - 70, 100 - 30)
     view.screen.blit.assert_called_with(overlay_surface, topleft)
-    assert clock.count == 2
+    assert view._draw_frame.call_count == 2
     pygame.quit()
 
 
@@ -514,8 +519,10 @@ def test_animate_sprites_speed():
     sprite.rect = sprite.image.get_rect()
     with patch("pygame.event.pump"), patch("pygame.display.flip"):
         view.animation_speed = 2.0
-        view._animate_sprites([sprite], (0, 0), frames=10)
-        assert clock.count == 5
+        view._draw_frame = MagicMock()
+        view._animate_sprites([sprite], (0, 0), frames=10, dt=1 / 60)
+        expected = math.ceil(10 / view.animation_speed)
+        assert view._draw_frame.call_count == expected
     pygame.quit()
 
 
@@ -524,8 +531,10 @@ def test_animate_back_speed():
     with patch.object(pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))):
         with patch("pygame.event.pump"), patch("pygame.display.flip"):
             view.animation_speed = 0.5
-            view._animate_back((0, 0), (1, 1), frames=10)
-            assert clock.count == 32
+            view._draw_frame = MagicMock()
+            view._animate_back((0, 0), (1, 1), frames=10, dt=1 / 60)
+            expected = math.ceil(10 / view.animation_speed) + math.ceil(6 / view.animation_speed)
+            assert view._draw_frame.call_count == expected
     pygame.quit()
 
 
@@ -533,8 +542,10 @@ def test_highlight_turn_speed():
     view, clock = make_view()
     with patch("pygame.event.pump"), patch("pygame.display.flip"):
         view.animation_speed = 2.0
-        view._highlight_turn(0, frames=10)
-        assert clock.count == 5
+        view._draw_frame = MagicMock()
+        view._highlight_turn(0, frames=10, dt=1 / 60)
+        expected = math.ceil(10 / view.animation_speed)
+        assert view._draw_frame.call_count == expected
     pygame.quit()
 
 
