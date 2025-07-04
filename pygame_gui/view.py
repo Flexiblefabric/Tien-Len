@@ -35,6 +35,7 @@ from .helpers import (
     CardBackSprite,
     draw_surface_shadow,
     draw_glow,
+    load_button_images,
 )
 from .overlays import (
     Button,
@@ -362,21 +363,30 @@ class GameView(AnimationMixin):
             y = max_y
 
         font = self.font
+        play_imgs = load_button_images("button_play")
+        pass_imgs = load_button_images("button_pass")
+        undo_imgs = load_button_images("button_undo")
         self.action_buttons = [
             Button(
-                "Play", pygame.Rect(start_x, y, btn_w, BUTTON_HEIGHT), self.play_selected, font
+                "Play",
+                pygame.Rect(start_x, y, btn_w, BUTTON_HEIGHT),
+                self.play_selected,
+                font,
+                **play_imgs,
             ),
             Button(
                 "Pass",
                 pygame.Rect(start_x + btn_w + spacing, y, btn_w, BUTTON_HEIGHT),
                 self.pass_turn,
                 font,
+                **pass_imgs,
             ),
             Button(
                 "Undo",
                 pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, BUTTON_HEIGHT),
                 self.undo_move,
                 font,
+                **undo_imgs,
             ),
         ]
 
@@ -385,8 +395,13 @@ class GameView(AnimationMixin):
         w, _ = self.screen.get_size()
         font = self.font
         if not hasattr(self, "settings_button"):
+            imgs = load_button_images("button_settings")
             self.settings_button = Button(
-                "Settings", pygame.Rect(0, 0, 100, 40), self.show_in_game_menu, font
+                "Settings",
+                pygame.Rect(0, 0, 100, 40),
+                self.show_in_game_menu,
+                font,
+                **imgs,
             )
         else:
             self.settings_button.callback = self.show_in_game_menu

@@ -202,6 +202,30 @@ def test_card_sprite_draw_shadow_blits():
     pygame.quit()
 
 
+def test_button_draw_uses_nine_patch():
+    pygame.display.init()
+    rect = pygame.Rect(0, 0, 10, 10)
+    surf = pygame.Surface((20, 20))
+    btn = pygame_gui.overlays.Button(
+        "Play",
+        rect,
+        lambda: None,
+        DummyFont(),
+        **{
+            "idle_image": pygame.Surface((5, 5)),
+            "hover_image": pygame.Surface((5, 5)),
+            "pressed_image": pygame.Surface((5, 5)),
+        },
+    )
+    with patch.object(pygame_gui.overlays, "draw_nine_patch") as nine, patch(
+        "pygame.draw.rect"
+    ) as rect_draw:
+        btn.draw(surf)
+    nine.assert_called_once()
+    rect_draw.assert_not_called()
+    pygame.quit()
+
+
 def test_card_sprite_draw_shadow_uses_default_constants():
     pygame.display.init()
     with patch("pygame.font.SysFont", return_value=DummyFont()):
