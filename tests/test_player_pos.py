@@ -19,7 +19,7 @@ class DummyFont:
 def make_view(width=200, height=200):
     pygame.display.init()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
-        with patch("pygame.font.SysFont", return_value=DummyFont()):
+        with patch("pygame_gui.get_font", return_value=DummyFont()):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(width, height)
     # Avoid GUI operations during tests
