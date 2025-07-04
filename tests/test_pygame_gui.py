@@ -6,6 +6,7 @@ pytest.importorskip("pygame")
 import os
 import logging
 from unittest.mock import patch, MagicMock
+from pathlib import Path
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -198,6 +199,36 @@ def test_card_sprite_draw_shadow_blits():
     surf = MagicMock()
     sprite.draw_shadow(surf)
     assert surf.blit.call_count > 0
+    pygame.quit()
+
+
+def test_draw_shadow_cache_cleared_on_size_change():
+    pygame.display.init()
+    from pygame_gui import helpers as h
+
+    h._SHADOW_CACHE.clear()
+    h._SHADOW_SIZE = None
+
+    with patch("pygame.font.SysFont", return_value=DummyFont()):
+        with patch.object(
+            pygame_gui,
+            "get_card_image",
+            return_value=pygame.Surface((2, 3), pygame.SRCALPHA),
+        ):
+            sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 2)
+
+    surf = pygame.Surface((10, 10))
+    sprite.draw_shadow(surf)
+    size = sprite.image.get_size()
+    assert size in h._SHADOW_CACHE
+
+    # Prepare fake base images for load_card_images
+    h._BASE_IMAGES.clear()
+    h._BASE_IMAGES["dummy"] = pygame.Surface((10, 14))
+    with patch.object(Path, "glob", return_value=[]):
+        pygame_gui.load_card_images(5)
+
+    assert not h._SHADOW_CACHE
     pygame.quit()
 
 
