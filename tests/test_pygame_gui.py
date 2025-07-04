@@ -616,12 +616,16 @@ def test_toggle_fullscreen_sets_flags_and_rescales():
                     set_mode.reset_mock()
 
                     view.toggle_fullscreen()
-                    set_mode.assert_called_with((300, 200), pygame.FULLSCREEN)
+                    set_mode.assert_called_with(
+                        (300, 200), pygame.FULLSCREEN | pygame.DOUBLEBUF
+                    )
                     load_images.assert_called_with(view.card_width)
                     fs_width = view.card_width
 
                     view.toggle_fullscreen()
-                    set_mode.assert_called_with((300, 200), pygame.RESIZABLE)
+                    set_mode.assert_called_with(
+                        (300, 200), pygame.RESIZABLE | pygame.DOUBLEBUF
+                    )
                     assert load_images.call_args_list[-1][0][0] == view.card_width
                     assert view.card_width == fs_width  # width unchanged for same size
     pygame.quit()
@@ -735,7 +739,7 @@ def test_on_resize_updates_screen_size():
         view, "_create_action_buttons"
     ) as cab:
         view.on_resize(300, 200)
-    sm.assert_called_with((300, 200), pygame.RESIZABLE)
+    sm.assert_called_with((300, 200), pygame.RESIZABLE | pygame.DOUBLEBUF)
     uh.assert_called_once()
     cab.assert_called_once()
 
