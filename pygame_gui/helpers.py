@@ -65,6 +65,10 @@ BUTTON_HEIGHT = 40
 ZONE_GUTTER = 10
 AVATAR_DIR = ASSETS_DIR / "avatars"
 AVATAR_SIZE = 40
+# Background colour for player hand zones
+ZONE_BG = (0, 0, 0, 100)
+# Glow color for the active player's zone
+ZONE_HIGHLIGHT = (255, 255, 0)
 
 # Helper for positioning card sequences
 

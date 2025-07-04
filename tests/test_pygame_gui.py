@@ -261,6 +261,36 @@ def test_draw_players_labels_use_padding():
     assert calls[3].args[1].midright == (150 - pad_h, 100)
 
 
+def test_player_zone_rect_returns_union():
+    view, _ = make_view()
+    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
+    rects = [pygame.Rect(1, 2, 4, 5), pygame.Rect(4, 10, 2, 3)]
+    sprites = [DummySprite() for _ in rects]
+    for sp, r in zip(sprites, rects):
+        sp.rect = r
+    view.hand_sprites.add(*sprites)
+    zone = view._player_zone_rect(0)
+    assert zone.topleft == (1, 2)
+    assert zone.bottomright == (6, 13)
+
+
+def test_draw_players_highlights_active_zone():
+    view, _ = make_view()
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (100, 100)
+    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
+    zone = pygame.Rect(0, 0, 10, 10)
+    with patch.object(view, "_player_zone_rect", return_value=zone), patch.object(
+        pygame_gui.view, "draw_glow"
+    ) as glow:
+        view.game.current_idx = 2
+        view.draw_players()
+    assert glow.call_count == 1
+    glow.assert_called_with(view.screen, zone, pygame_gui.ZONE_HIGHLIGHT)
+
+
 def test_animate_sprites_moves_to_destination():
     view, clock = make_view()
     sprite = DummySprite()
