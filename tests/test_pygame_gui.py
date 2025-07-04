@@ -38,8 +38,11 @@ def make_view():
     pygame.font.init()
     pygame.display.init()
     clock = DummyClock()
+    pygame_gui.clear_font_cache()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 with patch("pygame.time.Clock", return_value=clock):
                     view = pygame_gui.GameView(1, 1)
@@ -52,7 +55,9 @@ def test_update_hand_sprites():
     pygame.font.init()
     pygame.display.init()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(1, 1)
                 view.update_hand_sprites()
@@ -195,7 +200,9 @@ def test_card_sprite_draw_shadow_blits():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("pygame_gui.get_font", return_value=DummyFont()):
+    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "pygame_gui.view.get_font", return_value=DummyFont()
+    ):
         with patch.object(
             pygame_gui,
             "get_card_image",
@@ -238,7 +245,9 @@ def test_card_sprite_draw_shadow_uses_default_constants():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("pygame_gui.get_font", return_value=DummyFont()):
+    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "pygame_gui.view.get_font", return_value=DummyFont()
+    ):
         with patch.object(
             pygame_gui,
             "get_card_image",
@@ -273,7 +282,9 @@ def test_draw_shadow_cache_cleared_on_size_change():
     h._SHADOW_CACHE.clear()
     h._SHADOW_SIZE = None
 
-    with patch("pygame_gui.get_font", return_value=DummyFont()):
+    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "pygame_gui.view.get_font", return_value=DummyFont()
+    ):
         with patch.object(
             pygame_gui,
             "get_card_image",
@@ -343,7 +354,9 @@ def test_draw_glow_blits():
 
 def test_draw_players_uses_draw_shadow():
     view, _ = make_view()
-    with patch("pygame_gui.get_font", return_value=DummyFont()):
+    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "pygame_gui.view.get_font", return_value=DummyFont()
+    ):
         with patch.object(
             pygame_gui,
             "get_card_image",
@@ -555,7 +568,9 @@ def test_on_resize_rebuilds_sprites():
     surf_large = pygame.Surface((650, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(
                 pygame_gui, "load_card_images"
             ) as load_images, patch.object(
@@ -585,7 +600,9 @@ def test_toggle_fullscreen_sets_flags_and_rescales():
     surf = pygame.Surface((300, 200))
     set_mode = MagicMock(return_value=surf)
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(
                 pygame_gui, "load_card_images"
             ) as load_images, patch.object(
@@ -695,7 +712,9 @@ def test_apply_options_updates_game_and_audio():
 
 def test_toggle_fullscreen_flag_toggles():
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 with patch("pygame.display.toggle_fullscreen"):
                     view = pygame_gui.GameView(100, 100)
@@ -729,7 +748,9 @@ def test_on_resize_repositions_layout():
     surf_large = pygame.Surface((600, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"), patch.object(
                 pygame_gui,
                 "get_card_image",
@@ -780,7 +801,9 @@ def test_resize_keeps_sprites_within_margins():
     surf_large = pygame.Surface((600, 600))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"), patch.object(
                 pygame_gui,
                 "get_card_image",
@@ -825,7 +848,9 @@ def test_vertical_spacing_changes_on_resize():
     surf_large = pygame.Surface((600, 600))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(
                 pygame_gui, "load_card_images"
             ), patch.object(
@@ -902,7 +927,7 @@ def test_draw_frame_with_overlay():
         "pygame.display.flip"
     ) as flip, patch("pygame.Surface", return_value=overlay_surface), patch.object(
         view.score_button, "draw"
-    ):
+    ), patch("pygame_gui.view.draw_nine_patch"):
         pygame_gui.GameView._draw_frame(view)
     blit.assert_any_call(overlay_surface, (0, 0))
     flip.assert_called_once()
@@ -1183,12 +1208,15 @@ def test_on_resize_recreates_font():
     pygame.display.init()
     sizes = []
 
-    def fake_font(name, size):
+    def fake_font(*args):
+        size = args[-1]
         sizes.append(size)
         return DummyFont()
 
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.get_font", side_effect=fake_font):
+        with patch("pygame_gui.view.get_font", side_effect=fake_font), patch(
+            "pygame_gui.helpers.get_font", side_effect=fake_font
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(100, 100)
                 first = sizes[-1]
@@ -1210,13 +1238,16 @@ def test_overlay_font_changes_after_resize():
     pygame.display.init()
     sizes = []
 
-    def fake_font(name, size):
+    def fake_font(*args):
+        size = args[-1]
         sizes.append(size)
         return DummyFont()
 
     surf = pygame.Surface((100, 100))
     with patch("pygame.display.set_mode", return_value=surf):
-        with patch("pygame_gui.get_font", side_effect=fake_font):
+        with patch("pygame_gui.view.get_font", side_effect=fake_font), patch(
+            "pygame_gui.helpers.get_font", side_effect=fake_font
+        ):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(100, 100)
                 overlay = pygame_gui.SavePromptOverlay(view, lambda: None, "Quit")
@@ -1256,7 +1287,9 @@ def test_overlay_buttons_reposition_after_resize(show_fn, args):
     surf_large = pygame.Surface((600, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.get_font", return_value=DummyFont()):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
             with patch.object(pygame_gui, "load_card_images"), patch.object(
                 pygame_gui,
                 "get_card_image",
