@@ -745,7 +745,7 @@ def test_resize_keeps_sprites_within_margins():
 
                 w, h = view.screen.get_size()
                 card_w = view.card_width
-                margin_h = pygame_gui.HORIZONTAL_MARGIN
+                margin_h = pygame_gui.horizontal_margin(card_w)
                 margin_v = min(60, max(40, int(card_w * 0.75)))
 
                 hand = view.hand_sprites.sprites()
@@ -990,14 +990,15 @@ def test_calc_hand_layout_wraps_start_and_spacing():
     card_w = 50
     count = 3
     start, spacing = pygame_gui.calc_hand_layout(width, card_w, count)
+    margin = pygame_gui.horizontal_margin(card_w)
     start_rel, overlap = pygame_gui.calc_start_and_overlap(
-        width - 2 * pygame_gui.HORIZONTAL_MARGIN,
+        width - 2 * margin,
         count,
         card_w,
         25,
         card_w - 5,
     )
-    assert start == start_rel + pygame_gui.HORIZONTAL_MARGIN
+    assert start == start_rel + margin
     assert spacing == card_w - overlap
 
 
