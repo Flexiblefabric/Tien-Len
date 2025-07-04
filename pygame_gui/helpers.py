@@ -73,6 +73,7 @@ def bottom_margin(card_width: int) -> int:
     """Return the bottom margin below the player's hand."""
     return min(60, max(40, int(card_width * 0.75)))
 
+
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
 # Button dimensions and layout spacing

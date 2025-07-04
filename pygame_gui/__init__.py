@@ -52,7 +52,8 @@ from .overlays import (
 from .view import GameView, main
 
 __all__ = [
-    'TABLE_THEMES', 'PLAYER_COLORS', 'HAND_SPACING', 'HORIZONTAL_MARGIN', 'horizontal_margin', 'bottom_margin', 'LABEL_PAD',
+    'TABLE_THEMES', 'PLAYER_COLORS', 'HAND_SPACING', 'HORIZONTAL_MARGIN',
+    'horizontal_margin', 'bottom_margin', 'LABEL_PAD',
     'BUTTON_HEIGHT', 'ZONE_GUTTER', 'AVATAR_DIR', 'AVATAR_SIZE', 'ASSETS_DIR',
     'OPTIONS_FILE', 'SAVE_FILE', 'ZONE_BG', 'ZONE_HIGHLIGHT', 'GameState',
     'calc_start_and_overlap', 'calc_hand_layout', 'list_music_tracks', 'list_table_textures',
