@@ -145,6 +145,8 @@ _BASE_IMAGES: Dict[str, pygame.Surface] = {}
 _SHADOW_CACHE: Dict[Tuple[int, int], pygame.Surface] = {}
 # Track the size currently used to build cached shadows
 _SHADOW_SIZE: Tuple[int, int] | None = None
+# Cache for nine-patch button images
+_NINE_PATCH_CACHE: Dict[str, pygame.Surface] = {}
 
 
 def list_card_back_colors() -> List[str]:
@@ -186,6 +188,70 @@ def _image_key(card: Card) -> str:
     rank = rank_map.get(card.rank, card.rank.lower())
     suit = card.suit.lower()
     return f"{rank}_of_{suit}"
+
+
+def load_nine_patch(name: str) -> pygame.Surface:
+    """Return a nine-patch image from ``assets/buttons``."""
+    if name not in _NINE_PATCH_CACHE:
+        path = ASSETS_DIR / "buttons" / f"{name}.png"
+        img = pygame.image.load(str(path))
+        if pygame.display.get_surface():
+            img = img.convert_alpha()
+        _NINE_PATCH_CACHE[name] = img
+    return _NINE_PATCH_CACHE[name]
+
+
+def load_button_images(prefix: str, alt: bool = False) -> Dict[str, pygame.Surface]:
+    """Load idle/hover/pressed images for a button prefix."""
+    suffix = "_alt" if alt else ""
+    return {
+        "idle_image": load_nine_patch(f"{prefix}_idle{suffix}"),
+        "hover_image": load_nine_patch(f"{prefix}_hover{suffix}"),
+        "pressed_image": load_nine_patch(f"{prefix}_pressed{suffix}"),
+    }
+
+
+def draw_nine_patch(surface: pygame.Surface, img: pygame.Surface, rect: pygame.Rect) -> None:
+    """Draw ``img`` scaled to ``rect`` using a nine-patch split."""
+    w, h = img.get_size()
+    corner = w // 4
+    center_w = w - corner * 2
+    center_h = h - corner * 2
+
+    dw, dh = rect.size
+    c_w = int(corner * dw / w)
+    c_h = int(corner * dh / h)
+
+    pieces = {
+        "tl": pygame.Rect(0, 0, corner, corner),
+        "top": pygame.Rect(corner, 0, center_w, corner),
+        "tr": pygame.Rect(corner + center_w, 0, corner, corner),
+        "left": pygame.Rect(0, corner, corner, center_h),
+        "mid": pygame.Rect(corner, corner, center_w, center_h),
+        "right": pygame.Rect(corner + center_w, corner, corner, center_h),
+        "bl": pygame.Rect(0, corner + center_h, corner, corner),
+        "bottom": pygame.Rect(corner, corner + center_h, center_w, corner),
+        "br": pygame.Rect(corner + center_w, corner + center_h, corner, corner),
+    }
+
+    dests = {
+        "tl": pygame.Rect(rect.left, rect.top, c_w, c_h),
+        "top": pygame.Rect(rect.left + c_w, rect.top, dw - 2 * c_w, c_h),
+        "tr": pygame.Rect(rect.right - c_w, rect.top, c_w, c_h),
+        "left": pygame.Rect(rect.left, rect.top + c_h, c_w, dh - 2 * c_h),
+        "mid": pygame.Rect(rect.left + c_w, rect.top + c_h, dw - 2 * c_w, dh - 2 * c_h),
+        "right": pygame.Rect(rect.right - c_w, rect.top + c_h, c_w, dh - 2 * c_h),
+        "bl": pygame.Rect(rect.left, rect.bottom - c_h, c_w, c_h),
+        "bottom": pygame.Rect(rect.left + c_w, rect.bottom - c_h, dw - 2 * c_w, c_h),
+        "br": pygame.Rect(rect.right - c_w, rect.bottom - c_h, c_w, c_h),
+    }
+
+    for key, srect in pieces.items():
+        drect = dests[key]
+        part = img.subsurface(srect)
+        if part.get_size() != drect.size:
+            part = pygame.transform.smoothscale(part, drect.size)
+        surface.blit(part, drect)
 
 
 def load_card_images(width: int = 80) -> None:

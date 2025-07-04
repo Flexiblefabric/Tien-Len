@@ -9,6 +9,8 @@ from .helpers import (
     get_card_back,
     list_music_tracks,
     TABLE_THEMES,
+    load_button_images,
+    draw_nine_patch,
 )
 
 if TYPE_CHECKING:
@@ -25,30 +27,48 @@ class Button:
         callback: Callable[[], None],
         font: pygame.font.Font,
         enabled: bool = True,
+        idle_image: Optional[pygame.Surface] = None,
+        hover_image: Optional[pygame.Surface] = None,
+        pressed_image: Optional[pygame.Surface] = None,
     ) -> None:
         self.text = text
         self.rect = rect
         self.callback = callback
         self.font = font
         self.enabled = enabled
+        self.idle_image = idle_image
+        self.hover_image = hover_image
+        self.pressed_image = pressed_image
         self.hovered = False
         self.selected = False
 
     def draw(self, surface: pygame.Surface) -> None:
-        if not self.enabled:
-            color = (150, 150, 150)
-            text_color = (100, 100, 100)
-        elif self.selected:
-            color = (255, 220, 120)
-            text_color = (0, 0, 0)
-        elif self.hovered:
-            color = (220, 220, 220)
+        if self.idle_image:
+            if not self.enabled:
+                img = self.idle_image
+            elif self.selected:
+                img = self.pressed_image or self.idle_image
+            elif self.hovered:
+                img = self.hover_image or self.idle_image
+            else:
+                img = self.idle_image
+            draw_nine_patch(surface, img, self.rect)
             text_color = (0, 0, 0)
         else:
-            color = (200, 200, 200)
-            text_color = (0, 0, 0)
-        pygame.draw.rect(surface, color, self.rect)
-        pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
+            if not self.enabled:
+                color = (150, 150, 150)
+                text_color = (100, 100, 100)
+            elif self.selected:
+                color = (255, 220, 120)
+                text_color = (0, 0, 0)
+            elif self.hovered:
+                color = (220, 220, 220)
+                text_color = (0, 0, 0)
+            else:
+                color = (200, 200, 200)
+                text_color = (0, 0, 0)
+            pygame.draw.rect(surface, color, self.rect)
+            pygame.draw.rect(surface, (0, 0, 0), self.rect, 2)
         txt = self.font.render(self.text, True, text_color)
         surface.blit(txt, txt.get_rect(center=self.rect.center))
 
@@ -137,34 +157,46 @@ class MainMenuOverlay(Overlay):
         by = h // 2 - 120
         self.buttons = [
             Button(
-                "New Game", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font
+                "New Game",
+                pygame.Rect(bx, by, 200, 40),
+                self.view.restart_game,
+                font,
+                **load_button_images("button_new_game", alt=True),
             ),
             Button(
                 "Load Game",
                 pygame.Rect(bx, by + 50, 200, 40),
                 self.view.load_game,
                 font,
+                **load_button_images("button_load_game"),
             ),
             Button(
                 "Switch Profile",
                 pygame.Rect(bx, by + 100, 200, 40),
                 self.view.show_profile_select,
                 font,
+                **load_button_images("button_switch_profile"),
             ),
             Button(
                 "Settings",
                 pygame.Rect(bx, by + 150, 200, 40),
                 self.view.show_settings,
                 font,
+                **load_button_images("button_settings"),
             ),
             Button(
                 "How to Play",
                 pygame.Rect(bx, by + 200, 200, 40),
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
+                **load_button_images("button_how_to_play"),
             ),
             Button(
-                "Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font
+                "Quit",
+                pygame.Rect(bx, by + 250, 200, 40),
+                self.view.quit_game,
+                font,
+                **load_button_images("button_quit"),
             ),
         ]
         if self.focus_idx >= len(self.buttons):
@@ -204,6 +236,7 @@ class InGameMenuOverlay(Overlay):
                 pygame.Rect(bx, by + 100, 200, 40),
                 self.view.load_game,
                 font,
+                **load_button_images("button_load_game"),
             ),
             Button(
                 "Game Settings",
@@ -222,6 +255,7 @@ class InGameMenuOverlay(Overlay):
                 pygame.Rect(bx, by + 250, 200, 40),
                 self.view.confirm_quit,
                 font,
+                **load_button_images("button_quit"),
             ),
         ]
         if self.focus_idx >= len(self.buttons):
@@ -270,6 +304,7 @@ class SettingsOverlay(Overlay):
                 pygame.Rect(bx, by + 200, 240, 40),
                 self.view.close_overlay,
                 font,
+                **load_button_images("button_back"),
             ),
         ]
 
@@ -336,7 +371,11 @@ class GameSettingsOverlay(Overlay):
             )
         )
         btn = Button(
-            "Back", pygame.Rect(bx, by + 300, 240, 40), self.view.show_settings, font
+            "Back",
+            pygame.Rect(bx, by + 300, 240, 40),
+            self.view.show_settings,
+            font,
+            **load_button_images("button_back"),
         )
         self.buttons.append(btn)
 
@@ -396,7 +435,11 @@ class GraphicsOverlay(Overlay):
         make_button(150, "colorblind_mode", [False, True], "Colorblind")
         make_button(200, "fullscreen", [False, True], "Fullscreen")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
+            "Back",
+            pygame.Rect(bx, by + 250, 240, 40),
+            self.view.show_settings,
+            font,
+            **load_button_images("button_back"),
         )
         self.buttons.append(btn)
 
@@ -468,7 +511,11 @@ class AudioOverlay(Overlay):
         make_button(150, "music_volume", [0.5, 0.75, 1.0], "Music Vol")
         make_button(200, "music_track", list_music_tracks() or [self.view.music_track], "Track")
         btn = Button(
-            "Back", pygame.Rect(bx, by + 250, 240, 40), self.view.show_settings, font
+            "Back",
+            pygame.Rect(bx, by + 250, 240, 40),
+            self.view.show_settings,
+            font,
+            **load_button_images("button_back"),
         )
         self.buttons.append(btn)
 
@@ -515,7 +562,13 @@ class RulesOverlay(Overlay):
         make_button(0, "rule_flip_suit_rank", "Flip Suit Rank")
         make_button(50, "rule_no_2s", "No 2s in straights")
         self.buttons.append(
-            Button("Back", pygame.Rect(bx, by + 100, 240, 40), self.back_callback, font)
+            Button(
+                "Back",
+                pygame.Rect(bx, by + 100, 240, 40),
+                self.back_callback,
+                font,
+                **load_button_images("button_back"),
+            )
         )
 
 
@@ -535,7 +588,13 @@ class HowToPlayOverlay(Overlay):
         bx = w // 2 - 100
         by = h // 2 + 60
         self.buttons = [
-            Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)
+            Button(
+                "Back",
+                pygame.Rect(bx, by, 200, 40),
+                self.back_callback,
+                font,
+                **load_button_images("button_back"),
+            )
         ]
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -570,7 +629,13 @@ class TutorialOverlay(Overlay):
         bx = w // 2 - 100
         by = h // 2 + 60
         self.buttons = [
-            Button("Back", pygame.Rect(bx, by, 200, 40), self.back_callback, font)
+            Button(
+                "Back",
+                pygame.Rect(bx, by, 200, 40),
+                self.back_callback,
+                font,
+                **load_button_images("button_back"),
+            )
         ]
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -713,7 +778,11 @@ class GameOverOverlay(Overlay):
                 "Play Again", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font
             ),
             Button(
-                "Quit", pygame.Rect(bx, by + 50, 200, 40), self.view.quit_game, font
+                "Quit",
+                pygame.Rect(bx, by + 50, 200, 40),
+                self.view.quit_game,
+                font,
+                **load_button_images("button_quit"),
             ),
         ]
 
