@@ -883,6 +883,7 @@ class GameView(AnimationMixin):
         y = self.hand_y - card_h // 2
         for i, card in enumerate(player.hand):
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
+            sprite.rect.centery = self.hand_y
             self.hand_sprites.add(sprite)
 
         margin_v = bottom_margin(card_w)
