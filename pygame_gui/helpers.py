@@ -70,6 +70,11 @@ ZONE_BG = (0, 0, 0, 100)
 # Glow color for the active player's zone
 ZONE_HIGHLIGHT = (255, 255, 0)
 
+# Shadow drawing defaults
+SHADOW_OFFSET = (5, 5)
+SHADOW_BLUR = 2
+SHADOW_ALPHA = 80
+
 # Helper for positioning card sequences
 
 
@@ -183,7 +188,7 @@ def load_card_images(width: int = 80) -> None:
         )
 
     # Rebuild the shadow cache when card sizes change
-    global _SHADOW_CACHE, _SHADOW_SIZE
+    global _SHADOW_SIZE
     if _BASE_IMAGES:
         sample = next(iter(_BASE_IMAGES.values()))
         ratio = sample.get_height() / sample.get_width()
@@ -257,12 +262,11 @@ class CardSprite(pygame.sprite.Sprite):
     def draw_shadow(
         self,
         surface: pygame.Surface,
-        offset: Tuple[int, int] = (5, 5),
-        blur: int = 2,
-        alpha: int = 80,
+        offset: Tuple[int, int] = SHADOW_OFFSET,
+        blur: int = SHADOW_BLUR,
+        alpha: int = SHADOW_ALPHA,
     ) -> None:
         """Draw a simple blurred shadow beneath the card."""
-        global _SHADOW_CACHE
         size = self.image.get_size()
         base = _SHADOW_CACHE.get(size)
         if base is None:
@@ -281,9 +285,9 @@ def draw_surface_shadow(
     surface: pygame.Surface,
     image: pygame.Surface,
     rect: pygame.Rect,
-    offset: Tuple[int, int] = (5, 5),
-    blur: int = 2,
-    alpha: int = 80,
+    offset: Tuple[int, int] = SHADOW_OFFSET,
+    blur: int = SHADOW_BLUR,
+    alpha: int = SHADOW_ALPHA,
 ) -> None:
     """Draw a simple blurred shadow beneath ``image`` at ``rect``."""
     shadow = pygame.Surface(image.get_size(), pygame.SRCALPHA)
