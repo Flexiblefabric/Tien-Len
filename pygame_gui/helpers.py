@@ -39,6 +39,8 @@ _FONT_CACHE: Dict[int, pygame.font.Font] = {}
 
 def get_font(size: int) -> pygame.font.Font:
     """Return a cached ``pygame.font.Font`` for ``size``."""
+    # Ensure the font module is initialised. Calling ``init`` repeatedly is safe.
+    pygame.font.init()
     if size not in _FONT_CACHE:
         _FONT_CACHE[size] = pygame.font.SysFont(None, size)
     return _FONT_CACHE[size]
