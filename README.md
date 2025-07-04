@@ -159,8 +159,8 @@ Tests that exercise the graphical interfaces require the optional
 tests when the dependencies are not available.
 
 Coverage statistics exclude the GUI module because automated testing of
-its interface is impractical. The `.coveragerc` file lists the
-`pygame_gui` package under the `omit` section.
+its interface is impractical. The `.coveragerc` file lists
+`pygame_gui/*.py` under the `omit` section.
 
 ## Debugging
 
