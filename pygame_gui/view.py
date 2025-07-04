@@ -70,7 +70,8 @@ class GameView(AnimationMixin):
         pygame.display.set_caption("Tiến Lên - Pygame")
         self.window_width = width
         self.window_height = height
-        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        flags = pygame.RESIZABLE | pygame.DOUBLEBUF
+        self.screen = pygame.display.set_mode((width, height), flags)
         self.fullscreen = False
         self.card_width = self._calc_card_width(width)
         self.clock = pygame.time.Clock()
@@ -694,7 +695,11 @@ class GameView(AnimationMixin):
 
     def on_resize(self, width: int, height: int) -> None:
         """Handle window resize by recreating sprites."""
-        flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
+        flags = (
+            pygame.FULLSCREEN | pygame.DOUBLEBUF
+            if self.fullscreen
+            else pygame.RESIZABLE | pygame.DOUBLEBUF
+        )
         self.window_width = width
         self.window_height = height
         self.screen = pygame.display.set_mode((width, height), flags)
@@ -719,7 +724,11 @@ class GameView(AnimationMixin):
         except Exception:
             pass
         self.fullscreen = not getattr(self, "fullscreen", False)
-        flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
+        flags = (
+            pygame.FULLSCREEN | pygame.DOUBLEBUF
+            if self.fullscreen
+            else pygame.RESIZABLE | pygame.DOUBLEBUF
+        )
         size = self.screen.get_size()
         self.window_width, self.window_height = size
         self.screen = pygame.display.set_mode(size, flags)
@@ -1130,7 +1139,7 @@ class GameView(AnimationMixin):
                     self._dispatch_game_event(event)
 
             self._draw_frame()
-            self.clock.tick(30)
+            self.clock.tick(60)
         pygame.quit()
 
 
