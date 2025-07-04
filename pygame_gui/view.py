@@ -75,6 +75,7 @@ class GameView(AnimationMixin):
         self.fullscreen = False
         self.card_width = self._calc_card_width(width)
         self.clock = pygame.time.Clock()
+        self.dt = 1 / 60  # default frame time for tests
         self.animation_speed = 1.0
         self.game = Game()
         self.game.setup()
@@ -849,7 +850,7 @@ class GameView(AnimationMixin):
             sound.play("bomb")
         else:
             sound.play("click")
-        self._animate_flip(list(self.selected), self._pile_center(), self.dt)
+        self._animate_flip(list(self.selected), self._pile_center())
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()

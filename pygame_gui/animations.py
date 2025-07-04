@@ -58,11 +58,14 @@ class AnimationMixin:
         if not sprites:
             return
         duration = (frames / 60) / self.animation_speed
-        half = duration / 2 or 0.01
         originals = [(sp.image, sp.rect.copy()) for sp in sprites]
-        elapsed = 0.0
-        while elapsed < duration:
-            progress = elapsed / half if elapsed < half else (duration - elapsed) / half
+        steps = math.ceil(frames / self.animation_speed)
+        half = max(1, steps // 2)
+        for i in range(steps):
+            if i < half:
+                progress = (i + 1) / half
+            else:
+                progress = (steps - i) / half
             t = max(0.0, min(progress, 1.0))
             factor = 1 + (scale - 1) * t
             for sp, (img, rect) in zip(sprites, originals):
@@ -77,7 +80,6 @@ class AnimationMixin:
                 sp.rect = scaled.get_rect(center=rect.center)
             self._draw_frame()
             pygame.event.pump()
-            elapsed += dt
         # restore originals
         for sp, (img, rect) in zip(sprites, originals):
             sp.image = img
@@ -161,9 +163,9 @@ class AnimationMixin:
         else:
             rect.midright = (x, y)
         duration = (frames / 60) / self.animation_speed
-        elapsed = 0.0
-        while elapsed < duration:
-            progress = elapsed / duration
+        steps = math.ceil(frames / self.animation_speed)
+        for i in range(steps):
+            progress = (i + 1) / steps
             self._draw_frame()
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
             alpha = max(0, 200 - int(progress * 200))
@@ -176,7 +178,6 @@ class AnimationMixin:
             self.screen.blit(overlay, rect.topleft)
             pygame.display.flip()
             pygame.event.pump()
-            elapsed += dt
 
     def _transition_overlay(
         self,
