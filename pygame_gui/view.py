@@ -439,7 +439,7 @@ class GameView(AnimationMixin):
         """Switch to ``overlay`` using a brief transition."""
         old = self.overlay
         if old is not overlay:
-            self._transition_overlay(old, overlay)
+            self._transition_overlay(old, overlay, dt=getattr(self, 'dt', 1 / 60))
         self.overlay = overlay
         self.state = state
 
@@ -791,7 +791,7 @@ class GameView(AnimationMixin):
                 up = not sp.selected
                 sp.toggle()
                 if isinstance(sp, CardSprite):
-                    self._animate_select(sp, up)
+                    self._animate_select(sp, up, self.dt)
                 if sp.selected:
                     self.selected.append(sp)
                 else:
@@ -803,7 +803,7 @@ class GameView(AnimationMixin):
                 up = not sp.selected
                 sp.toggle()
                 if isinstance(sp, CardSprite):
-                    self._animate_select(sp, up)
+                    self._animate_select(sp, up, self.dt)
                 if sp.selected and sp not in self.selected:
                     self.selected.append(sp)
                 elif not sp.selected and sp in self.selected:
@@ -849,11 +849,11 @@ class GameView(AnimationMixin):
             sound.play("bomb")
         else:
             sound.play("click")
-        self._animate_flip(list(self.selected), self._pile_center())
+        self._animate_flip(list(self.selected), self._pile_center(), self.dt)
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
-        self._highlight_turn(self.game.current_idx)
+        self._highlight_turn(self.game.current_idx, dt=self.dt)
         self.ai_turns()
 
     def pass_turn(self):
@@ -861,7 +861,7 @@ class GameView(AnimationMixin):
             self.running = False
         else:
             sound.play("pass")
-            self._highlight_turn(self.game.current_idx)
+            self._highlight_turn(self.game.current_idx, dt=self.dt)
             self.ai_turns()
         if not self.game.pile:
             self.current_trick.clear()
@@ -871,7 +871,7 @@ class GameView(AnimationMixin):
         if self.game.undo_last():
             self.selected.clear()
             self.update_hand_sprites()
-            self._highlight_turn(self.game.current_idx)
+            self._highlight_turn(self.game.current_idx, dt=self.dt)
 
     def ai_turns(self):
         while not self.game.players[self.game.current_idx].is_human:
@@ -894,17 +894,19 @@ class GameView(AnimationMixin):
                 else:
                     sound.play("click")
                 self._animate_back(
-                    self._player_pos(self.game.current_idx), self._pile_center()
+                    self._player_pos(self.game.current_idx),
+                    self._pile_center(),
+                    dt=self.dt,
                 )
             else:
                 sound.play("pass")
                 self.game.process_pass(p)
             self.game.next_turn()
-            self._highlight_turn(self.game.current_idx)
+            self._highlight_turn(self.game.current_idx, dt=self.dt)
             if not self.game.pile:
                 self.current_trick.clear()
         self.update_hand_sprites()
-        self._highlight_turn(self.game.current_idx)
+        self._highlight_turn(self.game.current_idx, dt=self.dt)
 
     # Rendering -------------------------------------------------------
     def update_hand_sprites(self):
@@ -1126,6 +1128,8 @@ class GameView(AnimationMixin):
         self.update_hand_sprites()
         self._highlight_turn(self.game.current_idx)
         while self.running:
+            dt = self.clock.tick(60) / 1000.0
+            self.dt = dt
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
@@ -1139,7 +1143,6 @@ class GameView(AnimationMixin):
                     self._dispatch_game_event(event)
 
             self._draw_frame()
-            self.clock.tick(60)
         pygame.quit()
 
 
