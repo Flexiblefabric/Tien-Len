@@ -146,19 +146,25 @@ class MainMenuOverlay(Overlay):
                 font,
             ),
             Button(
-                "Settings",
+                "Switch Profile",
                 pygame.Rect(bx, by + 100, 200, 40),
+                self.view.show_profile_select,
+                font,
+            ),
+            Button(
+                "Settings",
+                pygame.Rect(bx, by + 150, 200, 40),
                 self.view.show_settings,
                 font,
             ),
             Button(
                 "How to Play",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + 200, 200, 40),
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
             ),
             Button(
-                "Quit", pygame.Rect(bx, by + 200, 200, 40), self.view.quit_game, font
+                "Quit", pygame.Rect(bx, by + 250, 200, 40), self.view.quit_game, font
             ),
         ]
         if self.focus_idx >= len(self.buttons):

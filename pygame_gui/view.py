@@ -185,7 +185,7 @@ class GameView(AnimationMixin):
         self.apply_options()
         self.update_hand_sprites()
         self._create_action_buttons()
-        self.show_profile_select()
+        self.show_menu()
 
     # Animation helpers -------------------------------------------------
     def _draw_frame(self) -> None:
@@ -271,15 +271,21 @@ class GameView(AnimationMixin):
         """Load avatar images for all players if available."""
         self.avatars.clear()
         for p in self.game.players:
-            filename = p.name.lower().replace(" ", "_") + ".png"
-            path = AVATAR_DIR / filename
-            if path.exists():
-                try:
-                    img = pygame.image.load(str(path)).convert_alpha()
-                    img = pygame.transform.smoothscale(img, (AVATAR_SIZE, AVATAR_SIZE))
-                    self.avatars[p.name] = img
-                except Exception:
-                    continue
+            base = p.name.lower().replace(" ", "_")
+            candidates = []
+            if not getattr(p, "is_human", False):
+                candidates.append(base + "_icon.png")
+            candidates.append(base + ".png")
+            for name in candidates:
+                path = AVATAR_DIR / name
+                if path.exists():
+                    try:
+                        img = pygame.image.load(str(path)).convert_alpha()
+                        img = pygame.transform.smoothscale(img, (AVATAR_SIZE, AVATAR_SIZE))
+                        self.avatars[p.name] = img
+                        break
+                    except Exception:
+                        continue
 
     def _avatar_for(self, player: "Player") -> pygame.Surface:
         """Return avatar image or a placeholder with player initials."""
