@@ -33,6 +33,7 @@ from .helpers import (
     list_table_textures,
     CardSprite,
     CardBackSprite,
+    draw_surface_shadow,
     draw_glow,
 )
 from .overlays import (
@@ -1022,6 +1023,7 @@ class GameView(AnimationMixin):
             )
             color = PLAYER_COLORS[player_idx]
             draw_glow(self.screen, rect, color)
+            draw_surface_shadow(self.screen, img, rect)
             self.screen.blit(img, rect)
 
     def draw_score_overlay(self) -> None:
