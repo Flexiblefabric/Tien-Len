@@ -11,7 +11,6 @@ from .helpers import (
     TABLE_THEMES,
     load_button_images,
     draw_nine_patch,
-    get_font,
 )
 
 if TYPE_CHECKING:
@@ -601,17 +600,16 @@ class HowToPlayOverlay(Overlay):
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
         w, h = surface.get_size()
-        font = get_font(self.view._get_font_size())
         lines = [
             "Each player starts with 13 cards.",
             "Play higher combinations to beat opponents.",
             "First to shed all cards wins the round.",
         ]
-        y = h // 2 - 40
-        for line in lines:
-            img = font.render(line, True, (255, 255, 255))
-            surface.blit(img, img.get_rect(center=(w // 2, y)))
-            y += 24
+        panel = self.view._hud_box(
+            lines, padding=10, bg_image=self.view.panel_image
+        )
+        rect = panel.get_rect(center=(w // 2, h // 2 - 20))
+        surface.blit(panel, rect)
 
 
 class TutorialOverlay(Overlay):
@@ -642,17 +640,16 @@ class TutorialOverlay(Overlay):
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
         w, h = surface.get_size()
-        font = get_font(self.view._get_font_size())
         steps = [
             "1. Select cards with mouse or arrow keys.",
             "2. Press Play to submit your move.",
             "3. Beat opponents until you run out of cards.",
         ]
-        y = h // 2 - 40
-        for line in steps:
-            img = font.render(line, True, (255, 255, 255))
-            surface.blit(img, img.get_rect(center=(w // 2, y)))
-            y += 24
+        panel = self.view._hud_box(
+            steps, padding=10, bg_image=self.view.panel_image
+        )
+        rect = panel.get_rect(center=(w // 2, h // 2 - 20))
+        surface.blit(panel, rect)
 
 
 class SavePromptOverlay(Overlay):
@@ -701,10 +698,12 @@ class SavePromptOverlay(Overlay):
 
     def draw(self, surface: pygame.Surface) -> None:
         w, h = surface.get_size()
-        font = get_font(self.view._get_font_size())
         msg = f"Save your game before {self.label.lower()}?"
-        img = font.render(msg, True, (255, 255, 255))
-        surface.blit(img, img.get_rect(center=(w // 2, h // 2 - 60)))
+        panel = self.view._hud_box(
+            [msg], padding=10, bg_image=self.view.panel_image
+        )
+        rect = panel.get_rect(center=(w // 2, h // 2 - 60))
+        surface.blit(panel, rect)
         super().draw(surface)
 
 
@@ -789,13 +788,12 @@ class GameOverOverlay(Overlay):
 
     def draw(self, surface: pygame.Surface) -> None:
         w, h = surface.get_size()
-        font = get_font(self.view._get_font_size())
-        txt = font.render(f"{self.winner} wins!", True, (255, 255, 255))
-        surface.blit(txt, txt.get_rect(center=(w // 2, h // 2 - 60)))
-        rank_lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(self.rankings)]
-        y = h // 2 - 20
-        for line in rank_lines:
-            img = font.render(line, True, (255, 255, 255))
-            surface.blit(img, img.get_rect(center=(w // 2, y)))
-            y += 30
+        lines = [f"{self.winner} wins!"] + [
+            f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(self.rankings)
+        ]
+        panel = self.view._hud_box(
+            lines, padding=10, bg_image=self.view.panel_image
+        )
+        rect = panel.get_rect(center=(w // 2, h // 2 - 20))
+        surface.blit(panel, rect)
         super().draw(surface)

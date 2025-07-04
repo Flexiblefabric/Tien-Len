@@ -34,6 +34,8 @@ class DummyClock:
 
 
 def make_view():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     clock = DummyClock()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
@@ -46,6 +48,8 @@ def make_view():
 
 
 def test_update_hand_sprites():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
         with patch("pygame_gui.get_font", return_value=DummyFont()):
@@ -188,6 +192,8 @@ def test_update_hand_sprites_calls_update_play_button_state():
 
 
 def test_card_sprite_draw_shadow_blits():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     with patch("pygame_gui.get_font", return_value=DummyFont()):
         with patch.object(
@@ -203,6 +209,8 @@ def test_card_sprite_draw_shadow_blits():
 
 
 def test_button_draw_uses_nine_patch():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     rect = pygame.Rect(0, 0, 10, 10)
     surf = pygame.Surface((20, 20))
@@ -227,6 +235,8 @@ def test_button_draw_uses_nine_patch():
 
 
 def test_card_sprite_draw_shadow_uses_default_constants():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     with patch("pygame_gui.get_font", return_value=DummyFont()):
         with patch.object(
@@ -255,6 +265,8 @@ def test_card_sprite_draw_shadow_uses_default_constants():
 
 
 def test_draw_shadow_cache_cleared_on_size_change():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     from pygame_gui import helpers as h
 
@@ -285,6 +297,8 @@ def test_draw_shadow_cache_cleared_on_size_change():
 
 
 def test_draw_surface_shadow_blits():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     target = MagicMock()
     img = pygame.Surface((1, 1), pygame.SRCALPHA)
@@ -295,6 +309,8 @@ def test_draw_surface_shadow_blits():
 
 
 def test_draw_surface_shadow_uses_default_constants():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     target = MagicMock()
     img = pygame.Surface((2, 2), pygame.SRCALPHA)
@@ -315,6 +331,8 @@ def test_draw_surface_shadow_uses_default_constants():
 
 
 def test_draw_glow_blits():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     target = MagicMock()
     rect = pygame.Rect(0, 0, 2, 2)
@@ -530,6 +548,8 @@ def test_state_transitions():
 
 
 def test_on_resize_rebuilds_sprites():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((650, 400))
@@ -559,6 +579,8 @@ def test_on_resize_rebuilds_sprites():
 
 
 def test_toggle_fullscreen_sets_flags_and_rescales():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf = pygame.Surface((300, 200))
     set_mode = MagicMock(return_value=surf)
@@ -700,6 +722,8 @@ def test_on_resize_updates_screen_size():
 
 
 def test_on_resize_repositions_layout():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((600, 400))
@@ -749,6 +773,8 @@ def test_on_resize_repositions_layout():
 
 
 def test_resize_keeps_sprites_within_margins():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((600, 600))
@@ -792,6 +818,8 @@ def test_resize_keeps_sprites_within_margins():
 
 
 def test_vertical_spacing_changes_on_resize():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((600, 600))
@@ -1150,6 +1178,8 @@ def test_on_resize_calls_overlay_resize():
 
 
 def test_on_resize_recreates_font():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     sizes = []
 
@@ -1175,6 +1205,8 @@ def test_on_resize_recreates_font():
 
 
 def test_overlay_font_changes_after_resize():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     sizes = []
 
@@ -1217,6 +1249,8 @@ def test_overlay_font_changes_after_resize():
     ],
 )
 def test_overlay_buttons_reposition_after_resize(show_fn, args):
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     surf_small = pygame.Surface((300, 200))
     surf_large = pygame.Surface((600, 400))
