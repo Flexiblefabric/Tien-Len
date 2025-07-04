@@ -36,6 +36,7 @@ from .helpers import (
     draw_surface_shadow,
     draw_glow,
     load_button_images,
+    get_font,
 )
 from .overlays import (
     Button,
@@ -74,7 +75,7 @@ class GameView(AnimationMixin):
         self.game = Game()
         self.game.setup()
         self._attach_reset_pile()
-        self.font = pygame.font.SysFont(None, self._get_font_size())
+        self.font = get_font(self._get_font_size())
         self.avatars: Dict[str, pygame.Surface] = {}
         import pygame_gui
 
@@ -319,7 +320,7 @@ class GameView(AnimationMixin):
         initials = "".join(part[0] for part in player.name.split())[:2].upper()
         surf = pygame.Surface((AVATAR_SIZE, AVATAR_SIZE), pygame.SRCALPHA)
         pygame.draw.circle(surf, (80, 80, 80), (AVATAR_SIZE // 2, AVATAR_SIZE // 2), AVATAR_SIZE // 2)
-        font = pygame.font.SysFont(None, 20)
+        font = get_font(20)
         text = font.render(initials, True, (255, 255, 255))
         rect = text.get_rect(center=(AVATAR_SIZE // 2, AVATAR_SIZE // 2))
         surf.blit(text, rect)
@@ -692,7 +693,7 @@ class GameView(AnimationMixin):
         import pygame_gui
 
         pygame_gui.load_card_images(self.card_width)
-        self.font = pygame.font.SysFont(None, self._get_font_size())
+        self.font = get_font(self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
         self.update_hand_sprites()
@@ -717,7 +718,7 @@ class GameView(AnimationMixin):
         import pygame_gui
 
         pygame_gui.load_card_images(self.card_width)
-        self.font = pygame.font.SysFont(None, self._get_font_size())
+        self.font = get_font(self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
         self.update_hand_sprites()

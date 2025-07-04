@@ -33,6 +33,17 @@ def _mixer_ready() -> bool:
     return bool(pygame.mixer.get_init())
 
 
+# Cache for pygame Font objects keyed by size
+_FONT_CACHE: Dict[int, pygame.font.Font] = {}
+
+
+def get_font(size: int) -> pygame.font.Font:
+    """Return a cached ``pygame.font.Font`` for ``size``."""
+    if size not in _FONT_CACHE:
+        _FONT_CACHE[size] = pygame.font.SysFont(None, size)
+    return _FONT_CACHE[size]
+
+
 TABLE_THEMES = {
     "darkgreen": (0, 100, 0),
     "saddlebrown": (139, 69, 19),
@@ -321,7 +332,7 @@ class CardSprite(pygame.sprite.Sprite):
         img = pygame_gui.get_card_image(card, width)
         if img is None:
             # Render a text fallback
-            font = pygame.font.SysFont(None, 20)
+            font = get_font(20)
             img = font.render(str(card), True, (0, 0, 0), (255, 255, 255))
 
         border = 2
@@ -417,7 +428,7 @@ class CardBackSprite(pygame.sprite.Sprite):
 
         img = pygame_gui.get_card_back(name, width)
         if img is None:
-            font = pygame.font.SysFont(None, 20)
+            font = get_font(20)
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
         if rotation:
             img = pygame.transform.rotate(img, rotation)

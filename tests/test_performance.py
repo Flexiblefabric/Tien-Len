@@ -31,7 +31,7 @@ def make_view():
     pygame.display.init()
     clock = PerfClock()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame.font.SysFont", return_value=DummyFont()):
+        with patch("pygame_gui.get_font", return_value=DummyFont()):
             with patch.object(pygame_gui, "load_card_images"):
                 with patch("pygame.time.Clock", return_value=clock):
                     view = pygame_gui.GameView(1, 1)
