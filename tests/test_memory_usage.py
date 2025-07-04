@@ -23,6 +23,8 @@ class DummyClock:
 
 
 def make_view():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     clock = DummyClock()
     with patch('pygame.display.set_mode', return_value=pygame.Surface((1, 1))):

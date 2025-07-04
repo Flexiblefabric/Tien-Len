@@ -66,6 +66,7 @@ class GameView(AnimationMixin):
 
     def __init__(self, width: int = 1024, height: int = 768) -> None:
         pygame.init()
+        pygame.font.init()
         pygame.display.set_caption("Tiến Lên - Pygame")
         self.window_width = width
         self.window_height = height

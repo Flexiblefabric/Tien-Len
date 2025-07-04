@@ -9,6 +9,8 @@ try:  # Pygame is optional for some tests
     import pygame
 
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     if pygame.display.get_surface() is None:
         pygame.display.set_mode((1, 1))

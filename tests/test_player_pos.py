@@ -17,6 +17,8 @@ class DummyFont:
 
 
 def make_view(width=200, height=200):
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
         with patch("pygame_gui.get_font", return_value=DummyFont()):

@@ -28,6 +28,8 @@ class PerfClock:
 
 
 def make_view():
+    pygame.init()
+    pygame.font.init()
     pygame.display.init()
     clock = PerfClock()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
