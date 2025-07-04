@@ -19,7 +19,7 @@ class DummyFont:
 
 class DummyClock:
     def tick(self, *args, **kwargs):
-        pass
+        return 16
 
 
 def make_view():

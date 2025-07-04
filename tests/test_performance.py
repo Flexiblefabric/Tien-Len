@@ -25,6 +25,7 @@ class PerfClock:
         now = time.perf_counter()
         self.times.append(now - self.last)
         self.last = now
+        return int((self.times[-1]) * 1000)
 
 
 def make_view():

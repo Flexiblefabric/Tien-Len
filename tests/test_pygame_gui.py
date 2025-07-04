@@ -32,6 +32,7 @@ class DummyClock:
 
     def tick(self, *args, **kwargs):
         self.count += 1
+        return 16
 
 
 def make_view():
