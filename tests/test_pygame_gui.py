@@ -219,14 +219,14 @@ def test_card_sprite_draw_shadow_uses_default_constants():
     h._SHADOW_CACHE[sprite.image.get_size()] = base
     surf = MagicMock()
     sprite.draw_shadow(surf)
-    shadow.set_alpha.assert_called_once_with(pygame_gui.SHADOW_ALPHA)
-    expected = (pygame_gui.SHADOW_BLUR * 2 + 1) ** 2
+    shadow.set_alpha.assert_called_once_with(h.SHADOW_ALPHA)
+    expected = (h.SHADOW_BLUR * 2 + 1) ** 2
     assert surf.blit.call_count == expected
     first = surf.blit.call_args_list[0].args[1]
     dx = first.x - sprite.rect.x
     dy = first.y - sprite.rect.y
-    assert dx == pygame_gui.SHADOW_OFFSET[0] - pygame_gui.SHADOW_BLUR
-    assert dy == pygame_gui.SHADOW_OFFSET[1] - pygame_gui.SHADOW_BLUR
+    assert dx == h.SHADOW_OFFSET[0] - h.SHADOW_BLUR
+    assert dy == h.SHADOW_OFFSET[1] - h.SHADOW_BLUR
     pygame.quit()
 
 
@@ -278,14 +278,15 @@ def test_draw_surface_shadow_uses_default_constants():
     shadow = MagicMock()
     with patch("pygame.Surface", return_value=shadow):
         pygame_gui.draw_surface_shadow(target, img, rect)
-    shadow.set_alpha.assert_called_once_with(pygame_gui.SHADOW_ALPHA)
-    expected = (pygame_gui.SHADOW_BLUR * 2 + 1) ** 2
+    from pygame_gui import helpers as h
+    shadow.set_alpha.assert_called_once_with(h.SHADOW_ALPHA)
+    expected = (h.SHADOW_BLUR * 2 + 1) ** 2
     assert target.blit.call_count == expected
     first = target.blit.call_args_list[0].args[1]
     dx = first.x - rect.x
     dy = first.y - rect.y
-    assert dx == pygame_gui.SHADOW_OFFSET[0] - pygame_gui.SHADOW_BLUR
-    assert dy == pygame_gui.SHADOW_OFFSET[1] - pygame_gui.SHADOW_BLUR
+    assert dx == h.SHADOW_OFFSET[0] - h.SHADOW_BLUR
+    assert dy == h.SHADOW_OFFSET[1] - h.SHADOW_BLUR
     pygame.quit()
 
 
