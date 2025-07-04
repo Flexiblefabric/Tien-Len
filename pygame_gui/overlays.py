@@ -541,7 +541,7 @@ class HowToPlayOverlay(Overlay):
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
         w, h = surface.get_size()
-        font = pygame.font.SysFont(None, 20)
+        font = pygame.font.SysFont(None, self.view._get_font_size())
         lines = [
             "Each player starts with 13 cards.",
             "Play higher combinations to beat opponents.",
@@ -576,7 +576,7 @@ class TutorialOverlay(Overlay):
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
         w, h = surface.get_size()
-        font = pygame.font.SysFont(None, 20)
+        font = pygame.font.SysFont(None, self.view._get_font_size())
         steps = [
             "1. Select cards with mouse or arrow keys.",
             "2. Press Play to submit your move.",
@@ -635,7 +635,7 @@ class SavePromptOverlay(Overlay):
 
     def draw(self, surface: pygame.Surface) -> None:
         w, h = surface.get_size()
-        font = pygame.font.SysFont(None, 24)
+        font = pygame.font.SysFont(None, self.view._get_font_size())
         msg = f"Save your game before {self.label.lower()}?"
         img = font.render(msg, True, (255, 255, 255))
         surface.blit(img, img.get_rect(center=(w // 2, h // 2 - 60)))
@@ -719,7 +719,7 @@ class GameOverOverlay(Overlay):
 
     def draw(self, surface: pygame.Surface) -> None:
         w, h = surface.get_size()
-        font = pygame.font.SysFont(None, 32)
+        font = pygame.font.SysFont(None, self.view._get_font_size())
         txt = font.render(f"{self.winner} wins!", True, (255, 255, 255))
         surface.blit(txt, txt.get_rect(center=(w // 2, h // 2 - 60)))
         rank_lines = [f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(self.rankings)]

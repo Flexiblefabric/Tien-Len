@@ -1125,6 +1125,60 @@ def test_on_resize_calls_overlay_resize():
     overlay.resize.assert_called_once()
 
 
+def test_on_resize_recreates_font():
+    pygame.display.init()
+    sizes = []
+
+    def fake_font(name, size):
+        sizes.append(size)
+        return DummyFont()
+
+    with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
+        with patch("pygame.font.SysFont", side_effect=fake_font):
+            with patch.object(pygame_gui, "load_card_images"):
+                view = pygame_gui.GameView(100, 100)
+                first = sizes[-1]
+                sizes.clear()
+                with patch.object(view, "update_hand_sprites"), patch.object(
+                    view, "_create_action_buttons"
+                ), patch.object(view, "_position_score_button"), patch.object(
+                    view, "_position_settings_button"
+                ):
+                    view.on_resize(300, 300)
+                second = sizes[-1]
+    pygame.quit()
+    assert first != second
+
+
+def test_overlay_font_changes_after_resize():
+    pygame.display.init()
+    sizes = []
+
+    def fake_font(name, size):
+        sizes.append(size)
+        return DummyFont()
+
+    surf = pygame.Surface((100, 100))
+    with patch("pygame.display.set_mode", return_value=surf):
+        with patch("pygame.font.SysFont", side_effect=fake_font):
+            with patch.object(pygame_gui, "load_card_images"):
+                view = pygame_gui.GameView(100, 100)
+                overlay = pygame_gui.SavePromptOverlay(view, lambda: None, "Quit")
+                overlay.draw(surf)
+                before = sizes[-1]
+                sizes.clear()
+                with patch.object(view, "update_hand_sprites"), patch.object(
+                    view, "_create_action_buttons"
+                ), patch.object(view, "_position_score_button"), patch.object(
+                    view, "_position_settings_button"
+                ):
+                    view.on_resize(300, 300)
+                overlay.draw(surf)
+                after = sizes[-1]
+    pygame.quit()
+    assert before != after
+
+
 @pytest.mark.parametrize(
     "show_fn, args",
     [
