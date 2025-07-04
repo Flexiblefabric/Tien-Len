@@ -699,6 +699,7 @@ def test_on_resize_repositions_layout():
                 btn_large_x = [b.rect.x for b in view.action_buttons]
                 btn_large_y = [b.rect.y for b in view.action_buttons]
                 settings_large = view.settings_button.rect.topright
+                hand_center = view.hand_sprites.sprites()[0].rect.centery
 
                 card_w = view.card_width
                 card_h = int(card_w * 1.4)
@@ -715,6 +716,7 @@ def test_on_resize_repositions_layout():
     assert pos_large == expected_pos
     assert btn_large_x[0] == start_x
     assert btn_large_y[0] == expected_y
+    assert hand_center == pos_large[1]
     assert settings_large == expected_settings
     assert pos_small != pos_large
     assert btn_small_x[0] != btn_large_x[0]
