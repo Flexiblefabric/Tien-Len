@@ -201,6 +201,16 @@ def test_card_sprite_draw_shadow_blits():
     pygame.quit()
 
 
+def test_draw_surface_shadow_blits():
+    pygame.display.init()
+    target = MagicMock()
+    img = pygame.Surface((1, 1), pygame.SRCALPHA)
+    rect = img.get_rect()
+    pygame_gui.draw_surface_shadow(target, img, rect)
+    assert target.blit.call_count > 0
+    pygame.quit()
+
+
 def test_draw_glow_blits():
     pygame.display.init()
     target = MagicMock()
@@ -877,6 +887,20 @@ def test_draw_players_displays_trick_linearly():
     for call in calls:
         surf, rect = call.args
         assert rect.center == expected[surf]
+    pygame.quit()
+
+
+def test_draw_center_pile_uses_shadow_helper():
+    view, _ = make_view()
+    img = pygame.Surface((10, 20))
+    view.current_trick = [("P1", img)]
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (100, 100)
+    view.pile_y = 40
+    view.game.pile.append((view.game.players[0], []))
+    with patch.object(pygame_gui.view, "draw_surface_shadow") as shadow:
+        view.draw_center_pile()
+        shadow.assert_called_once()
     pygame.quit()
 
 

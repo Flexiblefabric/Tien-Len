@@ -257,6 +257,24 @@ class CardSprite(pygame.sprite.Sprite):
                 surface.blit(shadow, rect)
 
 
+def draw_surface_shadow(
+    surface: pygame.Surface,
+    image: pygame.Surface,
+    rect: pygame.Rect,
+    offset: Tuple[int, int] = (5, 5),
+    blur: int = 2,
+    alpha: int = 80,
+) -> None:
+    """Draw a simple blurred shadow beneath ``image`` at ``rect``."""
+    shadow = pygame.Surface(image.get_size(), pygame.SRCALPHA)
+    shadow.fill((0, 0, 0))
+    shadow.set_alpha(alpha)
+    for dx in range(-blur, blur + 1):
+        for dy in range(-blur, blur + 1):
+            r = rect.move(offset[0] + dx, offset[1] + dy)
+            surface.blit(shadow, r)
+
+
 def draw_glow(
     surface: pygame.Surface,
     rect: pygame.Rect,
