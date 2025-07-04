@@ -4,7 +4,8 @@
 
 This repository contains a simple command line implementation of the
 Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
-interface implemented in `pygame_gui.py`.
+interface implemented in the `pygame_gui` package and can be launched
+with `python -m pygame_gui`.
 
 This project requires **Python 3.8** or later.
 
@@ -48,13 +49,13 @@ Cards are written as ``<rank><symbol>`` (e.g. ``7♣``). When creating a
 
 ## Pygame GUI
 
-The graphical interface implemented in `pygame_gui.py` renders the
+The graphical interface implemented in the `pygame_gui` package renders the
 table using sprites and simple animations.
 
 Start the Pygame interface with:
 
 ```bash
-python3 pygame_gui.py
+python -m pygame_gui
 ```
 
 Select cards by clicking them and then press **Play Selected**. Press
@@ -106,7 +107,7 @@ pip install -r requirements.txt
 ### Showing card images
 
 If an `assets/cards` directory containing PNG card images is present next to
-`pygame_gui.py`, the interface will show graphical cards instead of simple
+the `pygame_gui` package, the interface will show graphical cards instead of simple
 text buttons. The repository ships with the required files (stored in
 `assets/cards/`):
 
@@ -158,8 +159,8 @@ Tests that exercise the graphical interfaces require the optional
 tests when the dependencies are not available.
 
 Coverage statistics exclude the GUI module because automated testing of
-its interface is impractical. The `.coveragerc` file lists
-`pygame_gui.py` under the `omit` section.
+its interface is impractical. The `.coveragerc` file lists the
+`pygame_gui` package under the `omit` section.
 
 ## Debugging
 
@@ -169,7 +170,7 @@ game logic:
 ```bash
 python -m pdb tien_len_full.py
 # or for the graphical version
-python -m pdb pygame_gui.py
+python -m pdb -m pygame_gui
 ```
 
 If the optional `pgdb` package is installed, it may be used in the same
