@@ -72,7 +72,7 @@ class GameView(AnimationMixin):
         self.game = Game()
         self.game.setup()
         self._attach_reset_pile()
-        self.font = pygame.font.SysFont(None, 24)
+        self.font = pygame.font.SysFont(None, self._get_font_size())
         self.avatars: Dict[str, pygame.Surface] = {}
         import pygame_gui
 
@@ -327,6 +327,10 @@ class GameView(AnimationMixin):
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
+
+    def _get_font_size(self) -> int:
+        """Return a font size scaled to the current card width."""
+        return max(12, self.card_width // 3)
 
     def _update_table_surface(self) -> None:
         """Generate a tiled background surface if a table image is loaded."""
@@ -669,6 +673,7 @@ class GameView(AnimationMixin):
         import pygame_gui
 
         pygame_gui.load_card_images(self.card_width)
+        self.font = pygame.font.SysFont(None, self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
         self.update_hand_sprites()
@@ -692,6 +697,7 @@ class GameView(AnimationMixin):
         import pygame_gui
 
         pygame_gui.load_card_images(self.card_width)
+        self.font = pygame.font.SysFont(None, self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
         self.update_hand_sprites()
