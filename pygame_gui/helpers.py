@@ -56,6 +56,8 @@ SAVE_FILE = USER_DIR / "saved_game.json"
 HAND_SPACING = 20
 # Horizontal margin used when centring hands on screen
 HORIZONTAL_MARGIN = 20
+# Vertical margin below the human player's hand
+BOTTOM_MARGIN = 20
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
 # Button dimensions and layout spacing
