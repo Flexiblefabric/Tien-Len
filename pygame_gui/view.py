@@ -15,7 +15,6 @@ from .helpers import (
     TABLE_THEMES,
     PLAYER_COLORS,
     HAND_SPACING,
-    HORIZONTAL_MARGIN,
     LABEL_PAD,
     BUTTON_HEIGHT,
     ZONE_GUTTER,
