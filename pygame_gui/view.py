@@ -16,7 +16,6 @@ from .helpers import (
     PLAYER_COLORS,
     HAND_SPACING,
     HORIZONTAL_MARGIN,
-    BOTTOM_MARGIN,
     LABEL_PAD,
     BUTTON_HEIGHT,
     ZONE_GUTTER,
@@ -874,7 +873,7 @@ class GameView(AnimationMixin):
         # --- Human player at the bottom ---------------------------------
         player = self.game.players[0]
         start_x, spacing = calc_hand_layout(screen_w, card_w, len(player.hand))
-        y = screen_h - card_h - BOTTOM_MARGIN
+        y = self.hand_y - card_h // 2
         for i, card in enumerate(player.hand):
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
