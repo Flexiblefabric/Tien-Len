@@ -35,6 +35,8 @@ from .helpers import (
     CardBackSprite,
     draw_surface_shadow,
     draw_glow,
+    draw_nine_patch,
+    load_nine_patch,
     load_button_images,
     get_font,
 )
@@ -99,6 +101,8 @@ class GameView(AnimationMixin):
         self._update_table_surface()
         self._layout_zones()
         self._load_avatars()
+        # Shared panel background for HUD and overlays
+        self.panel_image = load_nine_patch("button_back_idle")
         # Load sound effects and background music
         sdir = ASSETS_DIR / "sound"
         sound.load("click", sdir / "card-play.wav")
@@ -275,6 +279,7 @@ class GameView(AnimationMixin):
         text_color: Tuple[int, int, int] = (255, 255, 255),
         padding: int = 5,
         bg_color: Tuple[int, int, int, int] = (0, 0, 0, 150),
+        bg_image: Optional[pygame.Surface] = None,
     ) -> pygame.Surface:
         """Return a surface with ``lines`` rendered on a semi-transparent box."""
         line_height = getattr(self.font, "get_linesize", lambda: 20)()
@@ -285,7 +290,10 @@ class GameView(AnimationMixin):
             width = 0
         height = line_height * len(imgs) + 2 * padding
         panel = pygame.Surface((max(1, width), max(1, height)), pygame.SRCALPHA)
-        panel.fill(bg_color)
+        if bg_image:
+            draw_nine_patch(panel, bg_image, panel.get_rect())
+        else:
+            panel.fill(bg_color)
         y = padding
         for img in imgs:
             panel.blit(img, (padding, y))
@@ -1000,7 +1008,9 @@ class GameView(AnimationMixin):
             x, y = self._player_pos(idx)
             txt = f"{p.name} ({len(p.hand)})"
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
-            panel = self._hud_box([txt], text_color=color, padding=3)
+            panel = self._hud_box(
+                [txt], text_color=color, padding=3, bg_image=self.panel_image
+            )
             avatar = self._avatar_for(p)
             aw, ah = avatar.get_size()
             pw, ph = panel.get_size()
@@ -1069,7 +1079,7 @@ class GameView(AnimationMixin):
                 if cards:
                     text = " ".join(str(c) for c in cards)
                     lines.append(f"{name}: {text}")
-        panel = self._hud_box(lines, padding=5)
+        panel = self._hud_box(lines, padding=5, bg_image=self.panel_image)
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
         if self.score_visible:
