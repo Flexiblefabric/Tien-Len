@@ -63,6 +63,8 @@ class GameView(AnimationMixin):
     def __init__(self, width: int = 1024, height: int = 768) -> None:
         pygame.init()
         pygame.display.set_caption("Tiến Lên - Pygame")
+        self.window_width = width
+        self.window_height = height
         self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         self.fullscreen = False
         self.card_width = self._calc_card_width(width)
@@ -328,8 +330,9 @@ class GameView(AnimationMixin):
         return max(30, win_width // 13)
 
     def _get_font_size(self) -> int:
-        """Return a font size scaled to the current card width."""
-        return max(12, self.card_width // 3)
+        """Return a font size scaled to the current window size."""
+        scale = min(self.window_width, self.window_height) // 20
+        return max(12, scale)
 
     def _update_table_surface(self) -> None:
         """Generate a tiled background surface if a table image is loaded."""
@@ -667,6 +670,8 @@ class GameView(AnimationMixin):
     def on_resize(self, width: int, height: int) -> None:
         """Handle window resize by recreating sprites."""
         flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
+        self.window_width = width
+        self.window_height = height
         self.screen = pygame.display.set_mode((width, height), flags)
         self.card_width = self._calc_card_width(width)
         import pygame_gui
@@ -691,6 +696,7 @@ class GameView(AnimationMixin):
         self.fullscreen = not getattr(self, "fullscreen", False)
         flags = pygame.FULLSCREEN if self.fullscreen else pygame.RESIZABLE
         size = self.screen.get_size()
+        self.window_width, self.window_height = size
         self.screen = pygame.display.set_mode(size, flags)
         self.card_width = self._calc_card_width(size[0])
         import pygame_gui
