@@ -28,6 +28,8 @@ from .helpers import (
     GameState,
     calc_start_and_overlap,
     calc_hand_layout,
+    horizontal_margin,
+    bottom_margin,
     list_music_tracks,
     list_table_textures,
     CardSprite,
@@ -217,7 +219,7 @@ class GameView(AnimationMixin):
         """Update stored vertical positions for hand, pile, and buttons."""
         card_h = int(self.card_width * 1.4)
         _, h = self.screen.get_size()
-        margin = min(60, max(40, int(self.card_width * 0.75)))
+        margin = bottom_margin(self.card_width)
         self.hand_y = h - margin - card_h // 2
         self.pile_y = self.hand_y - card_h - ZONE_GUTTER
         self.button_y = self.hand_y + card_h // 2 + ZONE_GUTTER
@@ -230,7 +232,7 @@ class GameView(AnimationMixin):
         w, h = self.screen.get_size()
         card_w = self.card_width
         card_h = int(self.card_width * 1.4)
-        margin = min(60, max(40, int(card_w * 0.75)))
+        margin = bottom_margin(card_w)
         bottom_y = self.hand_y
         top_y = margin + card_h // 2
         left_x = margin + card_w // 2
@@ -878,7 +880,7 @@ class GameView(AnimationMixin):
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
             self.hand_sprites.add(sprite)
 
-        margin_v = min(60, max(40, int(card_w * 0.75)))
+        margin_v = bottom_margin(card_w)
 
         # --- Top AI player (horizontal) ---------------------------------
         top_player = self.game.players[2]
@@ -899,8 +901,9 @@ class GameView(AnimationMixin):
         )
         vert_spacing = card_h - overlap_v
         y_start = start_rel + margin_v
+        margin_h = horizontal_margin(card_w)
         for i in range(len(left_player.hand)):
-            pos = (HORIZONTAL_MARGIN, y_start + i * vert_spacing)
+            pos = (margin_h, y_start + i * vert_spacing)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
             self.ai_sprites[1].add(sprite)
 
@@ -915,7 +918,7 @@ class GameView(AnimationMixin):
         )
         vert_spacing = card_h - overlap_v
         y_start = start_rel + margin_v
-        x = screen_w - card_w - HORIZONTAL_MARGIN
+        x = screen_w - card_w - margin_h
         for i in range(len(right_player.hand)):
             pos = (x, y_start + i * vert_spacing)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)

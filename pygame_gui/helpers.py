@@ -58,6 +58,21 @@ HAND_SPACING = 20
 HORIZONTAL_MARGIN = 20
 # Vertical margin below the human player's hand
 BOTTOM_MARGIN = 20
+
+# ---------------------------------------------------------------------------
+# Margin helpers
+# ---------------------------------------------------------------------------
+
+
+def horizontal_margin(card_width: int) -> int:
+    """Return a horizontal margin size based on ``card_width``."""
+    return min(60, max(40, int(card_width * 0.75)))
+
+
+def bottom_margin(card_width: int) -> int:
+    """Return the bottom margin below the player's hand."""
+    return min(60, max(40, int(card_width * 0.75)))
+
 # Extra padding used when positioning player labels
 LABEL_PAD = 10
 # Button dimensions and layout spacing
@@ -107,15 +122,16 @@ def calc_start_and_overlap(
 def calc_hand_layout(screen_width: int, card_width: int, count: int) -> tuple[int, int]:
     """Return ``(start_x, spacing)`` for a horizontal hand."""
 
+    margin = horizontal_margin(card_width)
     start_rel, overlap = calc_start_and_overlap(
-        screen_width - 2 * HORIZONTAL_MARGIN,
+        screen_width - 2 * margin,
         count,
         card_width,
         25,
         card_width - 5,
     )
     spacing = card_width - overlap
-    return start_rel + HORIZONTAL_MARGIN, spacing
+    return start_rel + margin, spacing
 
 
 # ---------------------------------------------------------------------------
