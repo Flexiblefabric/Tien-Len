@@ -354,6 +354,36 @@ def test_draw_glow_blits():
     pygame.quit()
 
 
+def test_draw_glow_uses_cache(monkeypatch):
+    pygame.init()
+    pygame.font.init()
+    pygame.display.init()
+    from pygame_gui import helpers as h
+
+    h._GLOW_CACHE.clear()
+
+    calls = 0
+    orig_surface = pygame.Surface
+
+    def fake_surface(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return orig_surface(*args, **kwargs)
+
+    monkeypatch.setattr(pygame, "Surface", fake_surface)
+
+    target = pygame.Surface((10, 10))
+    rect = pygame.Rect(0, 0, 2, 2)
+    pygame_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
+    first = calls
+    pygame_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
+    assert calls == first
+
+    key = (rect.size, (1, 2, 3), 1, 10)
+    assert key in h._GLOW_CACHE
+    pygame.quit()
+
+
 def test_draw_players_uses_draw_shadow():
     view, _ = make_view()
     with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
