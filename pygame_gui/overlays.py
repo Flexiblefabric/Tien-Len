@@ -435,9 +435,10 @@ class GraphicsOverlay(Overlay):
         make_button(100, "table_texture_name", make_table_tex, "Table Tex")
         make_button(150, "colorblind_mode", [False, True], "Colorblind")
         make_button(200, "fullscreen", [False, True], "Fullscreen")
+        make_button(250, "fps_limit", [30, 60, 120], "FPS Limit")
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + 250, 240, 40),
+            pygame.Rect(bx, by + 300, 240, 40),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),

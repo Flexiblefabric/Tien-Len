@@ -1422,6 +1422,7 @@ def test_options_persist_across_sessions(tmp_path):
         view.score_visible = False
         view.score_pos = (30, 40)
         view.win_counts["Player"] = 3
+        view.fps_limit = 30
         view._save_options()
         # create new view that loads from same options file
         new_view, _ = make_view()
@@ -1435,6 +1436,7 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.score_visible is False
     assert new_view.score_pos == (30, 40)
     assert new_view.win_counts["Player"] == 3
+    assert new_view.fps_limit == 30
 
 
 def test_rules_overlay_toggles_update_state():
