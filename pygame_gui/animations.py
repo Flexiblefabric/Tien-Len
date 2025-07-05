@@ -118,6 +118,29 @@ class AnimationMixin:
             self.screen.blit(dummy.image, dummy.rect)
             dt = yield
 
+    def _animate_fade_out(
+        self,
+        sprites: List[types.SimpleNamespace],
+        duration: float = 0.25,
+    ):
+        """Yield a fade-out animation for ``sprites``."""
+        if not sprites:
+            return
+        originals = [sp.image for sp in sprites]
+        rects = [sp.rect.copy() for sp in sprites]
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            progress = min(elapsed / total, 1.0)
+            alpha = max(0, 255 - int(progress * 255))
+            for img, rect in zip(originals, rects):
+                surf = img.copy()
+                surf.set_alpha(alpha)
+                self.screen.blit(surf, rect)
+            dt = yield
+
     def _animate_flip(
         self,
         sprites: List[CardSprite],
