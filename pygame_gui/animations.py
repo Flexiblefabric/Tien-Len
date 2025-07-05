@@ -271,3 +271,42 @@ class AnimationMixin:
                 self.screen.blit(ts, (0, 0))
             dt = yield
         self.overlay = new
+
+    def _animate_deal(
+        self,
+        duration: float = 0.25,
+        delay: float = 5 / 60,
+    ):
+        """Yield a simple dealing animation for all current hand sprites."""
+        groups = [self.hand_sprites.sprites()] + [g.sprites() for g in self.ai_sprites]
+        if not any(groups):
+            return
+
+        start = self._pile_center()
+        destinations = [[sp.rect.center for sp in grp] for grp in groups]
+        for grp in groups:
+            for sp in grp:
+                sp.rect.center = start
+
+        max_len = max(len(g) for g in groups)
+        pause_total = delay / self.animation_speed
+
+        dt = yield
+        for i in range(max_len):
+            for g_idx, grp in enumerate(groups):
+                if i >= len(grp):
+                    continue
+                sp = grp[i]
+                dest = destinations[g_idx][i]
+                anim = self._animate_sprites([sp], dest, duration)
+                next(anim)
+                while True:
+                    try:
+                        anim.send(dt)
+                    except StopIteration:
+                        break
+                    dt = yield
+                elapsed = 0.0
+                while elapsed < pause_total:
+                    elapsed += dt
+                    dt = yield

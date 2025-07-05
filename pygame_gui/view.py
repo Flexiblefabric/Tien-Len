@@ -204,6 +204,7 @@ class GameView(AnimationMixin):
             self.toggle_fullscreen()
         self.apply_options()
         self.update_hand_sprites()
+        self._start_animation(self._animate_deal())
         self._create_action_buttons()
         self.show_menu()
 
@@ -574,6 +575,8 @@ class GameView(AnimationMixin):
         self.selected.clear()
         self.current_trick.clear()
         self.apply_options()
+        self.update_hand_sprites()
+        self._start_animation(self._animate_deal())
         for p in self.game.players:
             counts.setdefault(p.name, 0)
         self.win_counts = counts
