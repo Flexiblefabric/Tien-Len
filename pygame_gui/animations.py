@@ -411,3 +411,40 @@ class AnimationMixin:
             self.screen.blit(overlay, (0, 0))
             dt = yield
 
+    def _animate_trick_clear(self, duration: float = 0.2):
+        """Yield a slide-off and fade animation for ``current_trick``."""
+        if not self.current_trick:
+            return
+        w, _ = self.screen.get_size()
+        card_w = self.card_width
+        start_rel, overlap = calc_start_and_overlap(
+            w, len(self.current_trick), card_w, 25, card_w - 5
+        )
+        spacing = card_w - overlap
+        start = start_rel + card_w // 2
+        sprites: list[types.SimpleNamespace] = []
+        dests: list[tuple[int, int]] = []
+        for i, (_, img) in enumerate(self.current_trick):
+            x = start + i * spacing
+            rect = img.get_rect(center=(int(x), int(self.pile_y)))
+            sprites.append(types.SimpleNamespace(image=img.copy(), rect=rect))
+            dests.append((w + card_w // 2 + i * spacing, self.pile_y))
+
+        total = duration / self.animation_speed
+        starts = [sp.rect.center for sp in sprites]
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            t = ease(min(elapsed / total, 1.0))
+            alpha = max(0, 255 - int(t * 255))
+            for sp, (sx, sy), (dx, dy) in zip(sprites, starts, dests):
+                sp.rect.center = (
+                    int(sx + (dx - sx) * t),
+                    int(sy + (dy - sy) * t),
+                )
+                surf = sp.image.copy()
+                surf.set_alpha(alpha)
+                self.screen.blit(surf, sp.rect)
+            dt = yield
+

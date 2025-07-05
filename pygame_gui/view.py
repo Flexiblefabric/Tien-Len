@@ -583,8 +583,10 @@ class GameView(AnimationMixin):
         self.win_counts = counts
         self.close_overlay()
 
-    def reset_current_trick(self) -> None:
+    def reset_current_trick(self, animate: bool = True) -> None:
         """Clear the list of cards representing the current trick."""
+        if animate and self.current_trick:
+            self._start_animation(self._animate_trick_clear())
         self.current_trick.clear()
 
     def _attach_reset_pile(self) -> None:
@@ -608,8 +610,14 @@ class GameView(AnimationMixin):
                     to_fade.append(types.SimpleNamespace(image=img.copy(), rect=rect))
             original(*args, **kwargs)
             if to_fade:
-                self._start_animation(self._animate_fade_out(to_fade))
-            self.reset_current_trick()
+                def seq():
+                    yield from self._animate_fade_out(to_fade)
+                    yield from self._animate_trick_clear()
+                    self.reset_current_trick(animate=False)
+
+                self._start_animation(seq())
+            else:
+                self.reset_current_trick()
 
         self.game.reset_pile = wrapped_reset_pile
 

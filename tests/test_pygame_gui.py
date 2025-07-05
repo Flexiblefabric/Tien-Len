@@ -1360,9 +1360,13 @@ def test_current_trick_reset_on_restart_and_new_round():
     assert view.current_trick == []
 
     view.current_trick.append(("P1", pygame.Surface((1, 1))))
-    with patch.object(view, "_animate_fade_out", return_value="gen") as fade, patch.object(view, "_start_animation") as start:
+    with patch.object(view, "_animate_fade_out", return_value="gen") as fade, patch.object(
+        view, "_animate_trick_clear", return_value="clear"
+    ) as clear, patch.object(view, "_start_animation") as start:
         view.game.reset_pile()
-    start.assert_any_call("gen")
+    start_calls = [c.args[0] for c in start.call_args_list]
+    assert "gen" in start_calls
+    assert "clear" in start_calls
     assert view.current_trick == []
     pygame.quit()
 
@@ -1372,6 +1376,19 @@ def test_restart_game_clears_current_trick_immediately():
     view.current_trick.append(("P1", pygame.Surface((1, 1))))
     with patch.object(view, "close_overlay"):
         view.restart_game()
+    assert view.current_trick == []
+    pygame.quit()
+
+
+def test_reset_current_trick_starts_animation():
+    view, _ = make_view()
+    view.current_trick.append(("P1", pygame.Surface((1, 1))))
+    with patch.object(view, "_animate_trick_clear", return_value="clear") as clear, patch.object(
+        view, "_start_animation"
+    ) as start:
+        view.reset_current_trick()
+    clear.assert_called_once_with()
+    start.assert_any_call("clear")
     assert view.current_trick == []
     pygame.quit()
 
