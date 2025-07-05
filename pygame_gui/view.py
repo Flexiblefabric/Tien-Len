@@ -900,6 +900,7 @@ class GameView(AnimationMixin):
                 self.current_trick.append((player.name, img))
         if detect_combo(cards) == "bomb":
             sound.play("bomb")
+            self._start_animation(self._bomb_reveal())
         else:
             sound.play("click")
         sprites = list(self.selected)
@@ -958,6 +959,7 @@ class GameView(AnimationMixin):
                         self.current_trick.append((p.name, img))
                 if detect_combo(cards) == "bomb":
                     sound.play("bomb")
+                    self._start_animation(self._bomb_reveal())
                 else:
                     sound.play("click")
                 dest = self._pile_center()
