@@ -57,7 +57,6 @@ class AnimationMixin:
         """Briefly scale ``sprites`` up then back down for a bounce effect."""
         if not sprites:
             return
-        duration = (frames / 60) / self.animation_speed
         originals = [(sp.image, sp.rect.copy()) for sp in sprites]
         steps = math.ceil(frames / self.animation_speed)
         half = max(1, steps // 2)
@@ -162,7 +161,6 @@ class AnimationMixin:
             rect.midleft = (x, y)
         else:
             rect.midright = (x, y)
-        duration = (frames / 60) / self.animation_speed
         steps = math.ceil(frames / self.animation_speed)
         for i in range(steps):
             progress = (i + 1) / steps
