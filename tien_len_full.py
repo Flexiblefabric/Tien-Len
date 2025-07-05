@@ -287,6 +287,7 @@ class Game:
         # AI difficulty tier and numeric multiplier
         self.ai_level = "Normal"
         self.ai_difficulty = 1.0
+        self.ai_depth = 1
         # Optional AI behaviour tweaks
         self.ai_personality = "balanced"
         self.ai_lookahead = False
@@ -309,9 +310,17 @@ class Game:
     def set_ai_level(self, level: str) -> None:
         """Set difficulty tier and adjust internal multiplier."""
 
-        mapping = {"Easy": 0.5, "Normal": 1.0, "Hard": 2.0, "Expert": 3.0}
+        mapping = {
+            "Easy": 0.5,
+            "Normal": 1.0,
+            "Hard": 2.0,
+            "Expert": 3.0,
+            "Master": 4.0,
+        }
+        depth_map = {"Expert": 1, "Master": 2}
         self.ai_level = level
         self.ai_difficulty = mapping.get(level, 1.0)
+        self.ai_depth = depth_map.get(level, self.ai_depth)
 
     def set_personality(self, name: str) -> None:
         """Configure AI personality traits."""
@@ -574,8 +583,11 @@ class Game:
     # ------------------------------------------------------------------
     # Minimax helper used for the Expert AI level
     # ------------------------------------------------------------------
-    def _minimax(self, depth: int, max_name: str) -> float:
+    def _minimax(self, depth: int, max_name: str, mc_threshold: int = 3) -> float:
         """Return a minimax evaluation score."""
+
+        if depth > mc_threshold:
+            return self._monte_carlo_eval(max_name)
 
         if depth == 0 or all(not p.hand for p in self.players):
             player = next(p for p in self.players if p.name == max_name)
@@ -587,7 +599,7 @@ class Game:
             g = self._clone()
             g.process_pass(g.players[g.current_idx])
             g.next_turn()
-            return g._minimax(depth - 1, max_name)
+            return g._minimax(depth - 1, max_name, mc_threshold)
 
         if current_player.name == max_name:
             best = -float("inf")
@@ -595,7 +607,7 @@ class Game:
                 g = self._clone()
                 g.process_play(g.players[g.current_idx], mv)
                 g.next_turn()
-                val = g._minimax(depth - 1, max_name)
+                val = g._minimax(depth - 1, max_name, mc_threshold)
                 best = max(best, val)
             return best
         else:
@@ -604,11 +616,13 @@ class Game:
                 g = self._clone()
                 g.process_play(g.players[g.current_idx], mv)
                 g.next_turn()
-                val = g._minimax(depth - 1, max_name)
+                val = g._minimax(depth - 1, max_name, mc_threshold)
                 best = min(best, val)
             return best
 
-    def _minimax_decision(self, player) -> list[Card]:
+    def _minimax_decision(
+        self, player, depth: int, mc_threshold: int = 3
+    ) -> list[Card]:
         """Choose a move using a depth-limited minimax search."""
 
         moves = self.generate_valid_moves(player, self.current_combo)
@@ -621,7 +635,7 @@ class Game:
             g = self._clone()
             g.process_play(g.players[g.current_idx], mv)
             g.next_turn()
-            score = g._minimax(1, player.name)
+            score = g._minimax(depth - 1, player.name, mc_threshold)
             if score > best_score:
                 best_score = score
                 best_move = mv
@@ -644,8 +658,8 @@ class Game:
         if self.ai_level == "Easy" or personality == "random":
             return random.choice(moves)
 
-        if self.ai_level == "Expert":
-            return self._minimax_decision(p)
+        if self.ai_level in {"Expert", "Master"}:
+            return self._minimax_decision(p, self.ai_depth)
 
         return max(moves, key=lambda m: self.score_move(p, m, current))
 
@@ -809,9 +823,32 @@ class Game:
         g.from_dict(self.to_dict())
         g.ai_level = self.ai_level
         g.ai_difficulty = self.ai_difficulty
+        g.ai_depth = self.ai_depth
         g.ai_personality = self.ai_personality
         g.ai_lookahead = self.ai_lookahead
         return g
+
+    def _monte_carlo_eval(self, max_name: str, samples: int = 10) -> float:
+        """Approximate a state evaluation via random playouts."""
+
+        total = 0.0
+        for _ in range(samples):
+            g = self._clone()
+            while True:
+                if any(not p.hand for p in g.players):
+                    break
+                pl = g.players[g.current_idx]
+                moves = g.generate_valid_moves(pl, g.current_combo)
+                if moves:
+                    mv = random.choice(moves)
+                    if g.process_play(pl, mv):
+                        break
+                else:
+                    g.process_pass(pl)
+                g.next_turn()
+            player = next(p for p in g.players if p.name == max_name)
+            total += -float(len(player.hand))
+        return total / samples
 
     # New helper methods -------------------------------------------------
     def process_play(self, player: Player, cards: list[Card]) -> bool:
@@ -953,7 +990,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--ai',
         default='Normal',
-        choices=['Easy', 'Normal', 'Hard', 'Expert'],
+        choices=['Easy', 'Normal', 'Hard', 'Expert', 'Master'],
         help='AI difficulty level',
     )
     parser.add_argument(
@@ -966,6 +1003,12 @@ def create_parser() -> argparse.ArgumentParser:
         '--lookahead',
         action='store_true',
         help='Enable AI lookahead when scoring moves',
+    )
+    parser.add_argument(
+        '--depth',
+        type=int,
+        default=1,
+        help='Search depth for Expert/Master AI',
     )
     return parser
 
@@ -980,6 +1023,7 @@ def main(argv: Optional[list[str]] = None) -> Game:
     game.set_ai_level(args.ai)
     game.set_personality(args.personality)
     game.ai_lookahead = args.lookahead
+    game.ai_depth = args.depth
     game.play()
     return game
 
