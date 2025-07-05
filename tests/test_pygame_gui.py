@@ -1230,7 +1230,9 @@ def test_current_trick_reset_on_restart_and_new_round():
     assert view.current_trick == []
 
     view.current_trick.append(("P1", pygame.Surface((1, 1))))
-    view.game.reset_pile()
+    with patch.object(view, "_animate_fade_out", return_value="gen") as fade, patch.object(view, "_start_animation") as start:
+        view.game.reset_pile()
+    start.assert_any_call("gen")
     assert view.current_trick == []
     pygame.quit()
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 
 import pygame
+import types
 
 from tien_len_full import Game, detect_combo, Player
 import sound
@@ -587,12 +588,27 @@ class GameView(AnimationMixin):
         self.current_trick.clear()
 
     def _attach_reset_pile(self) -> None:
-        """Wrap the game's ``reset_pile`` method to clear the trick."""
+        """Wrap the game's ``reset_pile`` method to fade out the trick."""
 
         original = self.game.reset_pile
 
         def wrapped_reset_pile(*args, **kwargs):
+            to_fade: list[types.SimpleNamespace] = []
+            if self.current_trick:
+                w, _ = self.screen.get_size()
+                card_w = self.card_width
+                start_rel, overlap = calc_start_and_overlap(
+                    w, len(self.current_trick), card_w, 25, card_w - 5
+                )
+                spacing = card_w - overlap
+                start = start_rel + card_w // 2
+                for i, (_, img) in enumerate(self.current_trick):
+                    x = start + i * spacing
+                    rect = img.get_rect(center=(int(x), int(self.pile_y)))
+                    to_fade.append(types.SimpleNamespace(image=img.copy(), rect=rect))
             original(*args, **kwargs)
+            if to_fade:
+                self._start_animation(self._animate_fade_out(to_fade))
             self.reset_current_trick()
 
         self.game.reset_pile = wrapped_reset_pile
