@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional
 
 import pygame
 
-from .helpers import CardSprite
+from .helpers import CardSprite, calc_start_and_overlap
 from .overlays import Overlay
 
 
@@ -447,4 +447,3 @@ class AnimationMixin:
                 surf.set_alpha(alpha)
                 self.screen.blit(surf, sp.rect)
             dt = yield
-

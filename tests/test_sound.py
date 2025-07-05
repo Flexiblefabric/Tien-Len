@@ -90,7 +90,6 @@ def test_play_handles_errors():
     mock_sound.play.assert_called_once()
 
 
-
 def test_load_handles_sound_error(tmp_path):
     wav = tmp_path / "err.wav"
     wav.write_text("data")
@@ -101,4 +100,3 @@ def test_load_handles_sound_error(tmp_path):
             sound._SOUNDS.clear()
             assert not sound.load("bad", wav)
             assert "bad" not in sound._SOUNDS
-

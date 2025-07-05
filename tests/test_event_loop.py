@@ -1,11 +1,12 @@
-import pytest
-pytest.importorskip("pygame")
-
 import os
 from unittest.mock import patch
 
-import pygame
-import pygame_gui
+import pytest
+
+pytest.importorskip("pygame")
+
+import pygame  # noqa: E402
+import pygame_gui  # noqa: E402
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')

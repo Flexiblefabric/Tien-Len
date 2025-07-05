@@ -3,7 +3,7 @@ import pytest
 pytest.importorskip("pygame")
 pytest.importorskip("pygame_gui")
 
-from tien_len_full import Game, Card
+from tien_len_full import Game, Card  # noqa: E402
 
 
 def test_minimax_decision_selects_optimal_move():
@@ -40,4 +40,3 @@ def test_minimax_respects_depth_param():
     move_short = game._minimax_decision(ai, 1)
     move_deep = game._minimax_decision(ai, 2)
     assert move_short == move_deep
-

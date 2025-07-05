@@ -71,8 +71,6 @@ def test_player_sort_and_bombs():
 
 
 def test_is_valid_basic_rules():
-    import tien_len_full as tl
-
     game = Game(flip_suit_rank=False)
     starter = game.players[0]
     game.current_idx = 0
@@ -116,7 +114,6 @@ def test_is_valid_basic_rules():
     assert ok
 
 
-
 def test_is_valid_first_card_flip_suit():
     import tien_len_full as tl
 
@@ -132,6 +129,7 @@ def test_is_valid_first_card_flip_suit():
     card3h = tl.Card('Hearts', '3')
     ok, msg = tl_game.is_valid(starter, [card3h], None)
     assert ok
+
 
 def test_flip_suit_rank_sorting_and_deck_order():
     import tien_len_full as tl

@@ -1,21 +1,20 @@
-import pytest
-
-pytest.importorskip("PIL")
-pytest.importorskip("pygame")
-
 import os
 import logging
 import math
 from unittest.mock import patch, MagicMock
 from pathlib import Path
+import pytest
+
+pytest.importorskip("PIL")
+pytest.importorskip("pygame")
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame
-import pygame_gui
-import tien_len_full
-import sound
+import pygame  # noqa: E402
+import pygame_gui  # noqa: E402
+import tien_len_full  # noqa: E402
+import sound  # noqa: E402
 
 
 class DummyFont:
@@ -1360,9 +1359,9 @@ def test_current_trick_reset_on_restart_and_new_round():
     assert view.current_trick == []
 
     view.current_trick.append(("P1", pygame.Surface((1, 1))))
-    with patch.object(view, "_animate_fade_out", return_value="gen") as fade, patch.object(
+    with patch.object(view, "_animate_fade_out", return_value="gen") as _, patch.object(
         view, "_animate_trick_clear", return_value="clear"
-    ) as clear, patch.object(view, "_start_animation") as start:
+    ) as _, patch.object(view, "_start_animation") as start:
         view.game.reset_pile()
     start_calls = [c.args[0] for c in start.call_args_list]
     assert "gen" in start_calls
@@ -1492,7 +1491,6 @@ def test_overlay_keyboard_navigation(cls, args):
     overlay.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE}))
     overlay.back_callback.assert_called_once()
     pygame.quit()
-
 
 
 def test_in_game_menu_buttons():
@@ -1753,7 +1751,6 @@ def test_profile_overlay_new_profile_added():
     assert set(view.win_counts) - existing
 
 
-
 def test_handle_score_event_dragging():
     view, _ = make_view()
     view.score_visible = True
@@ -1818,4 +1815,3 @@ def test_load_game_warning_on_oserror(tmp_path, caplog):
     assert "Failed to load game" in caplog.text
     assert view.game.to_dict() == before
     pygame.quit()
-

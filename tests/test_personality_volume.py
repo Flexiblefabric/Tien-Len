@@ -50,6 +50,7 @@ def test_ai_play_random_personality_uses_random_choice(monkeypatch):
 
     monkeypatch.setattr(game, 'generate_valid_moves', lambda p, c: [ai.hand])
     chosen = ['chosen']
+
     def fake_choice(seq):
         assert seq == [ai.hand]
         return chosen

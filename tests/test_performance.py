@@ -1,11 +1,13 @@
 import os
 import time
+from unittest.mock import patch
+
 import pytest
+
 pytest.importorskip("pygame")
 
-import pygame
-import pygame_gui
-from unittest.mock import patch
+import pygame  # noqa: E402
+import pygame_gui  # noqa: E402
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -81,4 +83,3 @@ def test_custom_fps_limit_passed_to_clock():
 
     assert clock.args[0] == 30
     pygame.quit()
-

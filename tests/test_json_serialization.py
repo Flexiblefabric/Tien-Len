@@ -1,5 +1,4 @@
 import json
-import pytest
 from unittest.mock import patch
 from tien_len_full import Game, Card, AI_NAMES
 
