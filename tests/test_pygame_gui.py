@@ -506,7 +506,7 @@ def test_highlight_turn_draws_at_player_position():
     view.screen = MagicMock()
     view.screen.get_size.return_value = (100, 100)
     overlay_surface = MagicMock()
-    with patch("pygame.Surface", return_value=overlay_surface), patch(
+    with patch("pygame.Surface", return_value=overlay_surface) as surf_mock, patch(
         "pygame.event.pump"
     ), patch("pygame.display.flip"), patch("pygame.draw.circle"), patch.object(
         view, "_player_pos", return_value=(50, 100)
@@ -521,6 +521,8 @@ def test_highlight_turn_draws_at_player_position():
     pos.assert_called_with(0)
     topleft = (50 - 70, 100 - 30)
     view.screen.blit.assert_called_with(overlay_surface, topleft)
+    assert surf_mock.call_count == 1
+    assert overlay_surface.fill.call_count == 2
     pygame.quit()
 
 

@@ -236,6 +236,8 @@ class GameView(AnimationMixin):
 
     def _start_animation(self, anim):
         """Prime and store ``anim`` to run during the main loop."""
+        if anim is None:
+            return
         try:
             next(anim)
         except StopIteration:
