@@ -27,44 +27,46 @@ class AnimationMixin:
         self,
         sprites: List[CardSprite],
         dest: Tuple[int, int],
-        frames: int = 15,
-        dt: float = 1 / 60,
-    ) -> None:
-        """Move ``sprites`` toward ``dest`` over ``frames`` steps."""
+        duration: float = 0.25,
+    ):
+        """Yield steps that move ``sprites`` toward ``dest`` over ``duration``."""
         if not sprites:
             return
-        duration = (frames / 60) / self.animation_speed
+        total = duration / self.animation_speed
         starts = [sp.rect.center for sp in sprites]
         elapsed = 0.0
-        while elapsed < duration:
+        dt = yield
+        while elapsed < total:
             elapsed += dt
-            t = ease(min(elapsed / duration, 1.0))
+            t = ease(min(elapsed / total, 1.0))
             for sp, (sx, sy) in zip(sprites, starts):
                 sp.rect.center = (
                     int(sx + (dest[0] - sx) * t),
                     int(sy + (dest[1] - sy) * t),
                 )
             self._draw_frame()
-            pygame.event.pump()
+            dt = yield
 
     def _animate_bounce(
         self,
         sprites: List[CardSprite],
         scale: float = 1.2,
-        frames: int = 6,
-        dt: float = 1 / 60,
-    ) -> None:
-        """Briefly scale ``sprites`` up then back down for a bounce effect."""
+        duration: float = 0.1,
+    ):
+        """Yield a brief bounce animation for ``sprites``."""
         if not sprites:
             return
         originals = [(sp.image, sp.rect.copy()) for sp in sprites]
-        steps = math.ceil(frames / self.animation_speed)
-        half = max(1, steps // 2)
-        for i in range(steps):
-            if i < half:
-                progress = (i + 1) / half
+        total = duration / self.animation_speed
+        half = total / 2
+        dt = yield
+        elapsed = 0.0
+        while elapsed < total:
+            elapsed += dt
+            if elapsed < half:
+                progress = elapsed / half
             else:
-                progress = (steps - i) / half
+                progress = (total - elapsed) / half
             t = max(0.0, min(progress, 1.0))
             factor = 1 + (scale - 1) * t
             for sp, (img, rect) in zip(sprites, originals):
@@ -78,8 +80,7 @@ class AnimationMixin:
                 sp.image = scaled
                 sp.rect = scaled.get_rect(center=rect.center)
             self._draw_frame()
-            pygame.event.pump()
-        # restore originals
+            dt = yield
         for sp, (img, rect) in zip(sprites, originals):
             sp.image = img
             sp.rect = rect
@@ -88,19 +89,19 @@ class AnimationMixin:
         self,
         start: Tuple[int, int],
         dest: Tuple[int, int],
-        frames: int = 15,
-        dt: float = 1 / 60,
-    ) -> None:
-        """Animate a card back image from ``start`` to ``dest``."""
+        duration: float = 0.25,
+    ):
+        """Yield an animation for a moving card back image."""
         img = get_card_back(self.card_back_name)
         if img is None:
             return
-        duration = (frames / 60) / self.animation_speed
         rect = img.get_rect(center=start)
+        total = duration / self.animation_speed
         elapsed = 0.0
-        while elapsed < duration:
+        dt = yield
+        while elapsed < total:
             elapsed += dt
-            t = ease(min(elapsed / duration, 1.0))
+            t = ease(min(elapsed / total, 1.0))
             rect.center = (
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
@@ -108,28 +109,39 @@ class AnimationMixin:
             self._draw_frame(flip=False)
             self.screen.blit(img, rect)
             pygame.display.flip()
-            pygame.event.pump()
+            dt = yield
         dummy = types.SimpleNamespace(image=img, rect=rect)
-        self._animate_bounce([dummy], dt=dt)
+        bounce = self._animate_bounce([dummy])
+        next(bounce)
+        dt = yield
+        while True:
+            try:
+                bounce.send(dt)
+            except StopIteration:
+                break
+            self._draw_frame(flip=False)
+            self.screen.blit(dummy.image, dummy.rect)
+            pygame.display.flip()
+            dt = yield
 
     def _animate_flip(
         self,
         sprites: List[CardSprite],
         dest: Tuple[int, int],
-        frames: int = 15,
-        dt: float = 1 / 60,
-    ) -> None:
-        """Move ``sprites`` to ``dest`` while flipping from back to front."""
+        duration: float = 0.25,
+    ):
+        """Yield a flip animation moving to ``dest``."""
         if not sprites:
             return
-        duration = (frames / 60) / self.animation_speed
+        total = duration / self.animation_speed
         starts = [sp.rect.center for sp in sprites]
         fronts = [sp.image for sp in sprites]
         back = get_card_back(self.card_back_name, sprites[0].rect.width)
         elapsed = 0.0
-        while elapsed < duration:
+        dt = yield
+        while elapsed < total:
             elapsed += dt
-            t = ease(min(elapsed / duration, 1.0))
+            t = ease(min(elapsed / total, 1.0))
             for sp, (sx, sy) in zip(sprites, starts):
                 sp.rect.center = (
                     int(sx + (dest[0] - sx) * t),
@@ -141,16 +153,32 @@ class AnimationMixin:
                 rect = img.get_rect(center=sp.rect.center)
                 self.screen.blit(img, rect)
             pygame.display.flip()
-            pygame.event.pump()
-        self._animate_bounce(sprites, dt=dt)
+            dt = yield
+        bounce = self._animate_bounce(sprites)
+        next(bounce)
+        dt = yield
+        while True:
+            try:
+                bounce.send(dt)
+            except StopIteration:
+                break
+            dt = yield
 
-    def _animate_select(self, sprite: CardSprite, up: bool, dt: float = 1 / 60) -> None:
+    def _animate_select(self, sprite: CardSprite, up: bool, duration: float = 5 / 60):
         offset = -10 if up else 10
         dest = (sprite.rect.centerx, sprite.rect.centery + offset)
-        self._animate_sprites([sprite], dest, frames=5, dt=dt)
+        anim = self._animate_sprites([sprite], dest, duration)
+        next(anim)
+        dt = yield
+        while True:
+            try:
+                anim.send(dt)
+            except StopIteration:
+                break
+            dt = yield
 
-    def _highlight_turn(self, idx: int, frames: int = 10, dt: float = 1 / 60) -> None:
-        """Flash the active player's name for visual emphasis."""
+    def _highlight_turn(self, idx: int, duration: float = 10 / 60):
+        """Yield an animation highlighting the active player."""
         x, y = self._player_pos(idx)
         rect = pygame.Rect(0, 0, 140, 30)
         if idx == 0:
@@ -161,9 +189,12 @@ class AnimationMixin:
             rect.midleft = (x, y)
         else:
             rect.midright = (x, y)
-        steps = math.ceil(frames / self.animation_speed)
-        for i in range(steps):
-            progress = (i + 1) / steps
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            progress = min(elapsed / total, 1.0)
             self._draw_frame(flip=False)
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
             alpha = max(0, 200 - int(progress * 200))
@@ -175,20 +206,19 @@ class AnimationMixin:
                 )
             self.screen.blit(overlay, rect.topleft)
             pygame.display.flip()
-            pygame.event.pump()
+            dt = yield
 
     def _transition_overlay(
         self,
         old: Optional[Overlay],
         new: Overlay,
-        frames: int = 20,
+        duration: float = 20 / 60,
         slide: bool = False,
-        dt: float = 1 / 60,
-    ) -> None:
-        """Animate transition between two overlays."""
+    ):
+        """Yield animation transitioning between two overlays."""
         if old is None:
             return
-        duration = (frames / 60) / self.animation_speed
+        total = duration / self.animation_speed
         w, h = self.screen.get_size()
 
         def render(ov: Overlay) -> pygame.Surface:
@@ -209,9 +239,10 @@ class AnimationMixin:
         base = self.screen.copy()
         self.overlay = current
         elapsed = 0.0
-        while elapsed < duration:
+        dt = yield
+        while elapsed < total:
             elapsed += dt
-            progress = min(elapsed / duration, 1.0)
+            progress = min(elapsed / total, 1.0)
             self.screen.blit(base, (0, 0))
             if slide:
                 offset = int(w * (1 - progress))
@@ -225,7 +256,6 @@ class AnimationMixin:
                 self.screen.blit(fs, (0, 0))
                 self.screen.blit(ts, (0, 0))
             pygame.display.flip()
-            pygame.event.pump()
-
+            dt = yield
         self.overlay = new
         self._draw_frame()
