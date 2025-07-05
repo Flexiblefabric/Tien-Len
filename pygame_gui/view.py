@@ -867,6 +867,7 @@ class GameView(AnimationMixin):
         player = self.game.players[self.game.current_idx]
         ok, msg = self.game.is_valid(player, cards, self.game.current_combo)
         if not ok:
+            self._start_animation(self._animate_shake(list(self.selected)))
             logger.info("Invalid: %s", msg)
             return
         if self.game.process_play(player, cards):
@@ -893,6 +894,7 @@ class GameView(AnimationMixin):
         if self.game.handle_pass():
             self.running = False
         else:
+            self._start_animation(self._animate_shake(list(self.selected)))
             sound.play("pass")
             self._start_animation(self._highlight_turn(self.game.current_idx))
             self.ai_turns()
