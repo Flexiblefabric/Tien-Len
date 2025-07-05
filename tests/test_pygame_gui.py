@@ -750,6 +750,7 @@ def test_apply_options_updates_game_and_audio():
     view.ai_level = "Hard"
     view.ai_personality = "aggressive"
     view.ai_lookahead = True
+    view.ai_depth = 2
     view.fx_volume = 0.7
     view.music_volume = 0.5
     view.sound_enabled = True
@@ -773,6 +774,7 @@ def test_apply_options_updates_game_and_audio():
     sal.assert_called_with("Hard")
     sp.assert_called_with("aggressive")
     assert view.game.ai_lookahead is True
+    assert view.game.ai_depth == 2
     sv.assert_called_with(0.7)
     mv.assert_called_with(0.5)
     pause.assert_called_once()

@@ -30,9 +30,9 @@ After installation launch the Pygame GUI with `tien-len` or start the CLI via `t
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert] \
+python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert|Master] \
                         [--personality aggressive|defensive|balanced|random] \
-                        [--lookahead]
+                        [--lookahead] [--depth N]
 ```
 After installation the same game can be started with the `tien-len-cli` command.
 

@@ -135,6 +135,7 @@ class GameView(AnimationMixin):
         self.ai_level = "Normal"
         self.ai_personality = "balanced"
         self.ai_lookahead = False
+        self.ai_depth = 1
         self.sort_mode = "rank"
         self.player_name = "Player"
         self.card_back_name = "card_back"
@@ -174,6 +175,7 @@ class GameView(AnimationMixin):
         self.ai_level = opts.get("ai_level", self.ai_level)
         self.ai_personality = opts.get("ai_personality", self.ai_personality)
         self.ai_lookahead = opts.get("ai_lookahead", self.ai_lookahead)
+        self.ai_depth = opts.get("ai_depth", self.ai_depth)
         self.sound_enabled = opts.get("sound", self.sound_enabled)
         self.music_enabled = opts.get("music", self.music_enabled)
         self.music_volume = opts.get("music_volume", self.music_volume)
@@ -636,6 +638,7 @@ class GameView(AnimationMixin):
             "ai_level": self.ai_level,
             "ai_personality": self.ai_personality,
             "ai_lookahead": self.ai_lookahead,
+            "ai_depth": self.ai_depth,
             "sound": self.sound_enabled,
             "music": self.music_enabled,
             "music_volume": self.music_volume,
@@ -683,6 +686,7 @@ class GameView(AnimationMixin):
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
+        self.game.ai_depth = self.ai_depth
         self.game.allow_2_in_sequence = not self.rule_no_2s
         self.game.flip_suit_rank = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
