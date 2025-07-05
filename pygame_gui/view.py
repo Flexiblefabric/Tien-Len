@@ -126,8 +126,8 @@ class GameView(AnimationMixin):
                 pass
         self.selected: List[CardSprite] = []
         self.current_trick: list[tuple[str, pygame.Surface]] = []
-        self.ai_sprites: List[pygame.sprite.Group] = [
-            pygame.sprite.Group() for _ in range(3)
+        self.ai_sprites: List[pygame.sprite.RenderUpdates] = [
+            pygame.sprite.RenderUpdates() for _ in range(3)
         ]
         self.running = True
         self.overlay: Optional[Overlay] = None
@@ -938,8 +938,8 @@ class GameView(AnimationMixin):
     def update_hand_sprites(self):
         """Create card sprites for all players with a simple table layout."""
 
-        self.hand_sprites = pygame.sprite.Group()
-        self.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
+        self.hand_sprites = pygame.sprite.RenderUpdates()
+        self.ai_sprites = [pygame.sprite.RenderUpdates() for _ in range(3)]
 
         card_w = self.card_width
         card_h = int(card_w * 1.4)
@@ -1007,6 +1007,16 @@ class GameView(AnimationMixin):
         sprites = self.hand_sprites.sprites()
         card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
         spacing = min(40, card_w)
+
+        bg = self._table_surface
+        if bg is None:
+            bg = pygame.Surface(self.screen.get_size())
+            bg.fill(self.table_color)
+
+        # Clear previous sprite positions
+        self.hand_sprites.clear(self.screen, bg)
+        for group in self.ai_sprites:
+            group.clear(self.screen, bg)
 
         # Draw semi-transparent zones behind each player's hand
         for idx in range(len(self.game.players)):
