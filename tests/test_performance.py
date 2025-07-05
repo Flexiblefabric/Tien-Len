@@ -20,11 +20,14 @@ class PerfClock:
     def __init__(self):
         self.times = []
         self.last = time.perf_counter()
+        self.args = []
 
     def tick(self, *args, **kwargs):
         now = time.perf_counter()
         self.times.append(now - self.last)
         self.last = now
+        if args:
+            self.args.append(args[0])
         return int((self.times[-1]) * 1000)
 
 
@@ -63,5 +66,19 @@ def test_average_frame_time_below_threshold():
 
     avg = sum(clock.times) / len(clock.times)
     assert avg < 0.05
+    pygame.quit()
+
+
+def test_custom_fps_limit_passed_to_clock():
+    view, clock = make_view()
+    view.fps_limit = 30
+
+    with patch(
+        "pygame.event.get",
+        return_value=[pygame.event.Event(pygame.QUIT, {})],
+    ), patch("pygame.quit"):
+        view.run()
+
+    assert clock.args[0] == 30
     pygame.quit()
 

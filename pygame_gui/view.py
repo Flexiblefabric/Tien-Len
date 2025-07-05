@@ -76,6 +76,7 @@ class GameView(AnimationMixin):
         self.card_width = self._calc_card_width(width)
         self.clock = pygame.time.Clock()
         self.dt = 1 / 60  # default frame time for tests
+        self.fps_limit = 60
         self.animation_speed = 1.0
         self.animations: list = []
         self.game = Game()
@@ -198,6 +199,7 @@ class GameView(AnimationMixin):
         self.win_counts: Dict[str, int] = {
             p.name: int(win_data.get(p.name, 0)) for p in self.game.players
         }
+        self.fps_limit = int(opts.get("fps_limit", self.fps_limit))
         if opts.get("fullscreen", False):
             self.toggle_fullscreen()
         self.apply_options()
@@ -616,6 +618,11 @@ class GameView(AnimationMixin):
                 data["win_counts"] = {
                     str(k): int(v) for k, v in data["win_counts"].items()
                 }
+            if "fps_limit" in data:
+                try:
+                    data["fps_limit"] = int(data["fps_limit"])
+                except (TypeError, ValueError):
+                    data["fps_limit"] = 60
             return data
         except Exception as exc:
             logger.warning("Failed to load options: %s", exc)
@@ -651,6 +658,7 @@ class GameView(AnimationMixin):
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
             "fullscreen": self.fullscreen,
+            "fps_limit": self.fps_limit,
             "score_visible": self.score_visible,
             "score_pos": list(self.score_pos),
             "win_counts": self.win_counts,
@@ -1164,7 +1172,7 @@ class GameView(AnimationMixin):
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
         while self.running:
-            dt = self.clock.tick(60) / 1000.0
+            dt = self.clock.tick(self.fps_limit) / 1000.0
             self.dt = dt
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
