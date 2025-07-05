@@ -25,4 +25,3 @@ def test_summary_round_logs_winner_and_next_starter(caplog):
     messages = [rec.message for rec in caplog.records]
     assert any(f"{winner.name} won the round" in m for m in messages)
     assert any(f"{winner.name} will start the next round" in m for m in messages)
-

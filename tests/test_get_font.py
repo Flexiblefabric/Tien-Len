@@ -1,8 +1,10 @@
 import pytest
+
 pytest.importorskip("pygame")
 
-import pygame
-import pygame_gui
+import pygame  # noqa: E402
+import pygame_gui  # noqa: E402
+
 
 class DummyFont:
     def render(self, *args, **kwargs):

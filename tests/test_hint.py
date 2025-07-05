@@ -31,4 +31,3 @@ def test_hint_ignores_ai_difficulty():
 
     hint = game.hint(None)
     assert set(hint) == {c1, c2}
-
