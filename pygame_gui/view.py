@@ -902,7 +902,11 @@ class GameView(AnimationMixin):
             sound.play("bomb")
         else:
             sound.play("click")
-        self._start_animation(self._animate_flip(list(self.selected), self._pile_center()))
+        sprites = list(self.selected)
+        self._start_animation(self._animate_flip(sprites, self._pile_center()))
+        self._start_animation(
+            self._animate_glow(sprites, PLAYER_COLORS[self.game.current_idx])
+        )
         self.game.next_turn()
         self.selected.clear()
         self.update_hand_sprites()
@@ -956,11 +960,19 @@ class GameView(AnimationMixin):
                     sound.play("bomb")
                 else:
                     sound.play("click")
+                dest = self._pile_center()
                 self._start_animation(
                     self._animate_back(
                         self._player_pos(self.game.current_idx),
-                        self._pile_center(),
+                        dest,
                     )
+                )
+                glow_sprites = [
+                    types.SimpleNamespace(rect=img.get_rect(center=dest))
+                    for _, img in self.current_trick[-len(cards) :]
+                ]
+                self._start_animation(
+                    self._animate_glow(glow_sprites, PLAYER_COLORS[self.game.current_idx])
                 )
             else:
                 sound.play("pass")

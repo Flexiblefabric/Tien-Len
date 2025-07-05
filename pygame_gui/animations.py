@@ -22,6 +22,13 @@ def get_card_back(*args, **kwargs):
     return pygame_gui.get_card_back(*args, **kwargs)
 
 
+def draw_glow(*args, **kwargs):
+    """Proxy to pygame_gui.draw_glow for easy patching in tests."""
+    import pygame_gui
+
+    return pygame_gui.draw_glow(*args, **kwargs)
+
+
 class AnimationMixin:
     def _animate_sprites(
         self,
@@ -363,4 +370,28 @@ class AnimationMixin:
             while elapsed < pause_total:
                 elapsed += dt
                 dt = yield
+
+    def _animate_glow(
+        self,
+        sprites: List[types.SimpleNamespace],
+        color: Tuple[int, int, int],
+        pulses: int = 2,
+        duration: float = 0.5,
+    ):
+        """Yield a pulsing glow animation around ``sprites``."""
+        if not sprites:
+            return
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            progress = min(elapsed / total, 1.0)
+            strength = math.sin(progress * pulses * math.pi) ** 2
+            radius = 8 + int(4 * strength)
+            alpha = int(100 * strength)
+            for sp in sprites:
+                rect = sp.rect if hasattr(sp, "rect") else sp
+                draw_glow(self.screen, rect, color, radius=radius, alpha=alpha)
+            dt = yield
 
