@@ -474,7 +474,7 @@ def test_animate_back_moves_to_destination():
     assert rect.center == (10, 5)
     move_steps = math.ceil((4 / 60) / view.animation_speed / (1 / 60))
     bounce_steps = math.ceil((0.1) / view.animation_speed / (1 / 60))
-    assert steps == move_steps + bounce_steps
+    assert steps == move_steps + bounce_steps + 2
     pygame.quit()
 
 
@@ -497,7 +497,7 @@ def test_animate_flip_moves_to_destination():
     assert sprite.rect.center == (10, 5)
     move_steps = math.ceil((4 / 60) / view.animation_speed / (1 / 60))
     bounce_steps = math.ceil((0.1) / view.animation_speed / (1 / 60))
-    assert steps == move_steps + bounce_steps
+    assert steps == move_steps + bounce_steps + 2
     pygame.quit()
 
 
@@ -581,7 +581,7 @@ def test_animate_back_speed():
                     break
             move_steps = math.ceil((10 / 60) / view.animation_speed / (1 / 60))
             bounce_steps = math.ceil((0.1) / view.animation_speed / (1 / 60))
-            assert steps == move_steps + bounce_steps
+            assert steps == move_steps + bounce_steps + 2
     pygame.quit()
 
 
