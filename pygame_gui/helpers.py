@@ -167,6 +167,10 @@ _BASE_IMAGES: Dict[str, pygame.Surface] = {}
 _SHADOW_CACHE: Dict[Tuple[int, int], pygame.Surface] = {}
 # Track the size currently used to build cached shadows
 _SHADOW_SIZE: Tuple[int, int] | None = None
+# Cache for glow surfaces keyed by (size, color, radius, alpha)
+_GLOW_CACHE: Dict[
+    Tuple[Tuple[int, int], Tuple[int, int, int], int, int], pygame.Surface
+] = {}
 # Cache for nine-patch button images
 _NINE_PATCH_CACHE: Dict[str, pygame.Surface] = {}
 
@@ -411,18 +415,21 @@ def draw_glow(
     radius: int = 8,
     alpha: int = 100,
 ) -> None:
-    """Draw a subtle glow effect behind a rect."""
-    glow = pygame.Surface(
-        (rect.width + radius * 2, rect.height + radius * 2), pygame.SRCALPHA
-    )
-    for dx in range(-radius, radius + 1):
-        for dy in range(-radius, radius + 1):
-            dist = dx * dx + dy * dy
-            if dist <= radius * radius:
-                glow_x = rect.x - radius + dx
-                glow_y = rect.y - radius + dy
-                glow.fill((*color, alpha // (1 + dist)), special_flags=pygame.BLEND_RGBA_ADD)
-                surface.blit(glow, (glow_x, glow_y))
+    """Draw a subtle glow effect behind ``rect`` using cached surfaces."""
+    key = (rect.size, color, radius, alpha)
+    glow = _GLOW_CACHE.get(key)
+    if glow is None:
+        size = (rect.width + radius * 2, rect.height + radius * 2)
+        glow = pygame.Surface(size, pygame.SRCALPHA)
+        overlay = pygame.Surface(size, pygame.SRCALPHA)
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                dist = dx * dx + dy * dy
+                if dist <= radius * radius:
+                    overlay.fill((*color, alpha // (1 + dist)))
+                    glow.blit(overlay, (dx, dy), special_flags=pygame.BLEND_RGBA_ADD)
+        _GLOW_CACHE[key] = glow
+    surface.blit(glow, (rect.x - radius, rect.y - radius))
 
 
 class CardBackSprite(pygame.sprite.Sprite):
