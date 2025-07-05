@@ -24,12 +24,9 @@ jobs:
       - name: Run flake8
         run: |
           flake8
-      - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings -q
       - name: Run coverage
         run: |
-          coverage run -m pytest
+          coverage run -m pytest --maxfail=1 --disable-warnings -q
           coverage xml
           coverage report -m
       - name: Upload coverage to Codecov
