@@ -395,3 +395,19 @@ class AnimationMixin:
                 draw_glow(self.screen, rect, color, radius=radius, alpha=alpha)
             dt = yield
 
+    def _bomb_reveal(self, duration: float = 0.25):
+        """Yield a brief white flash when a bomb is played."""
+        w, h = self.screen.get_size()
+        overlay = pygame.Surface((w, h), pygame.SRCALPHA)
+        overlay.fill((255, 255, 255))
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            progress = min(elapsed / total, 1.0)
+            alpha = max(0, 255 - int(progress * 255))
+            overlay.set_alpha(alpha)
+            self.screen.blit(overlay, (0, 0))
+            dt = yield
+

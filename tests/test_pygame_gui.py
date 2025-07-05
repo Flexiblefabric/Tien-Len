@@ -574,6 +574,21 @@ def test_animate_glow_draws_glow():
     pygame.quit()
 
 
+def test_bomb_reveal_draws_flash():
+    view, _ = make_view()
+    view.screen = MagicMock()
+    with patch("pygame.event.pump"), patch("pygame.display.flip"):
+        gen = view._bomb_reveal(duration=2 / 60)
+        next(gen)
+        gen.send(1 / 60)
+        try:
+            gen.send(1 / 60)
+        except StopIteration:
+            pass
+    assert view.screen.blit.call_count >= 1
+    pygame.quit()
+
+
 def test_highlight_turn_draws_at_player_position():
     view, clock = make_view()
     view.screen = MagicMock()
@@ -1148,6 +1163,31 @@ def test_play_selected_triggers_glow():
     pygame.quit()
 
 
+def test_play_selected_triggers_bomb_reveal():
+    view, _ = make_view()
+    sprite = DummyCardSprite()
+    view.selected = [sprite]
+    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    with (
+        patch.object(view.game, "is_valid", return_value=(True, "")),
+        patch.object(view.game, "process_play", return_value=False),
+        patch.object(view.game, "next_turn"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "ai_turns"),
+        patch.object(view, "update_hand_sprites"),
+        patch.object(view, "_animate_flip", return_value="flip"),
+        patch.object(view, "_animate_glow", return_value="glow"),
+        patch.object(view, "_bomb_reveal", return_value="boom") as reveal,
+        patch.object(view, "_start_animation") as start,
+        patch.object(sound, "play"),
+        patch("pygame_gui.view.detect_combo", return_value="bomb"),
+    ):
+        view.play_selected()
+    reveal.assert_called_once_with()
+    assert "boom" in [c.args[0] for c in start.call_args_list]
+    pygame.quit()
+
+
 def test_play_selected_shakes_on_invalid():
     view, _ = make_view()
     sprite = DummyCardSprite()
@@ -1224,6 +1264,31 @@ def test_ai_turns_triggers_glow_on_play():
     glow.assert_called_once()
     assert glow.call_args.args[1] == pygame_gui.PLAYER_COLORS[1]
     assert "glow" in [c.args[0] for c in start.call_args_list]
+    pygame.quit()
+
+
+def test_ai_turns_triggers_bomb_reveal():
+    view, _ = make_view()
+    view.game.current_idx = 1
+    card = tien_len_full.Card("Spades", "3")
+    with (
+        patch.object(view.game, "ai_play", return_value=[card]),
+        patch.object(view.game, "is_valid", return_value=(True, "")),
+        patch.object(view.game, "process_play", return_value=False),
+        patch.object(view.game, "next_turn"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "update_hand_sprites"),
+        patch.object(view, "_animate_back", return_value="back"),
+        patch.object(view, "_animate_glow", return_value="glow"),
+        patch.object(view, "_bomb_reveal", return_value="boom") as reveal,
+        patch.object(view, "_start_animation") as start,
+        patch.object(sound, "play"),
+        patch.object(pygame_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
+        patch("pygame_gui.view.detect_combo", return_value="bomb"),
+    ):
+        view.ai_turns()
+    reveal.assert_called_once_with()
+    assert "boom" in [c.args[0] for c in start.call_args_list]
     pygame.quit()
 
 
