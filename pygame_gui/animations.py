@@ -169,6 +169,30 @@ class AnimationMixin:
                 break
             dt = yield
 
+    def _animate_shake(
+        self,
+        sprites: List[CardSprite],
+        amplitude: int = 5,
+        cycles: int = 3,
+        duration: float = 0.25,
+    ):
+        """Yield a horizontal shake animation for ``sprites``."""
+        if not sprites:
+            return
+        starts = [sp.rect.center for sp in sprites]
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            t = min(elapsed / total, 1.0)
+            offset = int(math.sin(t * cycles * 2 * math.pi) * amplitude)
+            for sp, (sx, sy) in zip(sprites, starts):
+                sp.rect.centerx = sx + offset
+            dt = yield
+        for sp, (sx, sy) in zip(sprites, starts):
+            sp.rect.centerx = sx
+
     def _highlight_turn(self, idx: int, duration: float = 10 / 60):
         """Yield an animation highlighting the active player."""
         x, y = self._player_pos(idx)

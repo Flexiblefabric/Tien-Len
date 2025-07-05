@@ -1056,6 +1056,36 @@ def test_play_selected_triggers_flip():
     pygame.quit()
 
 
+def test_play_selected_shakes_on_invalid():
+    view, _ = make_view()
+    sprite = DummyCardSprite()
+    view.selected = [sprite]
+    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    with (
+        patch.object(view.game, "is_valid", return_value=(False, "bad")),
+        patch.object(view, "_animate_shake", return_value="gen") as shake,
+        patch.object(view, "_start_animation") as start,
+    ):
+        view.play_selected()
+    shake.assert_called_once_with([sprite])
+    start.assert_called_once_with("gen")
+
+
+def test_pass_turn_shakes_on_invalid():
+    view, _ = make_view()
+    with (
+        patch.object(view.game, "handle_pass", return_value=False),
+        patch.object(view, "_animate_shake", return_value="gen") as shake,
+        patch.object(view, "_start_animation") as start,
+        patch.object(sound, "play"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "ai_turns"),
+    ):
+        view.pass_turn()
+    shake.assert_called_once_with(list(view.selected))
+    assert start.call_args_list[0].args[0] == "gen"
+
+
 def test_draw_score_overlay_positions_panel():
     with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
         view, _ = make_view()
