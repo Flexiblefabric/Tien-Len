@@ -65,6 +65,7 @@ are handled automatically.
 ### Pygame GUI features
 
 - Sprite-based interface with simple animations.
+- Animated card dealing at the start of each game.
 - Press **F11** to toggle full-screen.
 - Sprites and layout adapt automatically when the window is resized.
 - Press **Enter** or **Space** for the usual shortcuts.

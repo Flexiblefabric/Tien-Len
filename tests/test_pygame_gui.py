@@ -67,6 +67,31 @@ def test_update_hand_sprites():
     pygame.quit()
 
 
+def test_init_starts_deal_animation():
+    pygame.init()
+    pygame.font.init()
+    pygame.display.init()
+    clock = DummyClock()
+    with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ):
+            with patch.object(pygame_gui, "load_card_images"), patch(
+                "pygame.time.Clock",
+                return_value=clock,
+            ), patch.object(
+                pygame_gui.GameView,
+                "_animate_deal",
+                return_value="gen",
+            ) as deal, patch.object(
+                pygame_gui.GameView, "_start_animation"
+            ) as start:
+                pygame_gui.GameView(1, 1)
+    start.assert_any_call("gen")
+    deal.assert_called_once()
+    pygame.quit()
+
+
 class DummySprite(pygame.sprite.Sprite):
     """Minimal sprite used for input tests."""
 
@@ -633,6 +658,32 @@ def test_highlight_turn_speed():
     pygame.quit()
 
 
+def test_animate_deal_moves_cards():
+    view, _ = make_view()
+    deck = view._pile_center()
+    groups = [view.hand_sprites.sprites()] + [g.sprites() for g in view.ai_sprites]
+    dests = [[sp.rect.center for sp in grp] for grp in groups]
+    gen = view._animate_deal(duration=1 / 60, delay=0)
+    next(gen)
+    for grp in groups:
+        for sp in grp:
+            assert sp.rect.center == deck
+    steps = 0
+    while True:
+        try:
+            gen.send(1 / 60)
+            steps += 1
+        except StopIteration:
+            break
+    for grp, pos in zip(groups, dests):
+        for sp, dest in zip(grp, pos):
+            assert sp.rect.center == dest
+    total = sum(len(g) for g in groups)
+    expected = total * math.ceil((1 / 60) / view.animation_speed / (1 / 60))
+    assert steps == expected
+    pygame.quit()
+
+
 def test_state_transitions():
     view, _ = make_view()
     assert view.state == pygame_gui.GameState.MENU
@@ -1129,6 +1180,20 @@ def test_restart_game_preserves_scores():
     assert view.win_counts["Player"] == 2
     for p in view.game.players:
         assert p.name in view.win_counts
+    pygame.quit()
+
+
+def test_restart_game_triggers_deal_animation():
+    with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+        view, _ = make_view()
+    with patch.object(view, "close_overlay"), patch(
+        "random.sample", return_value=tien_len_full.AI_NAMES[1:4]
+    ), patch.object(view, "_animate_deal", return_value="gen") as deal, patch.object(
+        view, "_start_animation"
+    ) as start:
+        view.restart_game()
+    start.assert_any_call("gen")
+    deal.assert_called_once()
     pygame.quit()
 
 
