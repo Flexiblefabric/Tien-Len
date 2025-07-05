@@ -48,7 +48,7 @@ def make_view():
             with patch.object(pygame_gui, "load_card_images"):
                 with patch("pygame.time.Clock", return_value=clock):
                     view = pygame_gui.GameView(1, 1)
-    view._draw_frame = lambda: None
+    view._draw_frame = lambda *a, **k: None
     return view, clock
 
 

@@ -38,7 +38,7 @@ def make_view():
                         view = pygame_gui.GameView(1, 1)
     # Ensure highlight_turn does not access the display during tests
     view._highlight_turn = lambda *a, **k: None
-    view._draw_frame = lambda: None
+    view._draw_frame = lambda *a, **k: None
     return view
 
 
