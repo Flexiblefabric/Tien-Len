@@ -28,7 +28,7 @@ def make_view(width=200, height=200):
             with patch.object(pygame_gui, "load_card_images"):
                 view = pygame_gui.GameView(width, height)
     # Avoid GUI operations during tests
-    view._draw_frame = lambda: None
+    view._draw_frame = lambda *a, **k: None
     return view
 
 

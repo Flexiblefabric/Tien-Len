@@ -203,8 +203,16 @@ class GameView(AnimationMixin):
         self.show_menu()
 
     # Animation helpers -------------------------------------------------
-    def _draw_frame(self) -> None:
-        """Redraw the game state."""
+    def _draw_frame(self, flip: bool = True) -> None:
+        """Redraw the game state.
+
+        Parameters
+        ----------
+        flip:
+            If ``True`` (default), ``pygame.display.flip()`` is called after
+            drawing. Animation helpers can pass ``False`` to defer flipping until
+            additional elements are drawn.
+        """
         if self.state == GameState.MENU and self.main_menu_image:
             bg = pygame.transform.smoothscale(
                 self.main_menu_image, self.screen.get_size()
@@ -222,7 +230,8 @@ class GameView(AnimationMixin):
             self.screen.blit(overlay_surf, (0, 0))
             self.overlay.draw(self.screen)
         self.draw_score_overlay()
-        pygame.display.flip()
+        if flip:
+            pygame.display.flip()
 
     # Layout helpers --------------------------------------------------
     def _layout_zones(self) -> None:

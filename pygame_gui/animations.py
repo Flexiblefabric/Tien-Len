@@ -105,7 +105,7 @@ class AnimationMixin:
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
             )
-            self._draw_frame()
+            self._draw_frame(flip=False)
             self.screen.blit(img, rect)
             pygame.display.flip()
             pygame.event.pump()
@@ -135,7 +135,7 @@ class AnimationMixin:
                     int(sx + (dest[0] - sx) * t),
                     int(sy + (dest[1] - sy) * t),
                 )
-            self._draw_frame()
+            self._draw_frame(flip=False)
             for sp, front in zip(sprites, fronts):
                 img = back if back is not None and t < 0.5 else front
                 rect = img.get_rect(center=sp.rect.center)
@@ -164,7 +164,7 @@ class AnimationMixin:
         steps = math.ceil(frames / self.animation_speed)
         for i in range(steps):
             progress = (i + 1) / steps
-            self._draw_frame()
+            self._draw_frame(flip=False)
             overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
             alpha = max(0, 200 - int(progress * 200))
             center = overlay.get_rect().center
@@ -205,7 +205,7 @@ class AnimationMixin:
         current = self.overlay
         # Draw the base screen once and reuse it during the animation
         self.overlay = None
-        self._draw_frame()
+        self._draw_frame(flip=False)
         base = self.screen.copy()
         self.overlay = current
         elapsed = 0.0
