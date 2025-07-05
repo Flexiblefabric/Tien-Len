@@ -1137,6 +1137,31 @@ def test_pass_turn_shakes_on_invalid():
     assert start.call_args_list[0].args[0] == "gen"
 
 
+def test_undo_move_triggers_return_animation():
+    view, _ = make_view()
+    player = view.game.players[0]
+    card = tien_len_full.Card("Spades", "3")
+    view.game.pile.append((player, [card]))
+    view.game.snapshots.append(view.game.to_json())
+
+    def undo():
+        view.game.pile.pop()
+        return True
+
+    with (
+        patch.object(view.game, "undo_last", side_effect=undo) as undo_last,
+        patch.object(view, "_animate_return", return_value="gen") as ret,
+        patch.object(view, "_start_animation") as start,
+        patch.object(view, "update_hand_sprites"),
+        patch.object(view, "_highlight_turn"),
+    ):
+        view.undo_move()
+    undo_last.assert_called_once()
+    ret.assert_called_once_with(0, 1)
+    start.assert_any_call("gen")
+    pygame.quit()
+
+
 def test_draw_score_overlay_positions_panel():
     with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
         view, _ = make_view()

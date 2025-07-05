@@ -906,9 +906,18 @@ class GameView(AnimationMixin):
 
     def undo_move(self) -> None:
         """Undo the most recent move and refresh the display."""
+        before = list(self.game.pile)
         if self.game.undo_last():
+            removed = before[len(self.game.pile) :]
             self.selected.clear()
             self.update_hand_sprites()
+            for player, cards in removed:
+                idx = next(
+                    (i for i, p in enumerate(self.game.players) if p.name == player.name),
+                    None,
+                )
+                if idx is not None:
+                    self._start_animation(self._animate_return(idx, len(cards)))
             self._start_animation(self._highlight_turn(self.game.current_idx))
 
     def ai_turns(self):
