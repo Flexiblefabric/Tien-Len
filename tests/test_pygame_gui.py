@@ -112,7 +112,7 @@ def test_handle_mouse_select_and_overlay():
     view, _ = make_view()
     sprite = DummySprite()
     center = sprite.rect.center
-    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    view.hand_sprites = pygame.sprite.Group(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
@@ -138,7 +138,7 @@ def test_handle_mouse_selects_rightmost_sprite():
     view, _ = make_view()
     left = DummySprite((5, 5))
     right = DummySprite((5, 5))
-    view.hand_sprites = pygame.sprite.OrderedUpdates(left, right)
+    view.hand_sprites = pygame.sprite.Group(left, right)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
@@ -180,7 +180,7 @@ def test_update_play_button_state_disables_when_invalid():
 def test_handle_mouse_calls_update_play_button_state():
     view, _ = make_view()
     sprite = DummyCardSprite((5, 5))
-    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    view.hand_sprites = pygame.sprite.Group(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
@@ -365,7 +365,7 @@ def test_draw_players_uses_draw_shadow():
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
             sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
-    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    view.hand_sprites = pygame.sprite.Group(sprite)
     with patch.object(sprite, "draw_shadow") as ds:
         view.draw_players()
         ds.assert_called()
@@ -374,7 +374,7 @@ def test_draw_players_uses_draw_shadow():
 
 def test_draw_players_labels_use_padding():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.hand_sprites = pygame.sprite.Group()
     view.ai_sprites = []
     view.screen = MagicMock()
     view.screen.get_size.return_value = (200, 200)
@@ -409,7 +409,7 @@ def test_draw_players_labels_use_padding():
 
 def test_player_zone_rect_returns_union():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.hand_sprites = pygame.sprite.Group()
     view.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
     rects = [pygame.Rect(1, 2, 4, 5), pygame.Rect(4, 10, 2, 3)]
     sprites = [DummySprite() for _ in rects]
@@ -425,7 +425,7 @@ def test_draw_players_highlights_active_zone():
     view, _ = make_view()
     view.screen = MagicMock()
     view.screen.get_size.return_value = (100, 100)
-    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.hand_sprites = pygame.sprite.Group()
     view.ai_sprites = [pygame.sprite.Group() for _ in range(3)]
     zone = pygame.Rect(0, 0, 10, 10)
     with patch.object(view, "_player_zone_rect", return_value=zone), patch.object(
@@ -1007,7 +1007,7 @@ def test_play_selected_triggers_flip():
     view, _ = make_view()
     sprite = DummyCardSprite()
     view.selected = [sprite]
-    view.hand_sprites = pygame.sprite.OrderedUpdates(sprite)
+    view.hand_sprites = pygame.sprite.Group(sprite)
     dest = view._pile_center()
     with (
         patch.object(view.game, "is_valid", return_value=(True, "")),
@@ -1094,7 +1094,7 @@ def test_restart_game_clears_current_trick_immediately():
 
 def test_draw_players_displays_trick_linearly():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.OrderedUpdates()
+    view.hand_sprites = pygame.sprite.Group()
     view.ai_sprites = []
     surf1 = pygame.Surface((10, 20))
     surf2 = pygame.Surface((10, 20))
