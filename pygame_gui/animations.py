@@ -310,3 +310,34 @@ class AnimationMixin:
                 while elapsed < pause_total:
                     elapsed += dt
                     dt = yield
+
+    def _animate_return(
+        self,
+        player_idx: int,
+        count: int,
+        duration: float = 0.25,
+        delay: float = 5 / 60,
+    ):
+        """Yield an animation returning ``count`` card backs to ``player_idx``."""
+        if count <= 0:
+            return
+
+        start = self._pile_center()
+        dest = self._player_pos(player_idx)
+        pause_total = delay / self.animation_speed
+
+        dt = yield
+        for _ in range(count):
+            anim = self._animate_back(start, dest, duration)
+            next(anim)
+            while True:
+                try:
+                    anim.send(dt)
+                except StopIteration:
+                    break
+                dt = yield
+            elapsed = 0.0
+            while elapsed < pause_total:
+                elapsed += dt
+                dt = yield
+
