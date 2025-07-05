@@ -44,7 +44,6 @@ class AnimationMixin:
                     int(sx + (dest[0] - sx) * t),
                     int(sy + (dest[1] - sy) * t),
                 )
-            self._draw_frame()
             dt = yield
 
     def _animate_bounce(
@@ -79,7 +78,6 @@ class AnimationMixin:
                     scaled = img
                 sp.image = scaled
                 sp.rect = scaled.get_rect(center=rect.center)
-            self._draw_frame()
             dt = yield
         for sp, (img, rect) in zip(sprites, originals):
             sp.image = img
@@ -106,9 +104,7 @@ class AnimationMixin:
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
             )
-            self._draw_frame(flip=False)
             self.screen.blit(img, rect)
-            pygame.display.flip()
             dt = yield
         dummy = types.SimpleNamespace(image=img, rect=rect)
         bounce = self._animate_bounce([dummy])
@@ -119,9 +115,7 @@ class AnimationMixin:
                 bounce.send(dt)
             except StopIteration:
                 break
-            self._draw_frame(flip=False)
             self.screen.blit(dummy.image, dummy.rect)
-            pygame.display.flip()
             dt = yield
 
     def _animate_flip(
@@ -147,12 +141,10 @@ class AnimationMixin:
                     int(sx + (dest[0] - sx) * t),
                     int(sy + (dest[1] - sy) * t),
                 )
-            self._draw_frame(flip=False)
             for sp, front in zip(sprites, fronts):
                 img = back if back is not None and t < 0.5 else front
                 rect = img.get_rect(center=sp.rect.center)
                 self.screen.blit(img, rect)
-            pygame.display.flip()
             dt = yield
         bounce = self._animate_bounce(sprites)
         next(bounce)
@@ -197,7 +189,6 @@ class AnimationMixin:
         while elapsed < total:
             elapsed += dt
             progress = min(elapsed / total, 1.0)
-            self._draw_frame(flip=False)
             overlay.fill((0, 0, 0, 0))
             alpha = max(0, 200 - int(progress * 200))
             radius = 11 + int(3 * math.sin(math.pi * progress))
@@ -206,7 +197,6 @@ class AnimationMixin:
                     overlay, (255, 255, 0, alpha), center, radius, width=3
                 )
             self.screen.blit(overlay, rect.topleft)
-            pygame.display.flip()
             dt = yield
 
     def _transition_overlay(
@@ -236,7 +226,6 @@ class AnimationMixin:
         current = self.overlay
         # Draw the base screen once and reuse it during the animation
         self.overlay = None
-        self._draw_frame(flip=False)
         base = self.screen.copy()
         self.overlay = current
         elapsed = 0.0
@@ -256,7 +245,5 @@ class AnimationMixin:
                 ts.set_alpha(int(255 * progress))
                 self.screen.blit(fs, (0, 0))
                 self.screen.blit(ts, (0, 0))
-            pygame.display.flip()
             dt = yield
         self.overlay = new
-        self._draw_frame()

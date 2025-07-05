@@ -62,6 +62,6 @@ def test_average_frame_time_below_threshold():
         view.run()
 
     avg = sum(clock.times) / len(clock.times)
-    assert avg < 0.2
+    assert avg < 0.05
     pygame.quit()
 

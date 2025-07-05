@@ -1174,8 +1174,7 @@ class GameView(AnimationMixin):
                 except StopIteration:
                     self.animations.remove(anim)
 
-            if not self.animations:
-                self._draw_frame()
+            self._draw_frame()
         pygame.quit()
 
 
