@@ -191,14 +191,15 @@ class AnimationMixin:
             rect.midright = (x, y)
         total = duration / self.animation_speed
         elapsed = 0.0
+        overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+        center = overlay.get_rect().center
         dt = yield
         while elapsed < total:
             elapsed += dt
             progress = min(elapsed / total, 1.0)
             self._draw_frame(flip=False)
-            overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 0))
             alpha = max(0, 200 - int(progress * 200))
-            center = overlay.get_rect().center
             radius = 11 + int(3 * math.sin(math.pi * progress))
             if hasattr(overlay, "get_width"):
                 pygame.draw.circle(
