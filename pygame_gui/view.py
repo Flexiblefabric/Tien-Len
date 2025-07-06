@@ -940,6 +940,9 @@ class GameView(AnimationMixin):
         else:
             self._start_animation(self._animate_shake(list(self.selected)))
             sound.play("pass")
+            self._start_animation(
+                self._animate_pass_text(self.game.current_idx)
+            )
             self._start_animation(self._highlight_turn(self.game.current_idx))
             self.ai_turns()
         if not self.game.pile:
@@ -999,6 +1002,9 @@ class GameView(AnimationMixin):
             else:
                 sound.play("pass")
                 self.game.process_pass(p)
+                self._start_animation(
+                    self._animate_pass_text(self.game.current_idx)
+                )
             self.game.next_turn()
             self._start_animation(self._highlight_turn(self.game.current_idx))
             if not self.game.pile:
