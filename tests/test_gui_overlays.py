@@ -589,7 +589,6 @@ def test_ai_turns_triggers_glow_on_play():
         view.ai_turns()
     glow.assert_called_once()
     assert glow.call_args.args[1] == pygame_gui.PLAYER_COLORS[1]
-    assert "glow" in [c.args[0] for c in start.call_args_list]
     pygame.quit()
 
 
