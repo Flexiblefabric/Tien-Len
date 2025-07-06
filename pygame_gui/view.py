@@ -103,6 +103,13 @@ class GameView(AnimationMixin):
                 self.main_menu_image = pygame.image.load(str(menu_path)).convert()
             except Exception:
                 self.main_menu_image = None
+
+        # Shared background for score panel and overlays
+        bg_path = ASSETS_DIR / "imgs" / "menu_background.png"
+        try:
+            self.menu_background = pygame.image.load(str(bg_path)).convert_alpha()
+        except Exception:
+            self.menu_background = None
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
         self._layout_zones()
@@ -1214,7 +1221,7 @@ class GameView(AnimationMixin):
                 if cards:
                     text = " ".join(str(c) for c in cards)
                     lines.append(f"{name}: {text}")
-        panel = self._hud_box(lines, padding=5, bg_image=self.panel_image)
+        panel = self._hud_box(lines, padding=5, bg_image=self.menu_background or self.panel_image)
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
         if self.score_visible:
