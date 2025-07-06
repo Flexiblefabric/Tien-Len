@@ -244,8 +244,8 @@ def test_draw_players_labels_use_padding():
     card_w = view.card_width
     card_h = int(card_w * 1.4)
     spacing = min(40, card_w)
-    pad_v = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD
-    pad_h = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD
+    pad_v = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD * 2
+    pad_h = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD * 2
 
     assert calls[0].args[1].midbottom == (100, 150 - pad_v)
     assert calls[1].args[1].midtop == (100, 50 + pad_v)
