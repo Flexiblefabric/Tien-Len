@@ -991,19 +991,21 @@ class GameView(AnimationMixin):
                 else:
                     sound.play("click")
                 dest = self._pile_center()
-                self._start_animation(
-                    self._animate_back(
-                        self._player_pos(self.game.current_idx),
-                        dest,
-                    )
-                )
+                start_pos = self._player_pos(self.game.current_idx)
                 glow_sprites = [
                     types.SimpleNamespace(rect=img.get_rect(center=dest))
                     for _, img in self.current_trick[-len(cards) :]
                 ]
-                self._start_animation(
-                    self._animate_glow(glow_sprites, PLAYER_COLORS[self.game.current_idx])
-                )
+
+                def seq():
+                    for _ in cards:
+                        yield from self._animate_back(start_pos, dest)
+                        yield from self._animate_delay(0.2)
+                    yield from self._animate_glow(
+                        glow_sprites, PLAYER_COLORS[self.game.current_idx]
+                    )
+
+                self._start_animation(seq())
             else:
                 sound.play("pass")
                 self.game.process_pass(p)

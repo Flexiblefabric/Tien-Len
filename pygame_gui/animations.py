@@ -541,3 +541,12 @@ class AnimationMixin:
         while elapsed < total:
             elapsed += dt
             dt = yield
+
+    def _animate_delay(self, duration: float = 0.2):
+        """Yield a generic pause with no visual effect."""
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            dt = yield
