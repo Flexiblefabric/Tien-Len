@@ -253,6 +253,30 @@ class AnimationMixin:
             self.screen.blit(overlay, rect.topleft)
             dt = yield
 
+    def _animate_pass_text(self, idx: int, duration: float = 0.5):
+        """Yield an animation showing "PASS" over ``idx``'s zone."""
+        zone = self._player_zone_rect(idx)
+        if zone.width <= 0 or zone.height <= 0:
+            return
+        panel = self._hud_box(["PASS"], bg_image=self.panel_image)
+        rect = panel.get_rect(center=zone.center)
+        start = rect.center
+        dest = (rect.centerx, rect.centery - 30)
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            t = ease(min(elapsed / total, 1.0))
+            rect.center = (
+                int(start[0] + (dest[0] - start[0]) * t),
+                int(start[1] + (dest[1] - start[1]) * t),
+            )
+            surf = panel.copy()
+            surf.set_alpha(max(0, 255 - int(t * 255)))
+            self.screen.blit(surf, rect)
+            dt = yield
+
     def _transition_overlay(
         self,
         old: Optional[Overlay],

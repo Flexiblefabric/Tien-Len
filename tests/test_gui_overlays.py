@@ -478,6 +478,26 @@ def test_play_selected_triggers_bomb_reveal():
     pygame.quit()
 
 
+def test_ai_turns_triggers_pass_animation():
+    view, _ = make_view()
+    view.game.current_idx = 1
+    with (
+        patch.object(view.game, "ai_play", return_value=[]),
+        patch.object(view.game, "is_valid", return_value=(True, "")),
+        patch.object(view.game, "process_pass") as proc,
+        patch.object(view.game, "next_turn"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "update_hand_sprites"),
+        patch.object(view, "_animate_pass_text", return_value="pass") as anim,
+        patch.object(view, "_start_animation") as start,
+        patch.object(sound, "play"),
+    ):
+        view.ai_turns()
+    proc.assert_called_once_with(view.game.players[1])
+    anim.assert_called_once_with(1)
+    assert "pass" in [c.args[0] for c in start.call_args_list]
+    
+
 def test_play_selected_shakes_on_invalid():
     view, _ = make_view()
     sprite = DummyCardSprite()
@@ -506,6 +526,22 @@ def test_pass_turn_shakes_on_invalid():
         view.pass_turn()
     shake.assert_called_once_with(list(view.selected))
     assert start.call_args_list[0].args[0] == "gen"
+
+
+def test_pass_turn_triggers_pass_animation():
+    view, _ = make_view()
+    with (
+        patch.object(view.game, "handle_pass", return_value=False),
+        patch.object(view, "_animate_shake", return_value="shake"),
+        patch.object(view, "_animate_pass_text", return_value="pass") as anim,
+        patch.object(view, "_start_animation") as start,
+        patch.object(sound, "play"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "ai_turns"),
+    ):
+        view.pass_turn()
+    anim.assert_called_once_with(view.game.current_idx)
+    assert "pass" in [c.args[0] for c in start.call_args_list]
 
 
 def test_undo_move_triggers_return_animation():

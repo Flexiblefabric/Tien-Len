@@ -405,6 +405,26 @@ def test_highlight_turn_draws_at_player_position():
     pygame.quit()
 
 
+def test_animate_pass_text_draws_panel():
+    view, _ = make_view()
+    view.screen = MagicMock()
+    zone = pygame.Rect(0, 0, 10, 10)
+    panel = pygame.Surface((2, 2))
+    with patch.object(view, "_player_zone_rect", return_value=zone) as rect_mock, patch.object(
+        view, "_hud_box", return_value=panel
+    ) as hud, patch("pygame.event.pump"), patch("pygame.display.flip"):
+        gen = view._animate_pass_text(1, duration=2 / 60)
+        next(gen)
+        gen.send(1 / 60)
+        try:
+            gen.send(1 / 60)
+        except StopIteration:
+            pass
+    rect_mock.assert_called_with(1)
+    hud.assert_called_once()
+    assert view.screen.blit.call_count >= 1
+    
+
 def test_state_methods_update_state():
     view, _ = make_view()
     assert view.state == pygame_gui.GameState.MENU
