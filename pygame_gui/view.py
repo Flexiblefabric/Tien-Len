@@ -1147,7 +1147,7 @@ class GameView(AnimationMixin):
         # Player labels and avatars
         for idx, p in enumerate(self.game.players):
             x, y = self._player_pos(idx)
-            txt = f"{p.name} ({len(p.hand)})"
+            txt = p.name
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
             panel = self._hud_box(
                 [txt], text_color=color, padding=3, bg_image=self.panel_image
@@ -1159,7 +1159,7 @@ class GameView(AnimationMixin):
             combined.blit(avatar, (0, (combined.get_height() - ah) // 2))
             combined.blit(panel, (aw + LABEL_PAD, (combined.get_height() - ph) // 2))
             panel = combined
-            offset = card_h // 2 + spacing // 2 + LABEL_PAD
+            offset = card_h // 2 + spacing // 2 + LABEL_PAD * 2
             if idx == 0:
                 rect = panel.get_rect(midbottom=(x, y - offset))
             elif idx == 1:
