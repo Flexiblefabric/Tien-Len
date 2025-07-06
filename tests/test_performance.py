@@ -46,6 +46,7 @@ def make_view():
                     view = pygame_gui.GameView(1, 1)
     # Avoid GUI operations during tests
     view._highlight_turn = lambda *a, **k: None
+    view._animate_avatar_blink = lambda *a, **k: None
     view._draw_frame = lambda *a, **k: None
     return view, clock
 

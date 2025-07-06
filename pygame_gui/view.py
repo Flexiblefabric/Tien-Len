@@ -932,6 +932,7 @@ class GameView(AnimationMixin):
         self.selected.clear()
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
+        self._start_animation(self._animate_avatar_blink(self.game.current_idx))
         self.ai_turns()
 
     def pass_turn(self):
@@ -944,6 +945,7 @@ class GameView(AnimationMixin):
                 self._animate_pass_text(self.game.current_idx)
             )
             self._start_animation(self._highlight_turn(self.game.current_idx))
+            self._start_animation(self._animate_avatar_blink(self.game.current_idx))
             self.ai_turns()
         if not self.game.pile:
             self.current_trick.clear()
@@ -1007,10 +1009,12 @@ class GameView(AnimationMixin):
                 )
             self.game.next_turn()
             self._start_animation(self._highlight_turn(self.game.current_idx))
+            self._start_animation(self._animate_avatar_blink(self.game.current_idx))
             if not self.game.pile:
                 self.current_trick.clear()
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
+        self._start_animation(self._animate_avatar_blink(self.game.current_idx))
 
     # Rendering -------------------------------------------------------
     def update_hand_sprites(self):
@@ -1242,6 +1246,7 @@ class GameView(AnimationMixin):
     def run(self):
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
+        self._start_animation(self._animate_avatar_blink(self.game.current_idx))
         while self.running:
             dt = self.clock.tick(self.fps_limit) / 1000.0
             self.dt = dt
