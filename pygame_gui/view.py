@@ -37,6 +37,7 @@ from .helpers import (
     draw_surface_shadow,
     draw_glow,
     draw_nine_patch,
+    draw_tiled,
     load_button_images,
     get_font,
 )
@@ -109,6 +110,11 @@ class GameView(AnimationMixin):
             self.menu_background = pygame.image.load(str(bg_path)).convert_alpha()
         except Exception:
             self.menu_background = None
+        tile_path = ASSETS_DIR / "imgs" / "panel_tile.png"
+        try:
+            self.panel_tile = pygame.image.load(str(tile_path)).convert()
+        except Exception:
+            self.panel_tile = None
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
         self._layout_zones()
@@ -234,6 +240,26 @@ class GameView(AnimationMixin):
                 self.screen.blit(self._table_surface, (0, 0))
             else:
                 self.screen.fill(self.table_color)
+
+            w, h = self.screen.get_size()
+            card_h = int(self.card_width * 1.4)
+            top_h = int(self.card_width * 1.2)
+            bottom_top = self.hand_y - card_h // 2 - LABEL_PAD
+            side_w = self.settings_button.rect.width + LABEL_PAD * 2
+
+            top_rect = pygame.Rect(0, 0, w, top_h)
+            bottom_rect = pygame.Rect(0, bottom_top, w, h - bottom_top)
+            side_rect = pygame.Rect(w - side_w, 0, side_w, top_h)
+
+            if self.panel_tile:
+                draw_tiled(self.screen, self.panel_tile, top_rect)
+                draw_tiled(self.screen, self.panel_tile, bottom_rect)
+                draw_tiled(self.screen, self.panel_tile, side_rect)
+            else:
+                pygame.draw.rect(self.screen, (0, 0, 0, 150), top_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0, 150), bottom_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0, 150), side_rect)
+
             self.draw_players()
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
@@ -447,8 +473,9 @@ class GameView(AnimationMixin):
             )
         else:
             self.settings_button.callback = self.show_in_game_menu
-        margin = min(60, max(40, self.card_width // 3))
-        self.settings_button.rect.topright = (w - margin, margin)
+        side_w = self.settings_button.rect.width + LABEL_PAD * 2
+        top_h = int(self.card_width * 1.2)
+        self.settings_button.rect.center = (w - side_w // 2, top_h // 2)
 
     def _position_score_button(self) -> None:
         """Create/position the scoreboard toggle button."""
