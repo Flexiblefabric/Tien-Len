@@ -968,6 +968,9 @@ class GameView(AnimationMixin):
 
     def ai_turns(self):
         while not self.game.players[self.game.current_idx].is_human:
+            self._start_animation(
+                self._animate_thinking(self.game.current_idx)
+            )
             p = self.game.players[self.game.current_idx]
             cards = self.game.ai_play(self.game.current_combo)
             ok, _ = self.game.is_valid(p, cards, self.game.current_combo)
