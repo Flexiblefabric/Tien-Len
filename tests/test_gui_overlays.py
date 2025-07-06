@@ -599,7 +599,7 @@ def test_show_game_over_updates_win_counts():
     pygame.quit()
 
 
-def test_restart_game_preserves_scores():
+def test_restart_game_resets_scores():
     with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
         view, _ = make_view()
     view.win_counts["Player"] = 2
@@ -607,9 +607,8 @@ def test_restart_game_preserves_scores():
         view, "close_overlay"
     ):
         view.restart_game()
-    assert view.win_counts["Player"] == 2
     for p in view.game.players:
-        assert p.name in view.win_counts
+        assert view.win_counts[p.name] == 0
     pygame.quit()
 
 

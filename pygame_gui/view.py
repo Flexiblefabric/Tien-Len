@@ -568,20 +568,21 @@ class GameView(AnimationMixin):
         self.running = False
 
     def restart_game(self) -> None:
-        counts = self.win_counts
         self.game = Game()
         self.game.setup()
         self._attach_reset_pile()
+        self.reset_scores()
         self.reset_current_trick()
         self.selected.clear()
         self.current_trick.clear()
         self.apply_options()
         self.update_hand_sprites()
         self._start_animation(self._animate_deal())
-        for p in self.game.players:
-            counts.setdefault(p.name, 0)
-        self.win_counts = counts
         self.close_overlay()
+
+    def reset_scores(self) -> None:
+        """Reset player win counts."""
+        self.win_counts = {p.name: 0 for p in self.game.players}
 
     def reset_current_trick(self, animate: bool = True) -> None:
         """Clear the list of cards representing the current trick."""
