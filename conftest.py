@@ -53,7 +53,6 @@ if pygame:
         def toggle(self):
             self.selected = not self.selected
 
-
     class DummyCardSprite(DummySprite):
         def __init__(self, pos=(0, 0)):
             super().__init__(pos)
@@ -68,7 +67,6 @@ else:  # pragma: no cover - pygame missing
 
         def toggle(self):
             self.selected = not self.selected
-
 
     class DummyCardSprite(DummySprite):
         def __init__(self, pos=(0, 0)):

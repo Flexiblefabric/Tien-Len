@@ -1,16 +1,15 @@
 import os
 from unittest.mock import patch, MagicMock
 import pytest
+import pygame
+import pygame_gui
+from conftest import make_view, DummySprite, DummyCardSprite
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
 # Use dummy video driver so no window is opened
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-import pygame  # noqa: E402
-import pygame_gui  # noqa: E402
-from conftest import make_view, DummySprite, DummyCardSprite
 
 
 def test_handle_key_shortcuts():

@@ -1,9 +1,8 @@
 import pytest
+import pygame
+import pygame_gui
 
 pytest.importorskip("pygame")
-
-import pygame  # noqa: E402
-import pygame_gui  # noqa: E402
 
 
 class DummyFont:
