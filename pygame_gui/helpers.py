@@ -13,6 +13,8 @@ from tien_len_full import Card
 
 # Path to the installed assets directory
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+# Path to the bundled TTF font shipped with the package
+FONT_FILE = ASSETS_DIR / "fonts" / "DejaVuSans.ttf"
 
 LOG_FILE = "tien_len_game.log"
 
@@ -46,7 +48,14 @@ def get_font(size: int) -> pygame.font.Font:
         _FONT_CACHE.clear()
 
     if size not in _FONT_CACHE:
-        _FONT_CACHE[size] = pygame.font.SysFont(None, size)
+        # Use bundled font when available to ensure consistent appearance
+        if FONT_FILE.is_file():
+            try:
+                _FONT_CACHE[size] = pygame.font.Font(str(FONT_FILE), size)
+            except Exception:  # pragma: no cover - fall back if font load fails
+                _FONT_CACHE[size] = pygame.font.SysFont(None, size)
+        else:
+            _FONT_CACHE[size] = pygame.font.SysFont(None, size)
     return _FONT_CACHE[size]
 
 
