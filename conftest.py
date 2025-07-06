@@ -89,6 +89,8 @@ def make_view(width=1, height=1, clock=None):
     pygame.init()
     pygame.font.init()
     pygame.display.init()
+    if pygame.display.get_surface() is None:
+        pygame.display.set_mode((width, height))
     pygame_gui.clear_font_cache()
     clk = clock or DummyClock()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):

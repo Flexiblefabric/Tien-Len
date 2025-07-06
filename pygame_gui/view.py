@@ -457,6 +457,16 @@ class GameView(AnimationMixin):
             self.score_button.callback = self.toggle_score
         self.score_button.rect.topleft = (5, 5)
 
+    def _clamp_score_pos(self) -> None:
+        """Ensure the score panel stays within the window bounds."""
+        w, h = self.screen.get_size()
+        max_x = max(0, w - self.score_rect.width)
+        max_y = max(0, h - self.score_rect.height)
+        x = min(max(self.score_pos[0], 0), max_x)
+        y = min(max(self.score_pos[1], 0), max_y)
+        self.score_pos = (x, y)
+        self.score_rect.topleft = self.score_pos
+
     def toggle_score(self) -> None:
         """Toggle visibility of the score panel and save."""
         self.score_visible = not self.score_visible
@@ -774,6 +784,7 @@ class GameView(AnimationMixin):
         self.update_hand_sprites()
         self._create_action_buttons()
         self._position_score_button()
+        self._clamp_score_pos()
         self._position_settings_button()
         if self.overlay:
             self.overlay.resize()
@@ -1211,6 +1222,7 @@ class GameView(AnimationMixin):
         elif event.type == pygame.MOUSEBUTTONUP:
             if self._dragging_score:
                 self._dragging_score = False
+                self._clamp_score_pos()
                 self._save_options()
                 return True
         elif event.type == pygame.MOUSEMOTION and self._dragging_score:

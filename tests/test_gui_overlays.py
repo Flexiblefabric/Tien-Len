@@ -130,6 +130,21 @@ def test_on_resize_calls_create_action_buttons():
         create.assert_called_once()
 
 
+def test_on_resize_clamps_score_pos():
+    view, _ = make_view()
+    with patch(
+        "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
+    ), patch.object(pygame_gui, "load_card_images"), patch.object(
+        view, "update_hand_sprites"
+    ), patch.object(view, "_create_action_buttons"), patch.object(
+        view, "_position_score_button"
+    ), patch.object(
+        view, "_position_settings_button"
+    ), patch.object(view, "_clamp_score_pos") as clamp:
+        view.on_resize(100, 100)
+    clamp.assert_called_once()
+
+
 def test_apply_options_updates_game_and_audio():
     view, _ = make_view()
     p0 = view.game.players[0]
@@ -1033,7 +1048,9 @@ def test_handle_score_event_dragging():
     view.score_pos = (50, 10)
     view.draw_score_overlay()
     start_x, start_y = view.score_pos
-    with patch.object(view, "_save_options") as save:
+    with patch.object(view, "_save_options") as save, patch.object(
+        view, "_clamp_score_pos"
+    ) as clamp:
         down = pygame.event.Event(
             pygame.MOUSEBUTTONDOWN, {"pos": (start_x + 5, start_y + 5)}
         )
@@ -1048,6 +1065,7 @@ def test_handle_score_event_dragging():
         )
         assert view._handle_score_event(up) is True
         save.assert_called_once()
+        clamp.assert_called_once()
     pygame.quit()
 
 
