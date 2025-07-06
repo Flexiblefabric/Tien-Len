@@ -608,7 +608,9 @@ class HowToPlayOverlay(Overlay):
             "First to shed all cards wins the round.",
         ]
         panel = self.view._hud_box(
-            lines, padding=10, bg_image=self.view.panel_image
+            lines,
+            padding=10,
+            bg_image=self.view.menu_background or self.view.panel_image,
         )
         rect = panel.get_rect(center=(w // 2, h // 2 - 20))
         surface.blit(panel, rect)
@@ -648,7 +650,9 @@ class TutorialOverlay(Overlay):
             "3. Beat opponents until you run out of cards.",
         ]
         panel = self.view._hud_box(
-            steps, padding=10, bg_image=self.view.panel_image
+            steps,
+            padding=10,
+            bg_image=self.view.menu_background or self.view.panel_image,
         )
         rect = panel.get_rect(center=(w // 2, h // 2 - 20))
         surface.blit(panel, rect)
@@ -702,7 +706,9 @@ class SavePromptOverlay(Overlay):
         w, h = surface.get_size()
         msg = f"Save your game before {self.label.lower()}?"
         panel = self.view._hud_box(
-            [msg], padding=10, bg_image=self.view.panel_image
+            [msg],
+            padding=10,
+            bg_image=self.view.menu_background or self.view.panel_image,
         )
         rect = panel.get_rect(center=(w // 2, h // 2 - 60))
         surface.blit(panel, rect)
@@ -794,7 +800,9 @@ class GameOverOverlay(Overlay):
             f"{i+1}. {n} ({c})" for i, (n, c) in enumerate(self.rankings)
         ]
         panel = self.view._hud_box(
-            lines, padding=10, bg_image=self.view.panel_image
+            lines,
+            padding=10,
+            bg_image=self.view.menu_background or self.view.panel_image,
         )
         rect = panel.get_rect(center=(w // 2, h // 2 - 20))
         surface.blit(panel, rect)
