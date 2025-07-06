@@ -532,3 +532,12 @@ class AnimationMixin:
                 surf.set_alpha(alpha)
                 self.screen.blit(surf, sp.rect)
             dt = yield
+
+    def _animate_thinking(self, idx: int, duration: float = 0.3):
+        """Yield a short pause representing the AI 'thinking'."""
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            dt = yield
