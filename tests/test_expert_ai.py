@@ -1,9 +1,8 @@
 import pytest
+from tien_len_full import Game, Card
 
 pytest.importorskip("pygame")
 pytest.importorskip("pygame_gui")
-
-from tien_len_full import Game, Card  # noqa: E402
 
 
 def test_minimax_decision_selects_optimal_move():

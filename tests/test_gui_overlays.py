@@ -1,19 +1,17 @@
 import os
 import logging
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
+import pygame
+import pygame_gui
+import tien_len_full
+import sound
+from conftest import make_view, DummyFont, DummyCardSprite
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-import pygame  # noqa: E402
-import pygame_gui  # noqa: E402
-import tien_len_full  # noqa: E402
-import sound  # noqa: E402
-from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
 
 
 def test_on_resize_rebuilds_sprites():

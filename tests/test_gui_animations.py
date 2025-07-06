@@ -3,17 +3,15 @@ import math
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 import pytest
+import pygame
+import pygame_gui
+import tien_len_full
+from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-
-import pygame  # noqa: E402
-import pygame_gui  # noqa: E402
-import tien_len_full  # noqa: E402
-from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
-
 
 
 def test_card_sprite_draw_shadow_blits():
@@ -530,5 +528,3 @@ def test_state_transitions():
         mock.assert_not_called()
     assert view.state == pygame_gui.GameState.GAME_OVER
     pygame.quit()
-
-
