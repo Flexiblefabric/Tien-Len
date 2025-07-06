@@ -70,7 +70,7 @@ def test_handle_mouse_selects_rightmost_sprite():
     view.action_buttons = []
     with patch.object(view, "update_play_button_state"), patch.object(
         view, "_highlight_turn"
-    ):
+    ), patch.object(view, "_animate_avatar_blink"):
         view.handle_mouse((5, 5))
     assert right.selected is True
     assert right in view.selected
@@ -112,7 +112,7 @@ def test_handle_mouse_calls_update_play_button_state():
     view.action_buttons = []
     with patch.object(view, "update_play_button_state") as upd, patch.object(
         view, "_highlight_turn"
-    ):
+    ), patch.object(view, "_animate_avatar_blink"):
         view.handle_mouse(sprite.rect.center)
         upd.assert_called()
 

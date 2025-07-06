@@ -117,7 +117,7 @@ def test_undo_button_triggers_game_undo_last():
     view.game.snapshots.append("s2")
     with patch.object(
         view.game, "undo_last", return_value=True
-    ) as undo_mock, patch.object(view, "_highlight_turn"):
+    ) as undo_mock, patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"):
         view.handle_mouse(undo_btn.rect.center)
         undo_mock.assert_called_once()
     pygame.quit()
@@ -419,7 +419,7 @@ def test_play_selected_triggers_flip():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "ai_turns"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_flip") as flip,
@@ -439,7 +439,7 @@ def test_play_selected_triggers_glow():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "ai_turns"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_flip", return_value="flip"),
@@ -462,7 +462,7 @@ def test_play_selected_triggers_bomb_reveal():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "ai_turns"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_flip", return_value="flip"),
@@ -486,7 +486,7 @@ def test_ai_turns_triggers_pass_animation():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_pass") as proc,
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_pass_text", return_value="pass") as anim,
         patch.object(view, "_start_animation") as start,
@@ -520,7 +520,7 @@ def test_pass_turn_shakes_on_invalid():
         patch.object(view, "_animate_shake", return_value="gen") as shake,
         patch.object(view, "_start_animation") as start,
         patch.object(sound, "play"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "ai_turns"),
     ):
         view.pass_turn()
@@ -536,7 +536,7 @@ def test_pass_turn_triggers_pass_animation():
         patch.object(view, "_animate_pass_text", return_value="pass") as anim,
         patch.object(view, "_start_animation") as start,
         patch.object(sound, "play"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "ai_turns"),
     ):
         view.pass_turn()
@@ -560,7 +560,7 @@ def test_undo_move_triggers_return_animation():
         patch.object(view, "_animate_return", return_value="gen") as ret,
         patch.object(view, "_start_animation") as start,
         patch.object(view, "update_hand_sprites"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
     ):
         view.undo_move()
     undo_last.assert_called_once()
@@ -578,7 +578,7 @@ def test_ai_turns_triggers_glow_on_play():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_back", return_value="back"),
         patch.object(view, "_animate_glow", return_value="glow") as glow,
@@ -602,7 +602,7 @@ def test_ai_turns_triggers_bomb_reveal():
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
         patch.object(view.game, "next_turn"),
-        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_highlight_turn"), patch.object(view, "_animate_avatar_blink"),
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_back", return_value="back"),
         patch.object(view, "_animate_glow", return_value="glow"),

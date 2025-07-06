@@ -6,7 +6,13 @@ from typing import List, Tuple, Optional
 
 import pygame
 
-from .helpers import CardSprite, calc_start_and_overlap
+from .helpers import (
+    CardSprite,
+    calc_start_and_overlap,
+    AVATAR_SIZE,
+    LABEL_PAD,
+    ZONE_HIGHLIGHT,
+)
 from .overlays import Overlay
 
 
@@ -251,6 +257,55 @@ class AnimationMixin:
                     overlay, (255, 255, 0, alpha), center, radius, width=3
                 )
             self.screen.blit(overlay, rect.topleft)
+            dt = yield
+
+    def _animate_avatar_blink(self, idx: int, duration: float = 0.3):
+        """Yield a quick outline animation around ``idx``'s avatar."""
+        player = self.game.players[idx]
+        text_panel = self._hud_box([f"{player.name} ({len(player.hand)})"], padding=3, bg_image=self.panel_image)
+        pw, ph = text_panel.get_size()
+        aw = ah = AVATAR_SIZE
+        panel_h = max(ah, ph)
+        panel_w = aw + LABEL_PAD + pw
+        x, y = self._player_pos(idx)
+        card_h = int(self.card_width * 1.4)
+        spacing = min(40, self.card_width)
+        offset = card_h // 2 + spacing // 2 + LABEL_PAD
+        rect = pygame.Rect(0, 0, panel_w, panel_h)
+        if idx == 0:
+            rect.midbottom = (x, y - offset)
+        elif idx == 1:
+            rect.midtop = (x, y + offset)
+        elif idx == 2:
+            rect.midleft = (x + offset, y)
+        else:
+            rect.midright = (x - offset, y)
+        avatar_rect = pygame.Rect(
+            rect.left,
+            rect.top + (panel_h - ah) // 2,
+            aw,
+            ah,
+        )
+        overlay = pygame.Surface(avatar_rect.size, pygame.SRCALPHA)
+        center = overlay.get_rect().center
+        total = duration / self.animation_speed
+        elapsed = 0.0
+        dt = yield
+        while elapsed < total:
+            elapsed += dt
+            progress = min(elapsed / total, 1.0)
+            overlay.fill((0, 0, 0, 0))
+            alpha = max(0, 200 - int(progress * 200))
+            radius = (aw // 2 + 2) + int(2 * math.sin(math.pi * progress))
+            if hasattr(overlay, "get_width"):
+                pygame.draw.circle(
+                    overlay,
+                    (*ZONE_HIGHLIGHT, alpha),
+                    center,
+                    radius,
+                    width=3,
+                )
+            self.screen.blit(overlay, avatar_rect.topleft)
             dt = yield
 
     def _animate_pass_text(self, idx: int, duration: float = 0.5):

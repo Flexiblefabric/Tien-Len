@@ -33,10 +33,12 @@ def make_view():
         ):
             with patch.object(pygame_gui, 'load_card_images'):
                 with patch('pygame.time.Clock', return_value=clock):
-                    with patch.object(pygame_gui.GameView, '_highlight_turn'):
+                    with patch.object(pygame_gui.GameView, '_highlight_turn'), \
+                         patch.object(pygame_gui.GameView, '_animate_avatar_blink'):
                         view = pygame_gui.GameView(1, 1)
     # Ensure highlight_turn does not access the display during tests
     view._highlight_turn = lambda *a, **k: None
+    view._animate_avatar_blink = lambda *a, **k: None
     view._draw_frame = lambda *a, **k: None
     return view
 
