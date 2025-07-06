@@ -264,7 +264,10 @@ class AnimationMixin:
         if old is None:
             return
         total = duration / self.animation_speed
-        w, h = self.screen.get_size()
+        # ``screen`` may be replaced with a mock during tests, so fetch the
+        # size from the active display surface.
+        surface = pygame.display.get_surface() or self.screen
+        w, h = surface.get_size()
 
         def render(ov: Overlay) -> pygame.Surface:
             surf = pygame.Surface((w, h), pygame.SRCALPHA)
@@ -397,7 +400,10 @@ class AnimationMixin:
 
     def _bomb_reveal(self, duration: float = 0.25):
         """Yield a brief white flash when a bomb is played."""
-        w, h = self.screen.get_size()
+        # ``screen`` may be swapped for a mock during tests. Use the active
+        # display surface if available to determine the size.
+        surface = pygame.display.get_surface() or self.screen
+        w, h = surface.get_size()
         overlay = pygame.Surface((w, h), pygame.SRCALPHA)
         overlay.fill((255, 255, 255))
         total = duration / self.animation_speed

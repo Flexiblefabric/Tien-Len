@@ -82,27 +82,26 @@ else:  # pragma: no cover - pygame missing
     pygame_gui = None
 
 
-@pytest.fixture
-def make_view(monkeypatch):
+def make_view(width=1, height=1, clock=None):
     """Create a ``GameView`` instance with common patches applied."""
 
-    def _factory(width=1, height=1, clock=None):
-        if not pygame or not pygame_gui:
-            pytest.skip("pygame not available")
+    if not pygame or not pygame_gui:
+        pytest.skip("pygame not available")
 
-        pygame.init()
-        pygame.font.init()
-        pygame.display.init()
-        pygame_gui.clear_font_cache()
-        clk = clock or DummyClock()
-        with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
-            with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-                "pygame_gui.helpers.get_font", return_value=DummyFont()
-            ), patch.object(pygame_gui, "load_card_images"), patch(
-                "pygame.time.Clock", return_value=clk
-            ):
-                view = pygame_gui.GameView(width, height)
-        view._draw_frame = lambda *a, **k: None
-        return view, clk
-
-    return _factory
+    pygame.init()
+    pygame.font.init()
+    pygame.display.init()
+    pygame_gui.clear_font_cache()
+    clk = clock or DummyClock()
+    with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
+        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
+            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        ), patch.object(pygame_gui, "load_card_images"), patch(
+            "pygame.time.Clock", return_value=clk
+        ):
+            view = pygame_gui.GameView(width, height)
+            # Ensure deterministic turn order for tests
+            view.game.current_idx = 0
+            view.game.start_idx = 0
+    view._draw_frame = lambda *a, **k: None
+    return view, clk
