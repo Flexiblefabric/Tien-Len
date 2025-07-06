@@ -37,7 +37,6 @@ from .helpers import (
     draw_surface_shadow,
     draw_glow,
     draw_nine_patch,
-    load_nine_patch,
     load_button_images,
     get_font,
 )
@@ -115,7 +114,7 @@ class GameView(AnimationMixin):
         self._layout_zones()
         self._load_avatars()
         # Shared panel background for HUD and overlays
-        self.panel_image = load_nine_patch("button_back_idle")
+        self.panel_image = self.menu_background
         # Load sound effects and background music
         sdir = ASSETS_DIR / "sound"
         sound.load("click", sdir / "card-play.wav")
@@ -1221,7 +1220,7 @@ class GameView(AnimationMixin):
                 if cards:
                     text = " ".join(str(c) for c in cards)
                     lines.append(f"{name}: {text}")
-        panel = self._hud_box(lines, padding=5, bg_image=self.menu_background or self.panel_image)
+        panel = self._hud_box(lines, padding=5, bg_image=self.menu_background)
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
         if self.score_visible:
