@@ -164,8 +164,6 @@ class GameView(AnimationMixin):
         self.score_visible = True
         self.score_pos: Tuple[int, int] = (10, 10)
         self.score_rect = pygame.Rect(self.score_pos, (0, 0))
-        self._dragging_score = False
-        self._drag_offset = (0, 0)
         self.action_buttons: List[Button] = []
         self._create_action_buttons()
         self.settings_button: Button
@@ -1208,18 +1206,11 @@ class GameView(AnimationMixin):
             self.screen.blit(img, rect)
 
     def draw_score_overlay(self) -> None:
-        """Render a scoreboard panel with last hands played."""
+        """Render a scoreboard panel showing total wins for each player."""
         lines = [
-            f"{p.name}: {len(p.hand)} ({self.win_counts.get(p.name, 0)})"
+            f"{p.name}: {self.win_counts.get(p.name, 0)}"
             for p in self.game.players
         ]
-        last = self.game.get_last_hands()
-        if any(cards for _, cards in last):
-            lines.append("Last:")
-            for name, cards in last:
-                if cards:
-                    text = " ".join(str(c) for c in cards)
-                    lines.append(f"{name}: {text}")
         panel = self._hud_box(lines, padding=5, bg_image=self.menu_background)
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
@@ -1228,29 +1219,9 @@ class GameView(AnimationMixin):
         self.score_button.draw(self.screen)
 
     def _handle_score_event(self, event: pygame.event.Event) -> bool:
-        """Handle toggle and drag interactions for the score panel."""
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.score_button.rect.collidepoint(event.pos):
-                self.toggle_score()
-                return True
-            if self.score_visible and self.score_rect.collidepoint(event.pos):
-                self._dragging_score = True
-                self._drag_offset = (
-                    event.pos[0] - self.score_pos[0],
-                    event.pos[1] - self.score_pos[1],
-                )
-                return True
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if self._dragging_score:
-                self._dragging_score = False
-                self._clamp_score_pos()
-                self._save_options()
-                return True
-        elif event.type == pygame.MOUSEMOTION and self._dragging_score:
-            self.score_pos = (
-                event.pos[0] - self._drag_offset[0],
-                event.pos[1] - self._drag_offset[1],
-            )
+        """Handle toggle interaction for the score panel."""
+        if event.type == pygame.MOUSEBUTTONDOWN and self.score_button.rect.collidepoint(event.pos):
+            self.toggle_score()
             return True
         return False
 

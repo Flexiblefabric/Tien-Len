@@ -1076,31 +1076,31 @@ def test_profile_overlay_new_profile_added():
     assert set(view.win_counts) - existing
 
 
-def test_handle_score_event_dragging():
+def test_handle_score_event_not_draggable():
     view, _ = make_view()
     view.score_visible = True
     # Position the score panel so it does not overlap the toggle button.
     view.score_pos = (50, 10)
     view.draw_score_overlay()
-    start_x, start_y = view.score_pos
+    start_pos = view.score_pos
     with patch.object(view, "_save_options") as save, patch.object(
         view, "_clamp_score_pos"
     ) as clamp:
         down = pygame.event.Event(
-            pygame.MOUSEBUTTONDOWN, {"pos": (start_x + 5, start_y + 5)}
+            pygame.MOUSEBUTTONDOWN, {"pos": (start_pos[0] + 5, start_pos[1] + 5)}
         )
-        assert view._handle_score_event(down) is True
+        assert view._handle_score_event(down) is False
         move = pygame.event.Event(
-            pygame.MOUSEMOTION, {"pos": (start_x + 10, start_y + 15)}
+            pygame.MOUSEMOTION, {"pos": (start_pos[0] + 10, start_pos[1] + 15)}
         )
-        assert view._handle_score_event(move) is True
-        assert view.score_pos == (start_x + 5, start_y + 10)
+        assert view._handle_score_event(move) is False
+        assert view.score_pos == start_pos
         up = pygame.event.Event(
-            pygame.MOUSEBUTTONUP, {"pos": (start_x + 10, start_y + 15)}
+            pygame.MOUSEBUTTONUP, {"pos": (start_pos[0] + 10, start_pos[1] + 15)}
         )
-        assert view._handle_score_event(up) is True
-        save.assert_called_once()
-        clamp.assert_called_once()
+        assert view._handle_score_event(up) is False
+        save.assert_not_called()
+        clamp.assert_not_called()
     pygame.quit()
 
 
