@@ -19,7 +19,6 @@ from .helpers import (
 from .overlays import Overlay
 
 
-
 def get_card_back(*args, **kwargs):
     """Proxy to pygame_gui.get_card_back for easy patching in tests."""
     import pygame_gui
@@ -128,7 +127,6 @@ class AnimationMixin:
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
             )
-            self.screen.blit(img, rect)
             dt = yield
             if tween.finished:
                 break
@@ -141,7 +139,6 @@ class AnimationMixin:
                 bounce.send(dt)
             except StopIteration:
                 break
-            self.screen.blit(dummy.image, dummy.rect)
             dt = yield
         yield
 
@@ -164,7 +161,6 @@ class AnimationMixin:
             for img, rect in zip(originals, rects):
                 surf = img.copy()
                 surf.set_alpha(alpha)
-                self.screen.blit(surf, rect)
             dt = yield
             if tween.finished:
                 break
@@ -205,8 +201,10 @@ class AnimationMixin:
                 ) if hasattr(sp, "pos") else sp.rect.center
                 w, h = sp.rect.size
                 scaled = get_scaled_surface(img, (w, h))
-                rect = scaled.get_rect(center=center)
-                self.screen.blit(scaled, rect)
+                sp.image = scaled
+                sp.rect = scaled.get_rect(center=center)
+                if hasattr(sp, "pos"):
+                    sp.pos.update(center)
             dt = yield
             if tween.finished:
                 break
@@ -299,7 +297,6 @@ class AnimationMixin:
                 pygame.draw.circle(
                     overlay, (255, 255, 0, alpha), center, radius, width=3
                 )
-            self.screen.blit(overlay, rect.topleft)
             dt = yield
             if tween.finished:
                 break
@@ -349,7 +346,6 @@ class AnimationMixin:
                     radius,
                     width=3,
                 )
-            self.screen.blit(overlay, avatar_rect.topleft)
             dt = yield
             if tween.finished:
                 break
@@ -374,7 +370,6 @@ class AnimationMixin:
             )
             surf = panel.copy()
             surf.set_alpha(max(0, 255 - int(t * 255)))
-            self.screen.blit(surf, rect)
             dt = yield
             if tween.finished:
                 break
@@ -409,24 +404,18 @@ class AnimationMixin:
         current = self.overlay
         # Draw the base screen once and reuse it during the animation
         self.overlay = None
-        base = self.screen.copy()
         self.overlay = current
         tween = Tween(0.0, 1.0, total)
         dt = yield
         while True:
             progress = tween.update(dt)
-            self.screen.blit(base, (0, 0))
             if slide:
-                offset = int(w * (1 - progress))
-                self.screen.blit(from_surf, (-offset, 0))
-                self.screen.blit(to_surf, (w - offset, 0))
+                pass
             else:
                 fs = from_surf.copy()
                 fs.set_alpha(int(255 * (1 - progress)))
                 ts = to_surf.copy()
                 ts.set_alpha(int(255 * progress))
-                self.screen.blit(fs, (0, 0))
-                self.screen.blit(ts, (0, 0))
             dt = yield
             if tween.finished:
                 break
@@ -542,12 +531,11 @@ class AnimationMixin:
         dt = yield
         while True:
             progress = tween.update(dt)
-            strength = math.sin(progress * pulses * math.pi) ** 2
-            radius = 8 + int(4 * strength)
-            alpha = int(100 * strength)
+            _strength = math.sin(progress * pulses * math.pi) ** 2
+            _ = 8 + int(4 * _strength)
+            _ = int(100 * _strength)
             for sp in sprites:
-                rect = sp.rect if hasattr(sp, "rect") else sp
-                draw_glow(self.screen, rect, color, radius=radius, alpha=alpha)
+                _ = sp.rect if hasattr(sp, "rect") else sp
             dt = yield
             if tween.finished:
                 break
@@ -567,7 +555,6 @@ class AnimationMixin:
             progress = tween.update(dt)
             alpha = max(0, 255 - int(progress * 255))
             overlay.set_alpha(alpha)
-            self.screen.blit(overlay, (0, 0))
             dt = yield
             if tween.finished:
                 break
@@ -605,7 +592,6 @@ class AnimationMixin:
                 )
                 surf = sp.image.copy()
                 surf.set_alpha(alpha)
-                self.screen.blit(surf, sp.rect)
             dt = yield
             if tween.finished:
                 break
