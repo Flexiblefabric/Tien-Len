@@ -58,6 +58,7 @@ from .overlays import (
     GameOverOverlay,
 )
 from .animations import AnimationMixin
+from .anim_manager import AnimationManager
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class GameView(AnimationMixin):
         self.fps_limit = 60
         self.animation_speed = 1.0
         self.animations: list = []
+        self.anim_managers: Dict[pygame.sprite.Sprite, AnimationManager] = {}
         self.game = Game()
         self.game.setup()
         self._attach_reset_pile()
@@ -284,6 +286,13 @@ class GameView(AnimationMixin):
         except StopIteration:
             return
         self.animations.append(anim)
+
+    def _manager_for(self, sprite: pygame.sprite.Sprite) -> AnimationManager:
+        manager = self.anim_managers.get(sprite)
+        if manager is None:
+            manager = AnimationManager(sprite)
+            self.anim_managers[sprite] = manager
+        return manager
 
     # Layout helpers --------------------------------------------------
     def _layout_zones(self) -> None:
@@ -1106,6 +1115,7 @@ class GameView(AnimationMixin):
 
         self.hand_sprites = pygame.sprite.LayeredUpdates()
         self.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
+        self.anim_managers.clear()
 
         card_w = self.card_width
         card_h = int(card_w * 1.4)
@@ -1120,6 +1130,7 @@ class GameView(AnimationMixin):
             sprite.pos.y = self.hand_y
             sprite.update()
             sprite._layer = i
+            self._manager_for(sprite)
             self.hand_sprites.add(sprite, layer=i)
 
         margin_v = bottom_margin(card_w)
@@ -1131,6 +1142,7 @@ class GameView(AnimationMixin):
             pos = (start_x + i * spacing, 40)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
             sprite._layer = i
+            self._manager_for(sprite)
             self.ai_sprites[0].add(sprite, layer=i)
 
         # --- Left AI player (vertical) ----------------------------------
@@ -1151,6 +1163,7 @@ class GameView(AnimationMixin):
                 pos, card_w, self.card_back_name, rotation=90
             )
             sprite._layer = i
+            self._manager_for(sprite)
             self.ai_sprites[1].add(sprite, layer=i)
 
         # --- Right AI player (vertical) ---------------------------------
@@ -1171,6 +1184,7 @@ class GameView(AnimationMixin):
                 pos, card_w, self.card_back_name, rotation=-90
             )
             sprite._layer = i
+            self._manager_for(sprite)
             self.ai_sprites[2].add(sprite, layer=i)
 
         self.update_play_button_state()
@@ -1342,6 +1356,9 @@ class GameView(AnimationMixin):
                     anim.send(dt)
                 except StopIteration:
                     self.animations.remove(anim)
+
+            for manager in list(self.anim_managers.values()):
+                manager.update(dt)
 
             self._draw_frame()
         pygame.quit()

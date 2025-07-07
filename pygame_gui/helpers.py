@@ -6,11 +6,10 @@ from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 from collections import OrderedDict
 from enum import Enum, auto
-import logging
 
 import pygame
 
-from tien_len_full import Card, logger
+from tien_len_full import Card
 
 # Path to the installed assets directory
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
@@ -390,11 +389,13 @@ class CardSprite(pygame.sprite.Sprite):
         pygame.draw.rect(surf, (0, 0, 0), rect, width=1, border_radius=5)
         surf.blit(img, (border, border))
 
-        self.image = surf
+        self.base_image = surf
+        self.image = surf.copy()
         self.rect = self.image.get_rect(topleft=pos)
         self.pos = pygame.math.Vector2(self.rect.center)
         self.card = card
         self.selected = False
+        self.scale = 1.0
 
     def toggle(self) -> None:
         self.selected = not self.selected
@@ -403,6 +404,21 @@ class CardSprite(pygame.sprite.Sprite):
 
     def update(self) -> None:
         self.rect.center = (int(self.pos.x), int(self.pos.y))
+
+    def set_scale(self, scale: float) -> None:
+        """Scale the sprite's image about its centre."""
+        self.scale = scale
+        w, h = self.base_image.get_size()
+        scaled = pygame.transform.smoothscale(
+            self.base_image, (int(w * scale), int(h * scale))
+        )
+        center = self.rect.center
+        self.image = scaled
+        self.rect = self.image.get_rect(center=center)
+        self.pos.update(self.rect.center)
+
+    def set_alpha(self, alpha: int) -> None:
+        self.image.set_alpha(alpha)
 
     def draw_shadow(
         self,
@@ -486,8 +502,23 @@ class CardBackSprite(pygame.sprite.Sprite):
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))
         if rotation:
             img = pygame.transform.rotate(img, rotation)
-        self.image = img
+        self.base_image = img
+        self.image = img.copy()
         self.rect = self.image.get_rect(topleft=pos)
+        self.scale = 1.0
+
+    def set_scale(self, scale: float) -> None:
+        self.scale = scale
+        w, h = self.base_image.get_size()
+        scaled = pygame.transform.smoothscale(
+            self.base_image, (int(w * scale), int(h * scale))
+        )
+        center = self.rect.center
+        self.image = scaled
+        self.rect = self.image.get_rect(center=center)
+
+    def set_alpha(self, alpha: int) -> None:
+        self.image.set_alpha(alpha)
 
 
 # ---------------------------------------------------------------------------

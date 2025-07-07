@@ -423,7 +423,7 @@ def test_animate_pass_text_draws_panel():
     rect_mock.assert_called_with(1)
     hud.assert_called_once()
     assert view.screen.blit.call_count >= 1
-    
+
 
 def test_state_methods_update_state():
     view, _ = make_view()
