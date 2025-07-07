@@ -46,17 +46,23 @@ class AnimationMixin:
         if not sprites:
             return
         total = duration / self.animation_speed
-        starts = [sp.rect.center for sp in sprites]
+        starts = [
+            (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+             getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+            for sp in sprites
+        ]
         elapsed = 0.0
         dt = yield
         while elapsed < total:
             elapsed += dt
             t = ease(min(elapsed / total, 1.0))
             for sp, (sx, sy) in zip(sprites, starts):
-                sp.rect.center = (
-                    int(sx + (dest[0] - sx) * t),
-                    int(sy + (dest[1] - sy) * t),
-                )
+                nx = sx + (dest[0] - sx) * t
+                ny = sy + (dest[1] - sy) * t
+                if hasattr(sp, "pos"):
+                    sp.pos.update(nx, ny)
+                else:
+                    sp.rect.center = (int(nx), int(ny))
             dt = yield
 
     def _animate_bounce(
@@ -68,7 +74,12 @@ class AnimationMixin:
         """Yield a brief bounce animation for ``sprites``."""
         if not sprites:
             return
-        originals = [(sp.image, sp.rect.copy()) for sp in sprites]
+        originals = []
+        for sp in sprites:
+            rect = sp.rect.copy()
+            if hasattr(sp, "pos"):
+                rect.center = (int(sp.pos.x), int(sp.pos.y))
+            originals.append((sp.image, rect))
         total = duration / self.animation_speed
         half = total / 2
         dt = yield
@@ -91,10 +102,14 @@ class AnimationMixin:
                     scaled = img
                 sp.image = scaled
                 sp.rect = scaled.get_rect(center=rect.center)
+                if hasattr(sp, "pos"):
+                    sp.pos.update(rect.center)
             dt = yield
         for sp, (img, rect) in zip(sprites, originals):
             sp.image = img
             sp.rect = rect
+            if hasattr(sp, "pos"):
+                sp.pos.update(rect.center)
 
     def _animate_back(
         self,
@@ -164,7 +179,11 @@ class AnimationMixin:
         if not sprites:
             return
         total = duration / self.animation_speed
-        starts = [sp.rect.center for sp in sprites]
+        starts = [
+            (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+             getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+            for sp in sprites
+        ]
         fronts = [sp.image for sp in sprites]
         back = get_card_back(self.card_back_name, sprites[0].rect.width)
         elapsed = 0.0
@@ -173,13 +192,19 @@ class AnimationMixin:
             elapsed += dt
             t = ease(min(elapsed / total, 1.0))
             for sp, (sx, sy) in zip(sprites, starts):
-                sp.rect.center = (
-                    int(sx + (dest[0] - sx) * t),
-                    int(sy + (dest[1] - sy) * t),
-                )
+                nx = sx + (dest[0] - sx) * t
+                ny = sy + (dest[1] - sy) * t
+                if hasattr(sp, "pos"):
+                    sp.pos.update(nx, ny)
+                else:
+                    sp.rect.center = (int(nx), int(ny))
             for sp, front in zip(sprites, fronts):
                 img = back if back is not None and t < 0.5 else front
-                rect = img.get_rect(center=sp.rect.center)
+                center = (
+                    int(sp.pos.x),
+                    int(sp.pos.y),
+                ) if hasattr(sp, "pos") else sp.rect.center
+                rect = img.get_rect(center=center)
                 self.screen.blit(img, rect)
             dt = yield
         bounce = self._animate_bounce(sprites)
@@ -194,7 +219,10 @@ class AnimationMixin:
 
     def _animate_select(self, sprite: CardSprite, up: bool, duration: float = 5 / 60):
         offset = -10 if up else 10
-        dest = (sprite.rect.centerx, sprite.rect.centery + offset)
+        if hasattr(sprite, "pos"):
+            dest = (sprite.pos.x, sprite.pos.y + offset)
+        else:
+            dest = (sprite.rect.centerx, sprite.rect.centery + offset)
         anim = self._animate_sprites([sprite], dest, duration)
         next(anim)
         dt = yield
@@ -215,7 +243,11 @@ class AnimationMixin:
         """Yield a horizontal shake animation for ``sprites``."""
         if not sprites:
             return
-        starts = [sp.rect.center for sp in sprites]
+        starts = [
+            (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+             getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+            for sp in sprites
+        ]
         total = duration / self.animation_speed
         elapsed = 0.0
         dt = yield
@@ -224,10 +256,17 @@ class AnimationMixin:
             t = min(elapsed / total, 1.0)
             offset = int(math.sin(t * cycles * 2 * math.pi) * amplitude)
             for sp, (sx, sy) in zip(sprites, starts):
-                sp.rect.centerx = sx + offset
+                nx = sx + offset
+                if hasattr(sp, "pos"):
+                    sp.pos.x = nx
+                else:
+                    sp.rect.centerx = nx
             dt = yield
         for sp, (sx, sy) in zip(sprites, starts):
-            sp.rect.centerx = sx
+            if hasattr(sp, "pos"):
+                sp.pos.x = sx
+            else:
+                sp.rect.centerx = sx
 
     def _highlight_turn(self, idx: int, duration: float = 10 / 60):
         """Yield an animation highlighting the active player."""
@@ -395,10 +434,20 @@ class AnimationMixin:
             return
 
         start = self._pile_center()
-        destinations = [[sp.rect.center for sp in grp] for grp in groups]
+        destinations = [
+            [
+                (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+                 getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+                for sp in grp
+            ]
+            for grp in groups
+        ]
         for grp in groups:
             for sp in grp:
-                sp.rect.center = start
+                if hasattr(sp, "pos"):
+                    sp.pos.update(start)
+                else:
+                    sp.rect.center = start
 
         max_len = max(len(g) for g in groups)
         pause_total = delay / self.animation_speed

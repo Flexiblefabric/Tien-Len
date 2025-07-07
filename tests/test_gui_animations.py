@@ -295,7 +295,7 @@ def test_animate_sprites_moves_to_destination():
             steps += 1
         except StopIteration:
             break
-    assert sprite.rect.center == (10, 15)
+    assert tuple(map(int, sprite.pos)) == (10, 15)
     expected = math.ceil((3 / 60) / view.animation_speed / (1 / 60))
     assert steps == expected
     pygame.quit()
@@ -340,7 +340,7 @@ def test_animate_flip_moves_to_destination():
                 steps += 1
             except StopIteration:
                 break
-    assert sprite.rect.center == (10, 5)
+    assert tuple(map(int, sprite.pos)) == (10, 5)
     move_steps = math.ceil((4 / 60) / view.animation_speed / (1 / 60))
     bounce_steps = math.ceil((0.1) / view.animation_speed / (1 / 60))
     assert steps == move_steps + bounce_steps + 2
@@ -506,12 +506,18 @@ def test_animate_deal_moves_cards():
     view, _ = make_view()
     deck = view._pile_center()
     groups = [view.hand_sprites.sprites()] + [g.sprites() for g in view.ai_sprites]
-    dests = [[sp.rect.center for sp in grp] for grp in groups]
+    dests = [
+        [tuple(map(int, getattr(sp, "pos", sp.rect.center))) for sp in grp]
+        for grp in groups
+    ]
     gen = view._animate_deal(duration=1 / 60, delay=0)
     next(gen)
     for grp in groups:
         for sp in grp:
-            assert sp.rect.center == deck
+            if hasattr(sp, "pos"):
+                assert tuple(map(int, sp.pos)) == deck
+            else:
+                assert sp.rect.center == deck
     steps = 0
     while True:
         try:
@@ -521,7 +527,10 @@ def test_animate_deal_moves_cards():
             break
     for grp, pos in zip(groups, dests):
         for sp, dest in zip(grp, pos):
-            assert sp.rect.center == dest
+            if hasattr(sp, "pos"):
+                assert tuple(map(int, sp.pos)) == dest
+            else:
+                assert sp.rect.center == dest
     total = sum(len(g) for g in groups)
     expected = total * math.ceil((1 / 60) / view.animation_speed / (1 / 60))
     assert steps == expected
