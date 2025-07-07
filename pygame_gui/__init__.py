@@ -37,6 +37,7 @@ from .helpers import (
 )
 from .animations import AnimationMixin
 from .tween import Tween
+from .anim_manager import AnimationManager
 from .overlays import (
     Button,
     Overlay,
@@ -63,6 +64,7 @@ __all__ = [
     'calc_start_and_overlap', 'calc_hand_layout', 'list_music_tracks', 'list_table_textures',
     'load_card_images', 'get_font', 'get_card_image', 'get_card_back', 'CardSprite', 'CardBackSprite',
     'draw_surface_shadow', 'draw_glow', 'draw_tiled', 'clear_font_cache', '_mixer_ready', 'AnimationMixin', 'Tween',
+    'AnimationManager',
     'Button', 'Overlay', 'MainMenuOverlay',
     'InGameMenuOverlay', 'SettingsOverlay', 'GameSettingsOverlay', 'GraphicsOverlay',
     'AudioOverlay', 'RulesOverlay', 'HowToPlayOverlay', 'TutorialOverlay', 'SavePromptOverlay',

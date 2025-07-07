@@ -496,7 +496,7 @@ def test_ai_turns_triggers_pass_animation():
     proc.assert_called_once_with(view.game.players[1])
     anim.assert_called_once_with(1)
     assert "pass" in [c.args[0] for c in start.call_args_list]
-    
+
 
 def test_play_selected_shakes_on_invalid():
     view, _ = make_view()
@@ -582,7 +582,7 @@ def test_ai_turns_triggers_glow_on_play():
         patch.object(view, "update_hand_sprites"),
         patch.object(view, "_animate_back", return_value="back"),
         patch.object(view, "_animate_glow", return_value="glow") as glow,
-        patch.object(view, "_start_animation") as start,
+        patch.object(view, "_start_animation") as _,
         patch.object(sound, "play"),
         patch.object(pygame_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
     ):
