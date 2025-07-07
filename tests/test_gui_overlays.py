@@ -356,7 +356,7 @@ def test_vertical_spacing_changes_on_resize():
 
 def test_overlay_instances_created():
     view, _ = make_view()
-    with patch("pygame.display.flip"), patch("pygame.event.pump"):
+    with patch("pygame.display.update"), patch("pygame.event.pump"):
         view.show_menu()
         assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
         view.show_in_game_menu()
@@ -399,7 +399,7 @@ def test_draw_frame_with_overlay():
     view.screen.get_size.return_value = (100, 100)
     overlay_surface = MagicMock()
     with patch.object(view.screen, "blit") as blit, patch(
-        "pygame.display.flip"
+        "pygame.display.update"
     ) as flip, patch("pygame.Surface", return_value=overlay_surface), patch.object(
         view.score_button, "draw"
     ), patch("pygame_gui.view.draw_nine_patch"):
@@ -684,7 +684,7 @@ def test_toggle_score_panel_changes_visibility():
 def test_show_game_over_updates_win_counts():
     with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
         view, _ = make_view()
-    with patch.object(sound, "play"), patch("pygame.display.flip"):
+    with patch.object(sound, "play"), patch("pygame.display.update"):
         view.show_game_over("Player")
     assert view.win_counts["Player"] == 1
     pygame.quit()
@@ -886,7 +886,7 @@ def test_in_game_menu_buttons():
 def test_settings_button_opens_in_game_menu():
     view, _ = make_view()
     with patch.object(view, "_save_options"), patch.object(view, "ai_turns"), patch(
-        "pygame.display.flip"
+        "pygame.display.update"
     ):
         view.close_overlay()
     view.settings_button.callback = MagicMock()
@@ -897,7 +897,7 @@ def test_settings_button_opens_in_game_menu():
 
 def test_how_to_play_overlay_escape_returns_menu():
     view, _ = make_view()
-    with patch.object(view, "show_menu") as show_menu, patch("pygame.display.flip"):
+    with patch.object(view, "show_menu") as show_menu, patch("pygame.display.update"):
         view.show_how_to_play(from_menu=True)
         view.overlay.handle_event(
             pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE})
@@ -909,7 +909,7 @@ def test_how_to_play_overlay_escape_returns_menu():
 def test_tutorial_overlay_escape_returns_settings():
     view, _ = make_view()
     with patch.object(view, "show_settings") as show_settings, patch(
-        "pygame.display.flip"
+        "pygame.display.update"
     ):
         view.show_tutorial(from_menu=False)
         view.overlay.handle_event(
@@ -1028,7 +1028,7 @@ def test_overlay_buttons_reposition_after_resize(show_fn, args):
                 pygame_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
-            ), patch("pygame.display.flip"):
+            ), patch("pygame.display.update"):
                 view = pygame_gui.GameView(300, 200)
                 getattr(view, show_fn)(*args)
                 before = [b.rect.topleft for b in view.overlay.buttons]
@@ -1074,7 +1074,7 @@ def test_options_persist_across_sessions(tmp_path):
 
 def test_rules_overlay_toggles_update_state():
     view, _ = make_view()
-    with patch("pygame.display.flip"):
+    with patch("pygame.display.update"):
         pygame_gui.GameView.show_rules(view)
     overlay = view.overlay
     attrs = [
