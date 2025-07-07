@@ -1318,6 +1318,10 @@ class GameView(AnimationMixin):
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
         self._start_animation(self._animate_avatar_blink(self.game.current_idx))
+        # Reset the clock after initialization so startup time isn't counted
+        self.clock.tick(self.fps_limit)
+        if hasattr(self.clock, "times"):
+            self.clock.times.clear()
         while self.running:
             dt = self.clock.tick(self.fps_limit) / 1000.0
             self.dt = dt
