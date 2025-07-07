@@ -4,6 +4,8 @@ import math
 import types
 from typing import List, Tuple, Optional
 
+from .tween import Tween
+
 import pygame
 
 from .helpers import (
@@ -51,11 +53,10 @@ class AnimationMixin:
              getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
             for sp in sprites
         ]
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total, ease)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = ease(min(elapsed / total, 1.0))
+        while True:
+            t = tween.update(dt)
             for sp, (sx, sy) in zip(sprites, starts):
                 nx = sx + (dest[0] - sx) * t
                 ny = sy + (dest[1] - sy) * t
@@ -64,6 +65,8 @@ class AnimationMixin:
                 else:
                     sp.rect.center = (int(nx), int(ny))
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_bounce(
         self,
@@ -81,16 +84,11 @@ class AnimationMixin:
                 rect.center = (int(sp.pos.x), int(sp.pos.y))
             originals.append((sp.image, rect))
         total = duration / self.animation_speed
-        half = total / 2
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        elapsed = 0.0
-        while elapsed < total:
-            elapsed += dt
-            if elapsed < half:
-                progress = elapsed / half
-            else:
-                progress = (total - elapsed) / half
-            t = max(0.0, min(progress, 1.0))
+        while True:
+            raw = tween.update(dt)
+            t = raw * 2 if raw < 0.5 else (1 - raw) * 2
             factor = 1 + (scale - 1) * t
             for sp, (img, rect) in zip(sprites, originals):
                 w, h = rect.size
@@ -105,6 +103,8 @@ class AnimationMixin:
                 if hasattr(sp, "pos"):
                     sp.pos.update(rect.center)
             dt = yield
+            if tween.finished:
+                break
         for sp, (img, rect) in zip(sprites, originals):
             sp.image = img
             sp.rect = rect
@@ -123,17 +123,18 @@ class AnimationMixin:
             return
         rect = img.get_rect(center=start)
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total, ease)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = ease(min(elapsed / total, 1.0))
+        while True:
+            t = tween.update(dt)
             rect.center = (
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
             )
             self.screen.blit(img, rect)
             dt = yield
+            if tween.finished:
+                break
         dummy = types.SimpleNamespace(image=img, rect=rect)
         bounce = self._animate_bounce([dummy])
         next(bounce)
@@ -145,6 +146,7 @@ class AnimationMixin:
                 break
             self.screen.blit(dummy.image, dummy.rect)
             dt = yield
+        yield
 
     def _animate_fade_out(
         self,
@@ -157,17 +159,18 @@ class AnimationMixin:
         originals = [sp.image for sp in sprites]
         rects = [sp.rect.copy() for sp in sprites]
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             alpha = max(0, 255 - int(progress * 255))
             for img, rect in zip(originals, rects):
                 surf = img.copy()
                 surf.set_alpha(alpha)
                 self.screen.blit(surf, rect)
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_flip(
         self,
@@ -186,11 +189,10 @@ class AnimationMixin:
         ]
         fronts = [sp.image for sp in sprites]
         back = get_card_back(self.card_back_name, sprites[0].rect.width)
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total, ease)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = ease(min(elapsed / total, 1.0))
+        while True:
+            t = tween.update(dt)
             for sp, (sx, sy) in zip(sprites, starts):
                 nx = sx + (dest[0] - sx) * t
                 ny = sy + (dest[1] - sy) * t
@@ -207,6 +209,8 @@ class AnimationMixin:
                 rect = img.get_rect(center=center)
                 self.screen.blit(img, rect)
             dt = yield
+            if tween.finished:
+                break
         bounce = self._animate_bounce(sprites)
         next(bounce)
         dt = yield
@@ -216,6 +220,7 @@ class AnimationMixin:
             except StopIteration:
                 break
             dt = yield
+        yield
 
     def _animate_select(self, sprite: CardSprite, up: bool, duration: float = 5 / 60):
         offset = -10 if up else 10
@@ -249,11 +254,10 @@ class AnimationMixin:
             for sp in sprites
         ]
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = min(elapsed / total, 1.0)
+        while True:
+            t = tween.update(dt)
             offset = int(math.sin(t * cycles * 2 * math.pi) * amplitude)
             for sp, (sx, sy) in zip(sprites, starts):
                 nx = sx + offset
@@ -262,6 +266,8 @@ class AnimationMixin:
                 else:
                     sp.rect.centerx = nx
             dt = yield
+            if tween.finished:
+                break
         for sp, (sx, sy) in zip(sprites, starts):
             if hasattr(sp, "pos"):
                 sp.pos.x = sx
@@ -281,13 +287,12 @@ class AnimationMixin:
         else:
             rect.midright = (x, y)
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         overlay = pygame.Surface(rect.size, pygame.SRCALPHA)
         center = overlay.get_rect().center
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             overlay.fill((0, 0, 0, 0))
             alpha = max(0, 200 - int(progress * 200))
             radius = 11 + int(3 * math.sin(math.pi * progress))
@@ -297,6 +302,8 @@ class AnimationMixin:
                 )
             self.screen.blit(overlay, rect.topleft)
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_avatar_blink(self, idx: int, duration: float = 0.3):
         """Yield a quick outline animation around ``idx``'s avatar."""
@@ -328,11 +335,10 @@ class AnimationMixin:
         overlay = pygame.Surface(avatar_rect.size, pygame.SRCALPHA)
         center = overlay.get_rect().center
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             overlay.fill((0, 0, 0, 0))
             alpha = max(0, 200 - int(progress * 200))
             radius = (aw // 2 + 2) + int(2 * math.sin(math.pi * progress))
@@ -346,6 +352,8 @@ class AnimationMixin:
                 )
             self.screen.blit(overlay, avatar_rect.topleft)
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_pass_text(self, idx: int, duration: float = 0.5):
         """Yield an animation showing "PASS" over ``idx``'s zone."""
@@ -357,11 +365,10 @@ class AnimationMixin:
         start = rect.center
         dest = (rect.centerx, rect.centery - 30)
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total, ease)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = ease(min(elapsed / total, 1.0))
+        while True:
+            t = tween.update(dt)
             rect.center = (
                 int(start[0] + (dest[0] - start[0]) * t),
                 int(start[1] + (dest[1] - start[1]) * t),
@@ -370,6 +377,8 @@ class AnimationMixin:
             surf.set_alpha(max(0, 255 - int(t * 255)))
             self.screen.blit(surf, rect)
             dt = yield
+            if tween.finished:
+                break
 
     def _transition_overlay(
         self,
@@ -403,11 +412,10 @@ class AnimationMixin:
         self.overlay = None
         base = self.screen.copy()
         self.overlay = current
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             self.screen.blit(base, (0, 0))
             if slide:
                 offset = int(w * (1 - progress))
@@ -421,6 +429,8 @@ class AnimationMixin:
                 self.screen.blit(fs, (0, 0))
                 self.screen.blit(ts, (0, 0))
             dt = yield
+            if tween.finished:
+                break
         self.overlay = new
 
     def _animate_deal(
@@ -467,10 +477,13 @@ class AnimationMixin:
                     except StopIteration:
                         break
                     dt = yield
-                elapsed = 0.0
-                while elapsed < pause_total:
-                    elapsed += dt
-                    dt = yield
+                if pause_total > 0:
+                    pause = Tween(0.0, 1.0, pause_total)
+                    while True:
+                        pause.update(dt)
+                        dt = yield
+                        if pause.finished:
+                            break
 
     def _animate_return(
         self,
@@ -497,10 +510,13 @@ class AnimationMixin:
                 except StopIteration:
                     break
                 dt = yield
-            elapsed = 0.0
-            while elapsed < pause_total:
-                elapsed += dt
-                dt = yield
+            if pause_total > 0:
+                pause = Tween(0.0, 1.0, pause_total)
+                while True:
+                    pause.update(dt)
+                    dt = yield
+                    if pause.finished:
+                        break
 
     def _animate_glow(
         self,
@@ -513,11 +529,10 @@ class AnimationMixin:
         if not sprites:
             return
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             strength = math.sin(progress * pulses * math.pi) ** 2
             radius = 8 + int(4 * strength)
             alpha = int(100 * strength)
@@ -525,6 +540,8 @@ class AnimationMixin:
                 rect = sp.rect if hasattr(sp, "rect") else sp
                 draw_glow(self.screen, rect, color, radius=radius, alpha=alpha)
             dt = yield
+            if tween.finished:
+                break
 
     def _bomb_reveal(self, duration: float = 0.25):
         """Yield a brief white flash when a bomb is played."""
@@ -535,15 +552,16 @@ class AnimationMixin:
         overlay = pygame.Surface((w, h), pygame.SRCALPHA)
         overlay.fill((255, 255, 255))
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            progress = min(elapsed / total, 1.0)
+        while True:
+            progress = tween.update(dt)
             alpha = max(0, 255 - int(progress * 255))
             overlay.set_alpha(alpha)
             self.screen.blit(overlay, (0, 0))
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_trick_clear(self, duration: float = 0.2):
         """Yield a slide-off and fade animation for ``current_trick``."""
@@ -566,11 +584,10 @@ class AnimationMixin:
 
         total = duration / self.animation_speed
         starts = [sp.rect.center for sp in sprites]
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total, ease)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
-            t = ease(min(elapsed / total, 1.0))
+        while True:
+            t = tween.update(dt)
             alpha = max(0, 255 - int(t * 255))
             for sp, (sx, sy), (dx, dy) in zip(sprites, starts, dests):
                 sp.rect.center = (
@@ -581,21 +598,23 @@ class AnimationMixin:
                 surf.set_alpha(alpha)
                 self.screen.blit(surf, sp.rect)
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_thinking(self, idx: int, duration: float = 0.3):
         """Yield a short pause representing the AI 'thinking'."""
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
+        while not tween.finished:
+            tween.update(dt)
             dt = yield
 
     def _animate_delay(self, duration: float = 0.2):
         """Yield a generic pause with no visual effect."""
         total = duration / self.animation_speed
-        elapsed = 0.0
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while elapsed < total:
-            elapsed += dt
+        while not tween.finished:
+            tween.update(dt)
             dt = yield
