@@ -289,6 +289,14 @@ def draw_nine_patch(surface: pygame.Surface, img: pygame.Surface, rect: pygame.R
         surface.blit(part, drect)
 
 
+def draw_tiled(surface: pygame.Surface, tile: pygame.Surface, rect: pygame.Rect) -> None:
+    """Tile ``tile`` across ``rect`` on ``surface``."""
+    tw, th = tile.get_size()
+    for x in range(rect.left, rect.right, tw):
+        for y in range(rect.top, rect.bottom, th):
+            surface.blit(tile, (x, y))
+
+
 def load_card_images(width: int = 80) -> None:
     """Load all card images scaled to ``width`` pixels."""
     cards = ASSETS_DIR / "cards"
