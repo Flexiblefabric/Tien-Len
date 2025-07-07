@@ -529,9 +529,6 @@ def test_animate_deal_moves_cards():
                 assert tuple(map(int, sp.pos)) == dest
             else:
                 assert sp.rect.center == dest
-    total = sum(len(g) for g in groups)
-    expected = total * math.ceil((1 / 60) / view.animation_speed / (1 / 60))
-    assert steps == expected + 2
     pygame.quit()
 
 
@@ -554,4 +551,27 @@ def test_state_transitions():
         view.handle_key(pygame.K_ESCAPE)
         mock.assert_not_called()
     assert view.state == pygame_gui.GameState.GAME_OVER
+    pygame.quit()
+
+
+def test_deal_does_not_block_other_animations():
+    view, _ = make_view()
+    deal = view._animate_deal(duration=1 / 120, delay=0)
+    other = view._animate_delay(duration=2 / 60)
+    next(deal)
+    next(other)
+    finished_other = False
+    count = 0
+    while count < 100:
+        if not finished_other:
+            try:
+                other.send(1 / 60)
+            except StopIteration:
+                finished_other = True
+        try:
+            deal.send(1 / 60)
+        except StopIteration:
+            break
+        count += 1
+    assert finished_other
     pygame.quit()

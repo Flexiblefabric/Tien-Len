@@ -456,8 +456,9 @@ class AnimationMixin:
         max_len = max(len(g) for _, g in groups)
         pause_total = delay / self.animation_speed
 
-        tl = Timeline()
         move_dur = duration / self.animation_speed
+        order = 0
+        managers = []
         for i in range(max_len):
             for g_idx, (group, grp) in enumerate(groups):
                 if i >= len(grp):
@@ -465,28 +466,29 @@ class AnimationMixin:
                 sp = grp[i]
                 dest = destinations[g_idx][i]
                 orig_layer = layers[g_idx][i]
+                mgr = self._manager_for(sp)
+                managers.append(mgr)
 
-                def start(sp=sp, dest=dest, group=group, orig_layer=orig_layer):
+                start_delay = order * (move_dur + pause_total)
+                order += 1
+
+                tl = Timeline()
+                if start_delay > 0:
+                    tl.wait(start_delay)
+
+                def start_move(sp=sp, dest=dest, group=group):
                     group.change_layer(sp, group.get_top_layer() + 1)
-                    mgr = self._manager_for(sp)
                     mgr.tween_position(dest, move_dur, 'smooth')
 
-                def reset(sp=sp, group=group, orig_layer=orig_layer):
+                def reset_layer(sp=sp, group=group, orig_layer=orig_layer):
                     group.change_layer(sp, orig_layer)
 
-                tl.then(start).wait(move_dur).then(reset)
-                if pause_total > 0:
-                    tl.wait(pause_total)
+                tl.then(start_move).wait(move_dur).then(reset_layer)
+                mgr.play(tl)
 
-        gen = tl.play()
-        next(gen)
-        dt = yield
-        while True:
-            try:
-                gen.send(dt)
-            except StopIteration:
-                break
-            dt = yield
+        yield
+        while any(m.active() for m in managers):
+            yield
 
     def _animate_return(
         self,
@@ -503,23 +505,23 @@ class AnimationMixin:
         dest = self._player_pos(player_idx)
         pause_total = delay / self.animation_speed
 
+        move_dur = duration / self.animation_speed
+        bounce_dur = 0.1 / self.animation_speed
+
+        timelines: List[Timeline] = []
+        for i in range(count):
+            tl = Timeline()
+            start_delay = i * (move_dur + bounce_dur + pause_total)
+            if start_delay > 0:
+                tl.wait(start_delay)
+            tl.then(self._animate_back(start, dest, duration))
+            timelines.append(tl)
+
         dt = yield
-        for _ in range(count):
-            anim = self._animate_back(start, dest, duration)
-            next(anim)
-            while True:
-                try:
-                    anim.send(dt)
-                except StopIteration:
-                    break
-                dt = yield
-            if pause_total > 0:
-                pause = Tween(0.0, 1.0, pause_total)
-                while True:
-                    pause.update(dt)
-                    dt = yield
-                    if pause.finished:
-                        break
+        while any(tl.active for tl in timelines):
+            for tl in timelines:
+                tl.update(dt)
+            dt = yield
 
     def _animate_glow(
         self,

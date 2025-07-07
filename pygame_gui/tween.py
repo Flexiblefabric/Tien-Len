@@ -75,7 +75,7 @@ class Timeline:
 
     def update(self, dt: float) -> None:
         """Advance the timeline by ``dt`` seconds."""
-        while dt > 0:
+        while dt > 0 or (dt == 0 and self._current is None and self._steps):
             if self._current is None:
                 if not self._steps:
                     break
@@ -114,4 +114,3 @@ class Timeline:
             yield
 
         return gen()
-

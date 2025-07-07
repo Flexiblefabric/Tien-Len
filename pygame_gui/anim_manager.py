@@ -4,7 +4,7 @@ from typing import Callable, List, Tuple
 
 import pygame
 
-from .tween import Tween
+from .tween import Tween, Timeline
 
 
 class AnimationManager:
@@ -13,11 +13,17 @@ class AnimationManager:
     def __init__(self, sprite: pygame.sprite.Sprite) -> None:
         self.sprite = sprite
         self._tweens: List[Tuple[Tween, Callable[[float], None]]] = []
+        self._timelines: List["Timeline"] = []
 
     def add(self, tween: Tween, setter: Callable[[float], None]) -> Tween:
         """Register ``tween`` and apply ``setter`` each update."""
         self._tweens.append((tween, setter))
         return tween
+
+    def play(self, timeline: Timeline) -> Timeline:
+        """Schedule ``timeline`` to run alongside other tweens."""
+        self._timelines.append(timeline)
+        return timeline
 
     def tween_position(
         self, dest: Tuple[float, float], duration: float, ease: str | Callable[[float], float] | None = None
@@ -79,5 +85,12 @@ class AnimationManager:
                 remaining.append((tw, setter))
         self._tweens = remaining
 
+        active_tl: List[Timeline] = []
+        for tl in self._timelines:
+            tl.update(dt)
+            if tl.active:
+                active_tl.append(tl)
+        self._timelines = active_tl
+
     def active(self) -> bool:
-        return bool(self._tweens)
+        return bool(self._tweens or self._timelines)
