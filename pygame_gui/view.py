@@ -140,8 +140,8 @@ class GameView(AnimationMixin):
                 pass
         self.selected: List[CardSprite] = []
         self.current_trick: list[tuple[str, pygame.Surface]] = []
-        self.ai_sprites: List[pygame.sprite.RenderUpdates] = [
-            pygame.sprite.RenderUpdates() for _ in range(3)
+        self.ai_sprites: List[pygame.sprite.LayeredUpdates] = [
+            pygame.sprite.LayeredUpdates() for _ in range(3)
         ]
         self.running = True
         self.overlay: Optional[Overlay] = None
@@ -1104,8 +1104,8 @@ class GameView(AnimationMixin):
     def update_hand_sprites(self):
         """Create card sprites for all players with a simple table layout."""
 
-        self.hand_sprites = pygame.sprite.RenderUpdates()
-        self.ai_sprites = [pygame.sprite.RenderUpdates() for _ in range(3)]
+        self.hand_sprites = pygame.sprite.LayeredUpdates()
+        self.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
 
         card_w = self.card_width
         card_h = int(card_w * 1.4)
@@ -1119,7 +1119,8 @@ class GameView(AnimationMixin):
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
             sprite.pos.y = self.hand_y
             sprite.update()
-            self.hand_sprites.add(sprite)
+            sprite._layer = i
+            self.hand_sprites.add(sprite, layer=i)
 
         margin_v = bottom_margin(card_w)
 
@@ -1129,7 +1130,8 @@ class GameView(AnimationMixin):
         for i in range(len(top_player.hand)):
             pos = (start_x + i * spacing, 40)
             sprite = CardBackSprite(pos, card_w, self.card_back_name)
-            self.ai_sprites[0].add(sprite)
+            sprite._layer = i
+            self.ai_sprites[0].add(sprite, layer=i)
 
         # --- Left AI player (vertical) ----------------------------------
         left_player = self.game.players[1]
@@ -1148,7 +1150,8 @@ class GameView(AnimationMixin):
             sprite = CardBackSprite(
                 pos, card_w, self.card_back_name, rotation=90
             )
-            self.ai_sprites[1].add(sprite)
+            sprite._layer = i
+            self.ai_sprites[1].add(sprite, layer=i)
 
         # --- Right AI player (vertical) ---------------------------------
         right_player = self.game.players[3]
@@ -1167,7 +1170,8 @@ class GameView(AnimationMixin):
             sprite = CardBackSprite(
                 pos, card_w, self.card_back_name, rotation=-90
             )
-            self.ai_sprites[2].add(sprite)
+            sprite._layer = i
+            self.ai_sprites[2].add(sprite, layer=i)
 
         self.update_play_button_state()
 

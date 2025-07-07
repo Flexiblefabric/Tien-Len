@@ -413,7 +413,7 @@ def test_play_selected_triggers_flip():
     view, _ = make_view()
     sprite = DummyCardSprite()
     view.selected = [sprite]
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     dest = view._pile_center()
     with (
         patch.object(view.game, "is_valid", return_value=(True, "")),
@@ -434,7 +434,7 @@ def test_play_selected_triggers_glow():
     view, _ = make_view()
     sprite = DummyCardSprite()
     view.selected = [sprite]
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with (
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
@@ -457,7 +457,7 @@ def test_play_selected_triggers_bomb_reveal():
     view, _ = make_view()
     sprite = DummyCardSprite()
     view.selected = [sprite]
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with (
         patch.object(view.game, "is_valid", return_value=(True, "")),
         patch.object(view.game, "process_play", return_value=False),
@@ -502,7 +502,7 @@ def test_play_selected_shakes_on_invalid():
     view, _ = make_view()
     sprite = DummyCardSprite()
     view.selected = [sprite]
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with (
         patch.object(view.game, "is_valid", return_value=(False, "bad")),
         patch.object(view, "_animate_shake", return_value="gen") as shake,
@@ -760,7 +760,7 @@ def test_reset_current_trick_starts_animation():
 
 def test_draw_players_displays_trick_linearly():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.RenderUpdates()
+    view.hand_sprites = pygame.sprite.LayeredUpdates()
     view.ai_sprites = []
     surf1 = pygame.Surface((10, 20))
     surf2 = pygame.Surface((10, 20))

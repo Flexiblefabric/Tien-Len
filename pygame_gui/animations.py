@@ -439,36 +439,45 @@ class AnimationMixin:
         delay: float = 5 / 60,
     ):
         """Yield a simple dealing animation for all current hand sprites."""
-        groups = [self.hand_sprites.sprites()] + [g.sprites() for g in self.ai_sprites]
-        if not any(groups):
+        groups = [
+            (self.hand_sprites, self.hand_sprites.sprites())
+        ] + [
+            (g, g.sprites()) for g in self.ai_sprites
+        ]
+        if not any(s for _, s in groups):
             return
 
         start = self._pile_center()
         destinations = [
             [
-                (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
-                 getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+                (
+                    getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+                    getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y,
+                )
                 for sp in grp
             ]
-            for grp in groups
+            for _, grp in groups
         ]
-        for grp in groups:
+        layers = [[getattr(sp, "_layer", idx) for idx, sp in enumerate(grp)] for _, grp in groups]
+        for _, grp in groups:
             for sp in grp:
                 if hasattr(sp, "pos"):
                     sp.pos.update(start)
                 else:
                     sp.rect.center = start
 
-        max_len = max(len(g) for g in groups)
+        max_len = max(len(g) for _, g in groups)
         pause_total = delay / self.animation_speed
 
         dt = yield
         for i in range(max_len):
-            for g_idx, grp in enumerate(groups):
+            for g_idx, (group, grp) in enumerate(groups):
                 if i >= len(grp):
                     continue
                 sp = grp[i]
                 dest = destinations[g_idx][i]
+                orig_layer = layers[g_idx][i]
+                group.change_layer(sp, group.get_top_layer() + 1)
                 anim = self._animate_sprites([sp], dest, duration)
                 next(anim)
                 while True:
@@ -477,6 +486,7 @@ class AnimationMixin:
                     except StopIteration:
                         break
                     dt = yield
+                group.change_layer(sp, orig_layer)
                 if pause_total > 0:
                     pause = Tween(0.0, 1.0, pause_total)
                     while True:
