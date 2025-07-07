@@ -32,3 +32,86 @@ class Tween:
     def finished(self) -> bool:
         """Return ``True`` when the tween has reached its end value."""
         return self.elapsed + 1e-9 >= self.duration
+
+
+class Timeline:
+    """Chain multiple ``Tween`` objects and callbacks sequentially."""
+
+    def __init__(self) -> None:
+        self._steps: list = []
+        self._current = None
+
+    def add(self, tween: Tween, setter: Callable[[float], None] | None = None) -> "Timeline":
+        """Append ``tween`` to the queue applying ``setter`` on each update."""
+        self._steps.append((tween, setter))
+        return self
+
+    def wait(self, duration: float) -> "Timeline":
+        """Pause for ``duration`` seconds."""
+        self._steps.append((Tween(0.0, 1.0, duration), None))
+        return self
+
+    def then(self, step) -> "Timeline":
+        """Execute ``step`` after previous entries finish."""
+        self._steps.append(step)
+        return self
+
+    # Internal update -------------------------------------------------
+    def _advance(self, dt: float) -> float:
+        if isinstance(self._current, tuple):
+            tw, setter = self._current
+            before = tw.elapsed
+            value = tw.update(dt)
+            if setter:
+                setter(value)
+            return tw.elapsed - before
+        elif hasattr(self._current, "send"):
+            try:
+                self._current.send(dt)
+            except StopIteration:
+                self._current = None
+            return dt
+        return dt
+
+    def update(self, dt: float) -> None:
+        """Advance the timeline by ``dt`` seconds."""
+        while dt > 0:
+            if self._current is None:
+                if not self._steps:
+                    break
+                step = self._steps.pop(0)
+                if isinstance(step, tuple) or hasattr(step, "send"):
+                    self._current = step
+                    if hasattr(step, "send"):
+                        try:
+                            next(step)
+                        except StopIteration:
+                            self._current = None
+                            continue
+                elif isinstance(step, Tween):
+                    self._current = (step, None)
+                else:
+                    step()
+                    continue
+            consumed = self._advance(dt)
+            if isinstance(self._current, tuple) and self._current[0].finished:
+                self._current = None
+            dt -= consumed
+
+    @property
+    def active(self) -> bool:
+        return self._current is not None or bool(self._steps)
+
+    # Generator wrapper -----------------------------------------------
+    def play(self):
+        """Return a generator that updates the timeline each frame."""
+
+        def gen():
+            dt = yield
+            while self.active:
+                self.update(dt)
+                dt = yield
+            yield
+
+        return gen()
+

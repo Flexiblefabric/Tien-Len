@@ -342,7 +342,7 @@ def test_animate_flip_moves_to_destination():
     assert tuple(map(int, sprite.pos)) == (10, 5)
     move_steps = math.ceil((4 / 60) / view.animation_speed / (1 / 60))
     bounce_steps = math.ceil((0.1) / view.animation_speed / (1 / 60))
-    assert steps == move_steps + bounce_steps + 2
+    assert steps == move_steps + bounce_steps + 3
     pygame.quit()
 
 
@@ -531,7 +531,7 @@ def test_animate_deal_moves_cards():
                 assert sp.rect.center == dest
     total = sum(len(g) for g in groups)
     expected = total * math.ceil((1 / 60) / view.animation_speed / (1 / 60))
-    assert steps == expected
+    assert steps == expected + 2
     pygame.quit()
 
 

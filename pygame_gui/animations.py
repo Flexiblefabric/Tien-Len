@@ -4,7 +4,7 @@ import math
 import types
 from typing import List, Tuple, Optional
 
-from .tween import Tween
+from .tween import Tween, Timeline
 
 import pygame
 
@@ -182,10 +182,8 @@ class AnimationMixin:
         ]
         fronts = [sp.image for sp in sprites]
         back = get_card_back(self.card_back_name, sprites[0].rect.width)
-        tween = Tween(0.0, 1.0, total, 'smooth')
-        dt = yield
-        while True:
-            t = tween.update(dt)
+
+        def update(t: float) -> None:
             for sp, (sx, sy) in zip(sprites, starts):
                 nx = sx + (dest[0] - sx) * t
                 ny = sy + (dest[1] - sy) * t
@@ -205,15 +203,16 @@ class AnimationMixin:
                 sp.rect = scaled.get_rect(center=center)
                 if hasattr(sp, "pos"):
                     sp.pos.update(center)
-            dt = yield
-            if tween.finished:
-                break
-        bounce = self._animate_bounce(sprites)
-        next(bounce)
+
+        tl = Timeline()
+        tl.add(Tween(0.0, 1.0, total, 'smooth'), update)
+        tl.then(self._animate_bounce(sprites))
+        gen = tl.play()
+        next(gen)
         dt = yield
         while True:
             try:
-                bounce.send(dt)
+                gen.send(dt)
             except StopIteration:
                 break
             dt = yield
@@ -457,7 +456,8 @@ class AnimationMixin:
         max_len = max(len(g) for _, g in groups)
         pause_total = delay / self.animation_speed
 
-        dt = yield
+        tl = Timeline()
+        move_dur = duration / self.animation_speed
         for i in range(max_len):
             for g_idx, (group, grp) in enumerate(groups):
                 if i >= len(grp):
@@ -465,23 +465,28 @@ class AnimationMixin:
                 sp = grp[i]
                 dest = destinations[g_idx][i]
                 orig_layer = layers[g_idx][i]
-                group.change_layer(sp, group.get_top_layer() + 1)
-                anim = self._animate_sprites([sp], dest, duration)
-                next(anim)
-                while True:
-                    try:
-                        anim.send(dt)
-                    except StopIteration:
-                        break
-                    dt = yield
-                group.change_layer(sp, orig_layer)
+
+                def start(sp=sp, dest=dest, group=group, orig_layer=orig_layer):
+                    group.change_layer(sp, group.get_top_layer() + 1)
+                    mgr = self._manager_for(sp)
+                    mgr.tween_position(dest, move_dur, 'smooth')
+
+                def reset(sp=sp, group=group, orig_layer=orig_layer):
+                    group.change_layer(sp, orig_layer)
+
+                tl.then(start).wait(move_dur).then(reset)
                 if pause_total > 0:
-                    pause = Tween(0.0, 1.0, pause_total)
-                    while True:
-                        pause.update(dt)
-                        dt = yield
-                        if pause.finished:
-                            break
+                    tl.wait(pause_total)
+
+        gen = tl.play()
+        next(gen)
+        dt = yield
+        while True:
+            try:
+                gen.send(dt)
+            except StopIteration:
+                break
+            dt = yield
 
     def _animate_return(
         self,
