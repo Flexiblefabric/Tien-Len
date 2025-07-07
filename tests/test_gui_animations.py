@@ -306,7 +306,7 @@ def test_animate_back_moves_to_destination():
     view.screen = MagicMock()
     img = pygame.Surface((1, 1))
     with patch.object(pygame_gui.animations, "get_card_back", return_value=img):
-        with patch("pygame.event.pump"), patch("pygame.display.flip"):
+        with patch("pygame.event.pump"), patch("pygame.display.update"):
             gen = view._animate_back((0, 0), (10, 5), duration=4 / 60)
             next(gen)
             steps = 0
@@ -329,7 +329,7 @@ def test_animate_flip_moves_to_destination():
     sprite = DummyCardSprite()
     with patch.object(
         pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))
-    ), patch("pygame.event.pump"), patch("pygame.display.flip"):
+    ), patch("pygame.event.pump"), patch("pygame.display.update"):
         gen = view._animate_flip([sprite], (10, 5), duration=4 / 60)
         next(gen)
         steps = 0
@@ -352,7 +352,7 @@ def test_animate_glow_draws_glow():
     sprite = DummyCardSprite()
     with patch.object(pygame_gui.animations, "draw_glow") as glow, patch(
         "pygame.event.pump"
-    ), patch("pygame.display.flip"):
+    ), patch("pygame.display.update"):
         gen = view._animate_glow([sprite], (1, 2, 3), duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -367,7 +367,7 @@ def test_animate_glow_draws_glow():
 def test_bomb_reveal_draws_flash():
     view, _ = make_view()
     view.screen = MagicMock()
-    with patch("pygame.event.pump"), patch("pygame.display.flip"):
+    with patch("pygame.event.pump"), patch("pygame.display.update"):
         gen = view._bomb_reveal(duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -386,7 +386,7 @@ def test_highlight_turn_draws_at_player_position():
     overlay_surface = MagicMock()
     with patch("pygame.Surface", return_value=overlay_surface) as surf_mock, patch(
         "pygame.event.pump"
-    ), patch("pygame.display.flip"), patch("pygame.draw.circle"), patch.object(
+    ), patch("pygame.display.update"), patch("pygame.draw.circle"), patch.object(
         view, "_player_pos", return_value=(50, 100)
     ) as pos:
         gen = view._highlight_turn(0, duration=2 / 60)
@@ -410,7 +410,7 @@ def test_animate_pass_text_draws_panel():
     panel = pygame.Surface((2, 2))
     with patch.object(view, "_player_zone_rect", return_value=zone) as rect_mock, patch.object(
         view, "_hud_box", return_value=panel
-    ) as hud, patch("pygame.event.pump"), patch("pygame.display.flip"):
+    ) as hud, patch("pygame.event.pump"), patch("pygame.display.update"):
         gen = view._animate_pass_text(1, duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -426,7 +426,7 @@ def test_animate_pass_text_draws_panel():
 def test_state_methods_update_state():
     view, _ = make_view()
     assert view.state == pygame_gui.GameState.MENU
-    with patch("pygame.display.flip"):
+    with patch("pygame.display.update"):
         with patch.object(view, "ai_turns"):
             view.close_overlay()
         assert view.state == pygame_gui.GameState.PLAYING
@@ -446,7 +446,7 @@ def test_animate_sprites_speed():
     sprite = pygame.sprite.Sprite()
     sprite.image = pygame.Surface((1, 1))
     sprite.rect = sprite.image.get_rect()
-    with patch("pygame.event.pump"), patch("pygame.display.flip"):
+    with patch("pygame.event.pump"), patch("pygame.display.update"):
         view.animation_speed = 2.0
         gen = view._animate_sprites([sprite], (0, 0), duration=10 / 60)
         next(gen)
@@ -465,7 +465,7 @@ def test_animate_sprites_speed():
 def test_animate_back_speed():
     view, clock = make_view()
     with patch.object(pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))):
-        with patch("pygame.event.pump"), patch("pygame.display.flip"):
+        with patch("pygame.event.pump"), patch("pygame.display.update"):
             view.animation_speed = 0.5
             gen = view._animate_back((0, 0), (1, 1), duration=10 / 60)
             next(gen)
@@ -484,7 +484,7 @@ def test_animate_back_speed():
 
 def test_highlight_turn_speed():
     view, clock = make_view()
-    with patch("pygame.event.pump"), patch("pygame.display.flip"):
+    with patch("pygame.event.pump"), patch("pygame.display.update"):
         view.animation_speed = 2.0
         gen = view._highlight_turn(0, duration=10 / 60)
         next(gen)

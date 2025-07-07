@@ -119,6 +119,7 @@ class GameView(AnimationMixin):
             self.panel_tile = None
         self._table_surface: Optional[pygame.Surface] = None
         self._update_table_surface()
+        self._background_needs_redraw = True
         self._layout_zones()
         self._load_avatars()
         # Shared panel background for HUD and overlays
@@ -224,26 +225,30 @@ class GameView(AnimationMixin):
         self.show_menu()
 
     # Animation helpers -------------------------------------------------
-    def _draw_frame(self, flip: bool = True) -> None:
-        """Redraw the game state.
+    def _draw_frame(self, flip: bool = True) -> List[pygame.Rect]:
+        """Redraw the game state and return dirty rectangles.
 
         Parameters
         ----------
         flip:
-            If ``True`` (default), ``pygame.display.flip()`` is called after
-            drawing. Animation helpers can pass ``False`` to defer flipping until
-            additional elements are drawn.
+            If ``True`` (default), ``pygame.display.update`` is called with all
+            dirty rectangles after drawing. Animation helpers can pass ``False``
+            to defer updating until additional elements are drawn.
         """
+        dirty: List[pygame.Rect] = []
         if self.state == GameState.MENU and self.main_menu_image:
             bg = pygame.transform.smoothscale(
                 self.main_menu_image, self.screen.get_size()
             )
-            self.screen.blit(bg, (0, 0))
+            dirty.append(self.screen.blit(bg, (0, 0)))
         else:
-            if self._table_surface:
-                self.screen.blit(self._table_surface, (0, 0))
-            else:
-                self.screen.fill(self.table_color)
+            if self._background_needs_redraw:
+                if self._table_surface:
+                    dirty.append(self.screen.blit(self._table_surface, (0, 0)))
+                else:
+                    self.screen.fill(self.table_color)
+                    dirty.append(self.screen.get_rect())
+                self._background_needs_redraw = False
 
             w, h = self.screen.get_size()
             card_h = int(self.card_width * 1.4)
@@ -263,19 +268,22 @@ class GameView(AnimationMixin):
                 pygame.draw.rect(self.screen, (0, 0, 0, 150), top_rect)
                 pygame.draw.rect(self.screen, (0, 0, 0, 150), bottom_rect)
                 pygame.draw.rect(self.screen, (0, 0, 0, 150), side_rect)
+            dirty.extend([top_rect, bottom_rect, side_rect])
 
-            self.draw_players()
+            dirty.extend(self.draw_players())
             if self.state == GameState.PLAYING:
-                self.draw_scoreboard()
-                self.draw_game_log()
+                dirty.append(self.draw_scoreboard())
+                dirty.append(self.draw_game_log())
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
             overlay_surf.fill((0, 0, 0, 180))
-            self.screen.blit(overlay_surf, (0, 0))
+            dirty.append(self.screen.blit(overlay_surf, (0, 0)))
             self.overlay.draw(self.screen)
-        self.draw_score_overlay()
+            dirty.append(self.screen.get_rect())
+        dirty.append(self.draw_score_overlay())
         if flip:
-            pygame.display.flip()
+            pygame.display.update(dirty)
+        return dirty
 
     def _start_animation(self, anim):
         """Prime and store ``anim`` to run during the main loop."""
@@ -373,7 +381,7 @@ class GameView(AnimationMixin):
             y += line_height
         return panel
 
-    def draw_scoreboard(self) -> None:
+    def draw_scoreboard(self) -> pygame.Rect:
         """Display remaining cards and ranking at the top centre."""
         font = get_font(14)
         old = self.font
@@ -389,8 +397,9 @@ class GameView(AnimationMixin):
         rect = panel.get_rect(midtop=(w // 2, 5))
         self.scoreboard_rect = rect
         self.screen.blit(panel, rect.topleft)
+        return rect
 
-    def draw_game_log(self) -> None:
+    def draw_game_log(self) -> pygame.Rect:
         """Render the latest history entries beside the scoreboard."""
         font = get_font(12)
         lines = [txt for _, txt in self.game.history[-4:]]
@@ -416,6 +425,7 @@ class GameView(AnimationMixin):
         )
         self.log_rect = rect
         self.screen.blit(panel, rect.topleft)
+        return rect
 
     def _load_avatars(self) -> None:
         """Load avatar images for all players if available."""
@@ -474,6 +484,7 @@ class GameView(AnimationMixin):
             for y in range(0, h, tile.get_height()):
                 surface.blit(tile, (x, y))
         self._table_surface = surface
+        self._background_needs_redraw = True
 
     def _create_action_buttons(self) -> None:
         """Create or reposition the Play/Pass/Undo buttons."""
@@ -1189,8 +1200,10 @@ class GameView(AnimationMixin):
 
         self.update_play_button_state()
 
-    def draw_players(self):
-        """Draw all players and their current hands."""
+    def draw_players(self) -> List[pygame.Rect]:
+        """Draw all players and their current hands and return dirty rects."""
+
+        dirty: List[pygame.Rect] = []
 
         card_w = self.card_width
         sprites = self.hand_sprites.sprites()
@@ -1218,23 +1231,26 @@ class GameView(AnimationMixin):
             if rect.width and rect.height:
                 zone = pygame.Surface(rect.size, pygame.SRCALPHA)
                 zone.fill(ZONE_BG)
-                self.screen.blit(zone, rect.topleft)
+                dirty.append(self.screen.blit(zone, rect.topleft))
                 if idx == self.game.current_idx:
                     draw_glow(self.screen, rect, ZONE_HIGHLIGHT)
+                    dirty.append(rect)
 
         # Draw shadows first for a little depth
         for sp in self.hand_sprites.sprites():
             if isinstance(sp, CardSprite):
                 sp.draw_shadow(self.screen)
+                dirty.append(sp.rect)
         for group in self.ai_sprites:
             for sp in group.sprites():
                 if isinstance(sp, CardSprite):
                     sp.draw_shadow(self.screen)
+                    dirty.append(sp.rect)
 
         # Draw the cards themselves
-        self.hand_sprites.draw(self.screen)
+        dirty.extend(self.hand_sprites.draw(self.screen))
         for group in self.ai_sprites:
-            group.draw(self.screen)
+            dirty.extend(group.draw(self.screen))
 
         # Highlight currently selected cards
         if self.selected:
@@ -1244,15 +1260,14 @@ class GameView(AnimationMixin):
             color = (0, 255, 0) if valid else (255, 0, 0)
             for sp in self.selected:
                 pygame.draw.rect(self.screen, color, sp.rect, width=3)
+                dirty.append(sp.rect)
 
         # Player labels and avatars
         for idx, p in enumerate(self.game.players):
             x, y = self._player_pos(idx)
             txt = p.name
             color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
-            panel = self._hud_box(
-                [txt], text_color=color, padding=3, bg_image=self.panel_image
-            )
+            panel = self._hud_box([txt], text_color=color, padding=3, bg_image=self.panel_image)
             avatar = self._avatar_for(p)
             aw, ah = avatar.get_size()
             pw, ph = panel.get_size()
@@ -1269,9 +1284,9 @@ class GameView(AnimationMixin):
                 rect = panel.get_rect(midleft=(x + offset, y))
             else:
                 rect = panel.get_rect(midright=(x - offset, y))
-            self.screen.blit(panel, rect)
+            dirty.append(self.screen.blit(panel, rect))
 
-        self.draw_center_pile()
+        dirty.extend(self.draw_center_pile())
 
         if self.state == GameState.PLAYING:
             undo_btn = next((b for b in self.action_buttons if b.text == "Undo"), None)
@@ -1279,14 +1294,19 @@ class GameView(AnimationMixin):
                 undo_btn.enabled = len(self.game.snapshots) > 1
             for btn in self.action_buttons:
                 btn.draw(self.screen)
+                dirty.append(btn.rect)
             self.settings_button.draw(self.screen)
+            dirty.append(self.settings_button.rect)
 
-    def draw_center_pile(self) -> None:
-        """Draw the cards currently in the centre pile."""
+        return dirty
+
+    def draw_center_pile(self) -> List[pygame.Rect]:
+        """Draw the cards currently in the centre pile and return dirty rects."""
+        dirty: List[pygame.Rect] = []
         if not self.game.pile:
             if self.current_trick:
                 self.current_trick.clear()
-            return
+            return dirty
 
         w, _ = self.screen.get_size()
         y = self.pile_y
@@ -1306,9 +1326,11 @@ class GameView(AnimationMixin):
             color = PLAYER_COLORS[player_idx]
             draw_glow(self.screen, rect, color)
             draw_surface_shadow(self.screen, img, rect)
-            self.screen.blit(img, rect)
+            dirty.append(self.screen.blit(img, rect))
+            dirty.append(rect)
+        return dirty
 
-    def draw_score_overlay(self) -> None:
+    def draw_score_overlay(self) -> pygame.Rect:
         """Render a scoreboard panel showing total wins for each player."""
         lines = [
             f"{p.name}: {self.win_counts.get(p.name, 0)}"
@@ -1318,8 +1340,12 @@ class GameView(AnimationMixin):
         rect = panel.get_rect(topleft=self.score_pos)
         self.score_rect = rect
         if self.score_visible:
-            self.screen.blit(panel, rect.topleft)
+            dirty = [self.screen.blit(panel, rect.topleft)]
+        else:
+            dirty = []
         self.score_button.draw(self.screen)
+        dirty.append(self.score_button.rect)
+        return rect.unionall(dirty)
 
     def _handle_score_event(self, event: pygame.event.Event) -> bool:
         """Handle toggle interaction for the score panel."""
