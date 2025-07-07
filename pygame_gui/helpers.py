@@ -367,13 +367,17 @@ class CardSprite(pygame.sprite.Sprite):
 
         self.image = surf
         self.rect = self.image.get_rect(topleft=pos)
+        self.pos = pygame.math.Vector2(self.rect.center)
         self.card = card
         self.selected = False
 
     def toggle(self) -> None:
         self.selected = not self.selected
         offset = -10 if self.selected else 10
-        self.rect.move_ip(0, offset)
+        self.pos.y += offset
+
+    def update(self) -> None:
+        self.rect.center = (int(self.pos.x), int(self.pos.y))
 
     def draw_shadow(
         self,

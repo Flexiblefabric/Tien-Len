@@ -1117,7 +1117,8 @@ class GameView(AnimationMixin):
         y = self.hand_y - card_h // 2
         for i, card in enumerate(player.hand):
             sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
-            sprite.rect.centery = self.hand_y
+            sprite.pos.y = self.hand_y
+            sprite.update()
             self.hand_sprites.add(sprite)
 
         margin_v = bottom_margin(card_w)
@@ -1177,6 +1178,11 @@ class GameView(AnimationMixin):
         sprites = self.hand_sprites.sprites()
         card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
         spacing = min(40, card_w)
+
+        # Sync sprite rects with their vector positions
+        self.hand_sprites.update()
+        for group in self.ai_sprites:
+            group.update()
 
         bg = self._table_surface
         if bg is None:

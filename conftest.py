@@ -48,10 +48,14 @@ if pygame:
             super().__init__()
             self.image = pygame.Surface((1, 1))
             self.rect = self.image.get_rect(center=pos)
+            self.pos = pygame.math.Vector2(self.rect.center)
             self.selected = False
 
         def toggle(self):
             self.selected = not self.selected
+
+        def update(self):
+            self.rect.center = (int(self.pos.x), int(self.pos.y))
 
     class DummyCardSprite(DummySprite):
         def __init__(self, pos=(0, 0)):
@@ -64,9 +68,13 @@ else:  # pragma: no cover - pygame missing
         def __init__(self, pos=(0, 0)):
             self.rect = None
             self.selected = False
+            self.pos = pygame.math.Vector2(pos) if 'pygame' in globals() else pos
 
         def toggle(self):
             self.selected = not self.selected
+
+        def update(self):
+            pass
 
     class DummyCardSprite(DummySprite):
         def __init__(self, pos=(0, 0)):
