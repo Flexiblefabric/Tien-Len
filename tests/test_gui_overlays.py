@@ -633,6 +633,47 @@ def test_draw_score_overlay_positions_panel():
     pygame.quit()
 
 
+class RecordingFont(DummyFont):
+    def __init__(self):
+        self.calls = []
+
+    def render(self, text, aa, color):
+        self.calls.append((text, color))
+        return pygame.Surface((1, 1))
+
+
+def test_draw_scoreboard_midtop_and_line_count():
+    view, _ = make_view()
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (200, 100)
+    font = RecordingFont()
+    with patch("pygame_gui.view.get_font", return_value=font):
+        view.draw_scoreboard()
+    surf, rect = view.screen.blit.call_args[0]
+    assert rect.midtop == (100, 5)
+    assert len(font.calls) == len(view.game.players)
+    pygame.quit()
+
+
+def test_draw_game_log_highlights_latest():
+    view, _ = make_view()
+    view.screen = MagicMock()
+    view.screen.get_size.return_value = (200, 100)
+    view.scoreboard_rect = pygame.Rect(90, 5, 20, 10)
+    view.game.history = [(0, f"line{i}") for i in range(5)]
+    font = RecordingFont()
+    with patch("pygame_gui.view.get_font", return_value=font):
+        view.draw_game_log()
+    surf, rect = view.screen.blit.call_args[0]
+    assert rect.topleft == (
+        view.scoreboard_rect.right + pygame_gui.LABEL_PAD,
+        view.scoreboard_rect.top,
+    )
+    assert len(font.calls) == 4
+    assert font.calls[-1][1] == (255, 255, 0)
+    pygame.quit()
+
+
 def test_toggle_score_panel_changes_visibility():
     view, _ = make_view()
     start = view.score_visible
