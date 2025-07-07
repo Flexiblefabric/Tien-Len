@@ -19,10 +19,6 @@ from .helpers import (
 from .overlays import Overlay
 
 
-def ease(t: float) -> float:
-    """Simple ease-in/out function."""
-    return t * t * (3 - 2 * t)
-
 
 def get_card_back(*args, **kwargs):
     """Proxy to pygame_gui.get_card_back for easy patching in tests."""
@@ -49,13 +45,25 @@ class AnimationMixin:
         if not sprites:
             return
         total = duration / self.animation_speed
-        for sp in sprites:
-            self._manager_for(sp).tween_position(dest, total, ease)
-        tween = Tween(0.0, 1.0, total)
+        starts = [
+            (getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).x,
+             getattr(sp, "pos", pygame.math.Vector2(sp.rect.center)).y)
+            for sp in sprites
+        ]
+        tween = Tween(0.0, 1.0, total, 'smooth')
         dt = yield
-        while not tween.finished:
-            tween.update(dt)
+        while True:
+            t = tween.update(dt)
+            for sp, (sx, sy) in zip(sprites, starts):
+                nx = sx + (dest[0] - sx) * t
+                ny = sy + (dest[1] - sy) * t
+                if hasattr(sp, "pos"):
+                    sp.pos.update(nx, ny)
+                else:
+                    sp.rect.center = (int(nx), int(ny))
             dt = yield
+            if tween.finished:
+                break
 
     def _animate_bounce(
         self,
@@ -66,22 +74,39 @@ class AnimationMixin:
         """Yield a brief bounce animation for ``sprites``."""
         if not sprites:
             return
+        originals = []
+        for sp in sprites:
+            rect = sp.rect.copy()
+            if hasattr(sp, "pos"):
+                rect.center = (int(sp.pos.x), int(sp.pos.y))
+            originals.append((sp.image, rect))
         total = duration / self.animation_speed
-        half = total / 2
-        for sp in sprites:
-            self._manager_for(sp).tween_scale(scale, half)
-        tween = Tween(0.0, 1.0, half)
+        tween = Tween(0.0, 1.0, total)
         dt = yield
-        while not tween.finished:
-            tween.update(dt)
+        while True:
+            raw = tween.update(dt)
+            t = raw * 2 if raw < 0.5 else (1 - raw) * 2
+            factor = 1 + (scale - 1) * t
+            for sp, (img, rect) in zip(sprites, originals):
+                w, h = rect.size
+                if isinstance(img, pygame.Surface):
+                    scaled = get_scaled_surface(
+                        img, (int(w * factor), int(h * factor))
+                    )
+                else:
+                    scaled = img
+                sp.image = scaled
+                sp.rect = scaled.get_rect(center=rect.center)
+                if hasattr(sp, "pos"):
+                    sp.pos.update(rect.center)
             dt = yield
-        for sp in sprites:
-            self._manager_for(sp).tween_scale(1.0, half)
-        tween2 = Tween(0.0, 1.0, half)
-        dt = yield
-        while not tween2.finished:
-            tween2.update(dt)
-            dt = yield
+            if tween.finished:
+                break
+        for sp, (img, rect) in zip(sprites, originals):
+            sp.image = img
+            sp.rect = rect
+            if hasattr(sp, "pos"):
+                sp.pos.update(rect.center)
 
     def _animate_back(
         self,
@@ -95,7 +120,7 @@ class AnimationMixin:
             return
         rect = img.get_rect(center=start)
         total = duration / self.animation_speed
-        tween = Tween(0.0, 1.0, total, ease)
+        tween = Tween(0.0, 1.0, total, 'smooth')
         dt = yield
         while True:
             t = tween.update(dt)
@@ -161,7 +186,7 @@ class AnimationMixin:
         ]
         fronts = [sp.image for sp in sprites]
         back = get_card_back(self.card_back_name, sprites[0].rect.width)
-        tween = Tween(0.0, 1.0, total, ease)
+        tween = Tween(0.0, 1.0, total, 'smooth')
         dt = yield
         while True:
             t = tween.update(dt)
@@ -339,7 +364,7 @@ class AnimationMixin:
         start = rect.center
         dest = (rect.centerx, rect.centery - 30)
         total = duration / self.animation_speed
-        tween = Tween(0.0, 1.0, total, ease)
+        tween = Tween(0.0, 1.0, total, 'smooth')
         dt = yield
         while True:
             t = tween.update(dt)
@@ -568,7 +593,7 @@ class AnimationMixin:
 
         total = duration / self.animation_speed
         starts = [sp.rect.center for sp in sprites]
-        tween = Tween(0.0, 1.0, total, ease)
+        tween = Tween(0.0, 1.0, total, 'smooth')
         dt = yield
         while True:
             t = tween.update(dt)
