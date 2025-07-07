@@ -170,6 +170,8 @@ class GameView(AnimationMixin):
         self.score_visible = True
         self.score_pos: Tuple[int, int] = (10, 10)
         self.score_rect = pygame.Rect(self.score_pos, (0, 0))
+        self.scoreboard_rect = pygame.Rect(0, 0, 0, 0)
+        self.log_rect = pygame.Rect(0, 0, 0, 0)
         self.action_buttons: List[Button] = []
         self._create_action_buttons()
         self.settings_button: Button
@@ -261,6 +263,9 @@ class GameView(AnimationMixin):
                 pygame.draw.rect(self.screen, (0, 0, 0, 150), side_rect)
 
             self.draw_players()
+            if self.state == GameState.PLAYING:
+                self.draw_scoreboard()
+                self.draw_game_log()
         if self.overlay:
             overlay_surf = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
             overlay_surf.fill((0, 0, 0, 180))
@@ -358,6 +363,50 @@ class GameView(AnimationMixin):
             panel.blit(img, (padding, y))
             y += line_height
         return panel
+
+    def draw_scoreboard(self) -> None:
+        """Display remaining cards and ranking at the top centre."""
+        font = get_font(14)
+        old = self.font
+        self.font = font
+        counts = sorted((len(p.hand), p.name) for p in self.game.players)
+        ranking = {name: i + 1 for i, (_, name) in enumerate(counts)}
+        lines = [
+            f"{p.name}: {len(p.hand)} (#{ranking[p.name]})" for p in self.game.players
+        ]
+        panel = self._hud_box(lines, padding=5, bg_image=self.panel_tile)
+        self.font = old
+        w, _ = self.screen.get_size()
+        rect = panel.get_rect(midtop=(w // 2, 5))
+        self.scoreboard_rect = rect
+        self.screen.blit(panel, rect.topleft)
+
+    def draw_game_log(self) -> None:
+        """Render the latest history entries beside the scoreboard."""
+        font = get_font(12)
+        lines = [txt for _, txt in self.game.history[-4:]]
+        line_height = font.get_linesize()
+        if lines:
+            width = max(font.size(line)[0] for line in lines) + 10
+        else:
+            width = 0
+        height = line_height * len(lines) + 10
+        panel = pygame.Surface((max(1, width), max(1, height)), pygame.SRCALPHA)
+        if self.panel_tile:
+            draw_tiled(panel, self.panel_tile, panel.get_rect())
+        else:
+            panel.fill((0, 0, 0, 150))
+        y = 5
+        for i, line in enumerate(lines):
+            color = (255, 255, 0) if i == len(lines) - 1 else (255, 255, 255)
+            img = font.render(line, True, color)
+            panel.blit(img, (5, y))
+            y += line_height
+        rect = panel.get_rect(
+            topleft=(self.scoreboard_rect.right + LABEL_PAD, self.scoreboard_rect.top)
+        )
+        self.log_rect = rect
+        self.screen.blit(panel, rect.topleft)
 
     def _load_avatars(self) -> None:
         """Load avatar images for all players if available."""
@@ -473,9 +522,8 @@ class GameView(AnimationMixin):
             )
         else:
             self.settings_button.callback = self.show_in_game_menu
-        side_w = self.settings_button.rect.width + LABEL_PAD * 2
-        top_h = int(self.card_width * 1.2)
-        self.settings_button.rect.center = (w - side_w // 2, top_h // 2)
+        margin = min(60, max(40, self.card_width // 3))
+        self.settings_button.rect.topright = (w - margin, margin)
 
     def _position_score_button(self) -> None:
         """Create/position the scoreboard toggle button."""
