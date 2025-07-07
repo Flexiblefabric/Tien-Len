@@ -75,6 +75,12 @@ are handled automatically.
   enabled from the main menu.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 - Optional player avatars loaded from `assets/avatars/`.
+- A small scoreboard at the top centre lists each player's remaining card count
+  and ranking in a 14&nbsp;pt font.
+- A game log beside the scoreboard records the last four actions using a 12&nbsp;pt
+  font and highlights the newest entry.
+- A compact score panel showing total wins can be toggled with the **S** button
+  in the top-left corner.
 
 ### AI personality and lookahead
 
@@ -139,6 +145,17 @@ silently skips all audio. Set the environment variable
 disable sound explicitly. Place additional `.mp3` files in
 `assets/music/` to make them selectable as background tracks.
 
+
+## TODO
+
+- Networked multiplayer mode for remote games.
+- Replay system to review finished rounds.
+- Achievements and statistics tracking.
+- More house rules and customisable card sets.
+- Mobile-friendly controls and interface scaling.
+- Animated bomb and combo effects.
+- Online leaderboards for high scores.
+- Hot-seat local multiplayer support.
 
 ## Running tests
 
