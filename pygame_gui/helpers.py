@@ -9,25 +9,15 @@ import logging
 
 import pygame
 
-from tien_len_full import Card
+from tien_len_full import Card, logger
 
 # Path to the installed assets directory
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 # Path to the bundled TTF font shipped with the package
 FONT_FILE = ASSETS_DIR / "fonts" / "DejaVuSans.ttf"
 
-LOG_FILE = "tien_len_game.log"
-
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
+# Reuse the game's logger defined in ``tien_len_full`` so all components
+# write to the same rotating log file.
 
 
 def _mixer_ready() -> bool:
