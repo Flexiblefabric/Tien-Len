@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Tuple, List, Optional
+from collections import OrderedDict
 from enum import Enum, auto
 import logging
 
@@ -52,6 +53,26 @@ def get_font(size: int) -> pygame.font.Font:
 def clear_font_cache() -> None:
     """Clear any cached fonts."""
     _FONT_CACHE.clear()
+
+
+def get_scaled_surface(image: pygame.Surface, size: Tuple[int, int]) -> pygame.Surface:
+    """Return ``image`` scaled to ``size`` using an LRU cache."""
+    key = (id(image), size)
+    surf = _SCALE_CACHE.get(key)
+    if surf is None:
+        surf = pygame.transform.smoothscale(image, size)
+        _SCALE_CACHE[key] = surf
+        _SCALE_CACHE.move_to_end(key)
+        if len(_SCALE_CACHE) > _SCALE_CACHE_SIZE:
+            _SCALE_CACHE.popitem(last=False)
+    else:
+        _SCALE_CACHE.move_to_end(key)
+    return surf
+
+
+def clear_scale_cache() -> None:
+    """Clear the scaled surface cache."""
+    _SCALE_CACHE.clear()
 
 
 TABLE_THEMES = {
@@ -172,6 +193,10 @@ _GLOW_CACHE: Dict[
 ] = {}
 # Cache for nine-patch button images
 _NINE_PATCH_CACHE: Dict[str, pygame.Surface] = {}
+
+# Cache for scaled surfaces keyed by (image_id, size)
+_SCALE_CACHE: OrderedDict[Tuple[int, Tuple[int, int]], pygame.Surface] = OrderedDict()
+_SCALE_CACHE_SIZE = 64
 
 
 def list_card_back_colors() -> List[str]:

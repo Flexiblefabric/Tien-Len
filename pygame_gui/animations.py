@@ -14,6 +14,7 @@ from .helpers import (
     AVATAR_SIZE,
     LABEL_PAD,
     ZONE_HIGHLIGHT,
+    get_scaled_surface,
 )
 from .overlays import Overlay
 
@@ -93,7 +94,7 @@ class AnimationMixin:
             for sp, (img, rect) in zip(sprites, originals):
                 w, h = rect.size
                 if isinstance(img, pygame.Surface):
-                    scaled = pygame.transform.smoothscale(
+                    scaled = get_scaled_surface(
                         img, (int(w * factor), int(h * factor))
                     )
                 else:
@@ -206,8 +207,10 @@ class AnimationMixin:
                     int(sp.pos.x),
                     int(sp.pos.y),
                 ) if hasattr(sp, "pos") else sp.rect.center
-                rect = img.get_rect(center=center)
-                self.screen.blit(img, rect)
+                w, h = sp.rect.size
+                scaled = get_scaled_surface(img, (w, h))
+                rect = scaled.get_rect(center=center)
+                self.screen.blit(scaled, rect)
             dt = yield
             if tween.finished:
                 break
