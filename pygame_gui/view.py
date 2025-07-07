@@ -1135,16 +1135,18 @@ class GameView(AnimationMixin):
         start_rel, overlap_v = calc_start_and_overlap(
             screen_h - 2 * margin_v,
             len(left_player.hand),
-            card_h,
+            card_w,
             25,
-            card_h - 5,
+            card_w - 5,
         )
-        vert_spacing = card_h - overlap_v
+        vert_spacing = card_w - overlap_v
         y_start = start_rel + margin_v
         margin_h = horizontal_margin(card_w)
         for i in range(len(left_player.hand)):
             pos = (margin_h, y_start + i * vert_spacing)
-            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            sprite = CardBackSprite(
+                pos, card_w, self.card_back_name, rotation=90
+            )
             self.ai_sprites[1].add(sprite)
 
         # --- Right AI player (vertical) ---------------------------------
@@ -1152,16 +1154,18 @@ class GameView(AnimationMixin):
         start_rel, overlap_v = calc_start_and_overlap(
             screen_h - 2 * margin_v,
             len(right_player.hand),
-            card_h,
+            card_w,
             25,
-            card_h - 5,
+            card_w - 5,
         )
-        vert_spacing = card_h - overlap_v
+        vert_spacing = card_w - overlap_v
         y_start = start_rel + margin_v
-        x = screen_w - card_w - margin_h
+        x = screen_w - card_h - margin_h
         for i in range(len(right_player.hand)):
             pos = (x, y_start + i * vert_spacing)
-            sprite = CardBackSprite(pos, card_w, self.card_back_name)
+            sprite = CardBackSprite(
+                pos, card_w, self.card_back_name, rotation=-90
+            )
             self.ai_sprites[2].add(sprite)
 
         self.update_play_button_state()
