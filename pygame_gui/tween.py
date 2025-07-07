@@ -2,20 +2,23 @@ from __future__ import annotations
 
 from typing import Callable
 
-
-def linear(t: float) -> float:
-    """Default linear easing function."""
-    return t
+from .easing import EASING_FUNCTIONS, linear
 
 
 class Tween:
     """Simple tween for numeric values."""
 
-    def __init__(self, start: float, end: float, duration: float, ease: Callable[[float], float] | None = None):
+    def __init__(self, start: float, end: float, duration: float,
+                 ease: str | Callable[[float], float] | None = None):
         self.start = start
         self.end = end
         self.duration = max(duration, 1e-8)
-        self.ease = ease or linear
+        if isinstance(ease, str):
+            if ease not in EASING_FUNCTIONS:
+                raise KeyError(f"Unknown easing '{ease}'")
+            self.ease = EASING_FUNCTIONS[ease]
+        else:
+            self.ease = ease or linear
         self.elapsed = 0.0
 
     def update(self, dt: float) -> float:

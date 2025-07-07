@@ -20,7 +20,7 @@ class AnimationManager:
         return tween
 
     def tween_position(
-        self, dest: Tuple[float, float], duration: float, ease: Callable[[float], float] | None = None
+        self, dest: Tuple[float, float], duration: float, ease: str | Callable[[float], float] | None = None
     ) -> Tuple[Tween, Tween]:
         """Animate the sprite's centre position."""
         if hasattr(self.sprite, "pos"):
@@ -47,7 +47,7 @@ class AnimationManager:
         return tx, ty
 
     def tween_scale(
-        self, dest: float, duration: float, ease: Callable[[float], float] | None = None
+        self, dest: float, duration: float, ease: str | Callable[[float], float] | None = None
     ) -> Tween:
         start = getattr(self.sprite, "scale", 1.0)
 
@@ -60,7 +60,7 @@ class AnimationManager:
         return tw
 
     def tween_alpha(
-        self, dest: float, duration: float, ease: Callable[[float], float] | None = None
+        self, dest: float, duration: float, ease: str | Callable[[float], float] | None = None
     ) -> Tween:
         start = self.sprite.image.get_alpha() or 255
 
