@@ -211,7 +211,7 @@ def test_draw_players_uses_draw_shadow():
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
             sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with patch.object(sprite, "draw_shadow") as ds:
         view.draw_players()
         ds.assert_called()
@@ -220,7 +220,7 @@ def test_draw_players_uses_draw_shadow():
 
 def test_draw_players_labels_use_padding():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.RenderUpdates()
+    view.hand_sprites = pygame.sprite.LayeredUpdates()
     view.ai_sprites = []
     view.screen = MagicMock()
     view.screen.get_size.return_value = (200, 200)
@@ -255,8 +255,8 @@ def test_draw_players_labels_use_padding():
 
 def test_player_zone_rect_returns_union():
     view, _ = make_view()
-    view.hand_sprites = pygame.sprite.RenderUpdates()
-    view.ai_sprites = [pygame.sprite.RenderUpdates() for _ in range(3)]
+    view.hand_sprites = pygame.sprite.LayeredUpdates()
+    view.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
     rects = [pygame.Rect(1, 2, 4, 5), pygame.Rect(4, 10, 2, 3)]
     sprites = [DummySprite() for _ in rects]
     for sp, r in zip(sprites, rects):
@@ -271,8 +271,8 @@ def test_draw_players_highlights_active_zone():
     view, _ = make_view()
     view.screen = MagicMock()
     view.screen.get_size.return_value = (100, 100)
-    view.hand_sprites = pygame.sprite.RenderUpdates()
-    view.ai_sprites = [pygame.sprite.RenderUpdates() for _ in range(3)]
+    view.hand_sprites = pygame.sprite.LayeredUpdates()
+    view.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
     zone = pygame.Rect(0, 0, 10, 10)
     with patch.object(view, "_player_zone_rect", return_value=zone), patch.object(
         pygame_gui.view, "draw_glow"

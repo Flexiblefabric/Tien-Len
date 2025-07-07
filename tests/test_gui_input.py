@@ -38,7 +38,7 @@ def test_handle_mouse_select_and_overlay():
     view, _ = make_view()
     sprite = DummySprite()
     center = sprite.rect.center
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
@@ -64,7 +64,7 @@ def test_handle_mouse_selects_rightmost_sprite():
     view, _ = make_view()
     left = DummySprite((5, 5))
     right = DummySprite((5, 5))
-    view.hand_sprites = pygame.sprite.RenderUpdates(left, right)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(left, right)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
@@ -106,7 +106,7 @@ def test_update_play_button_state_disables_when_invalid():
 def test_handle_mouse_calls_update_play_button_state():
     view, _ = make_view()
     sprite = DummyCardSprite((5, 5))
-    view.hand_sprites = pygame.sprite.RenderUpdates(sprite)
+    view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     view.selected = []
     view.state = pygame_gui.GameState.PLAYING
     view.action_buttons = []
