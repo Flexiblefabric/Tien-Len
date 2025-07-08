@@ -87,9 +87,9 @@ class GameView(AnimationMixin):
         self._attach_reset_pile()
         self.font = get_font(self._get_font_size())
         self.avatars: Dict[str, pygame.Surface] = {}
-        import pygame_gui
+        import tienlen_gui
 
-        pygame_gui.load_card_images(self.card_width)
+        tienlen_gui.load_card_images(self.card_width)
         self.table_texture_name = list_table_textures()[0] if list_table_textures() else ""
         self.table_image: Optional[pygame.Surface] = None
         tex_path = ASSETS_DIR / "tables" / f"{self.table_texture_name}.png"
@@ -132,9 +132,9 @@ class GameView(AnimationMixin):
         sound.load("shuffle", sdir / "shuffle.wav")
         sound.load("win", sdir / "win.wav")
         self.music_track = list_music_tracks()[0] if list_music_tracks() else ""
-        import pygame_gui
+        import tienlen_gui
 
-        if pygame_gui._mixer_ready() and self.music_track:
+        if tienlen_gui._mixer_ready() and self.music_track:
             music = ASSETS_DIR / "music" / self.music_track
             try:
                 pygame.mixer.music.load(str(music))
@@ -734,8 +734,8 @@ class GameView(AnimationMixin):
     # Option helpers --------------------------------------------------
     def _load_options(self) -> dict:
         try:
-            import pygame_gui
-            path = pygame_gui.OPTIONS_FILE
+            import tienlen_gui
+            path = tienlen_gui.OPTIONS_FILE
             default_path = Path.home() / ".tien_len" / "options.json"
             if os.getenv("PYTEST_CURRENT_TEST") and path == default_path and not path.exists():
                 return {}
@@ -766,9 +766,9 @@ class GameView(AnimationMixin):
             return {}
 
     def _save_options(self) -> None:
-        import pygame_gui
+        import tienlen_gui
         default_path = Path.home() / ".tien_len" / "options.json"
-        if os.getenv("PYTEST_CURRENT_TEST") and pygame_gui.OPTIONS_FILE == default_path:
+        if os.getenv("PYTEST_CURRENT_TEST") and tienlen_gui.OPTIONS_FILE == default_path:
             return
 
         data = {
@@ -801,8 +801,8 @@ class GameView(AnimationMixin):
             "win_counts": self.win_counts,
         }
         try:
-            pygame_gui.OPTIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(pygame_gui.OPTIONS_FILE, "w", encoding="utf-8") as f:
+            tienlen_gui.OPTIONS_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(tienlen_gui.OPTIONS_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f)
         except Exception as exc:
             logger.warning("Failed to save options: %s", exc)
@@ -836,9 +836,9 @@ class GameView(AnimationMixin):
         self.game.flip_suit_rank = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)
-        import pygame_gui
+        import tienlen_gui
 
-        if pygame_gui._mixer_ready():
+        if tienlen_gui._mixer_ready():
             pygame.mixer.music.set_volume(self.music_volume)
             if self.music_enabled:
                 track = ASSETS_DIR / "music" / self.music_track
@@ -874,9 +874,9 @@ class GameView(AnimationMixin):
         self.window_height = height
         self.screen = pygame.display.set_mode((width, height), flags)
         self.card_width = self._calc_card_width(width)
-        import pygame_gui
+        import tienlen_gui
 
-        pygame_gui.load_card_images(self.card_width)
+        tienlen_gui.load_card_images(self.card_width)
         self.font = get_font(self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
@@ -904,9 +904,9 @@ class GameView(AnimationMixin):
         self.window_width, self.window_height = size
         self.screen = pygame.display.set_mode(size, flags)
         self.card_width = self._calc_card_width(size[0])
-        import pygame_gui
+        import tienlen_gui
 
-        pygame_gui.load_card_images(self.card_width)
+        tienlen_gui.load_card_images(self.card_width)
         self.font = get_font(self._get_font_size())
         self._update_table_surface()
         self._layout_zones()
@@ -1012,9 +1012,9 @@ class GameView(AnimationMixin):
             self.show_game_over(player.name)
             return
         for c in cards:
-            import pygame_gui
+            import tienlen_gui
 
-            img = pygame_gui.get_card_image(c, self.card_width)
+            img = tienlen_gui.get_card_image(c, self.card_width)
             if img is not None:
                 self.current_trick.append((player.name, img))
         if detect_combo(cards) == "bomb":
@@ -1080,8 +1080,8 @@ class GameView(AnimationMixin):
                     self.show_game_over(p.name)
                     break
                 for c in cards:
-                    import pygame_gui
-                    img = pygame_gui.get_card_image(c, self.card_width)
+                    import tienlen_gui
+                    img = tienlen_gui.get_card_image(c, self.card_width)
                     if img is not None:
                         self.current_trick.append((p.name, img))
                 if detect_combo(cards) == "bomb":

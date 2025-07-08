@@ -1,8 +1,8 @@
 import math
 import pytest
 
-from pygame_gui.tween import Tween
-from pygame_gui.easing import EASING_FUNCTIONS
+from tienlen_gui.tween import Tween
+from tienlen_gui.easing import EASING_FUNCTIONS
 
 
 def test_tween_named_ease():

@@ -20,17 +20,17 @@ from .overlays import Overlay
 
 
 def get_card_back(*args, **kwargs):
-    """Proxy to pygame_gui.get_card_back for easy patching in tests."""
-    import pygame_gui
+    """Proxy to tienlen_gui.get_card_back for easy patching in tests."""
+    import tienlen_gui
 
-    return pygame_gui.get_card_back(*args, **kwargs)
+    return tienlen_gui.get_card_back(*args, **kwargs)
 
 
 def draw_glow(*args, **kwargs):
-    """Proxy to pygame_gui.draw_glow for easy patching in tests."""
-    import pygame_gui
+    """Proxy to tienlen_gui.draw_glow for easy patching in tests."""
+    import tienlen_gui
 
-    return pygame_gui.draw_glow(*args, **kwargs)
+    return tienlen_gui.draw_glow(*args, **kwargs)
 
 
 class AnimationMixin:

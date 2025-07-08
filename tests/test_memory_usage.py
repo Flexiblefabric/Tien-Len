@@ -3,7 +3,7 @@ import tracemalloc
 from unittest.mock import patch
 import pytest
 import pygame
-import pygame_gui
+import tienlen_gui
 
 pytest.importorskip("pygame")
 
@@ -25,17 +25,17 @@ def make_view():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    pygame_gui.clear_font_cache()
+    tienlen_gui.clear_font_cache()
     clock = DummyClock()
     with patch('pygame.display.set_mode', return_value=pygame.Surface((1, 1))):
-        with patch('pygame_gui.view.get_font', return_value=DummyFont()), patch(
-            'pygame_gui.helpers.get_font', return_value=DummyFont()
+        with patch('tienlen_gui.view.get_font', return_value=DummyFont()), patch(
+            'tienlen_gui.helpers.get_font', return_value=DummyFont()
         ):
-            with patch.object(pygame_gui, 'load_card_images'):
+            with patch.object(tienlen_gui, 'load_card_images'):
                 with patch('pygame.time.Clock', return_value=clock):
-                    with patch.object(pygame_gui.GameView, '_highlight_turn'), \
-                         patch.object(pygame_gui.GameView, '_animate_avatar_blink'):
-                        view = pygame_gui.GameView(1, 1)
+                    with patch.object(tienlen_gui.GameView, '_highlight_turn'), \
+                         patch.object(tienlen_gui.GameView, '_animate_avatar_blink'):
+                        view = tienlen_gui.GameView(1, 1)
     # Ensure highlight_turn does not access the display during tests
     view._highlight_turn = lambda *a, **k: None
     view._animate_avatar_blink = lambda *a, **k: None

@@ -14,7 +14,7 @@ decisions:
   the behaviour of the original proof of
   concept from which this repository was created.
 * The :class:`Game` class encapsulates all state and can be reused by the GUI
-  implemented in ``pygame_gui``.
+  implemented in ``tienlen_gui``.
 """
 
 import random

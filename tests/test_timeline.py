@@ -1,5 +1,5 @@
 import math
-from pygame_gui.tween import Tween, Timeline
+from tienlen_gui.tween import Tween, Timeline
 
 
 def test_timeline_wait_then_updates():

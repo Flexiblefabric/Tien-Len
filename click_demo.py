@@ -1,7 +1,7 @@
 """Minimal example demonstrating correct click detection with scaled images."""
 
 import pygame
-from pygame_gui import load_card_images, get_card_image
+from tienlen_gui import load_card_images, get_card_image
 from tien_len_full import Card
 
 pygame.init()

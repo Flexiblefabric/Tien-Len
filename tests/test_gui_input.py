@@ -2,7 +2,7 @@ import os
 from unittest.mock import patch, MagicMock
 import pytest
 import pygame
-import pygame_gui
+import tienlen_gui
 from conftest import make_view, DummySprite, DummyCardSprite
 
 pytest.importorskip("PIL")
@@ -14,7 +14,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 def test_handle_key_shortcuts():
     view, _ = make_view()
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
 
     with patch.object(view, "play_selected") as play:
         view.handle_key(pygame.K_RETURN)
@@ -40,7 +40,7 @@ def test_handle_mouse_select_and_overlay():
     center = sprite.rect.center
     view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     view.selected = []
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.action_buttons = []
 
     view.handle_mouse(center)
@@ -51,7 +51,7 @@ def test_handle_mouse_select_and_overlay():
     assert sprite.selected is False
     assert sprite not in view.selected
 
-    view.state = pygame_gui.GameState.MENU
+    view.state = tienlen_gui.GameState.MENU
     overlay = MagicMock()
     view.overlay = overlay
     view.handle_mouse((5, 5))
@@ -66,7 +66,7 @@ def test_handle_mouse_selects_rightmost_sprite():
     right = DummySprite((5, 5))
     view.hand_sprites = pygame.sprite.LayeredUpdates(left, right)
     view.selected = []
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.action_buttons = []
     with patch.object(view, "update_play_button_state"), patch.object(
         view, "_highlight_turn"
@@ -108,7 +108,7 @@ def test_handle_mouse_calls_update_play_button_state():
     sprite = DummyCardSprite((5, 5))
     view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     view.selected = []
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.action_buttons = []
     with patch.object(view, "update_play_button_state") as upd, patch.object(
         view, "_highlight_turn"

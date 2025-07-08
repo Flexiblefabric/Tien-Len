@@ -2,7 +2,7 @@ import pytest
 from tien_len_full import Game, Card
 
 pytest.importorskip("pygame")
-pytest.importorskip("pygame_gui")
+pytest.importorskip("tienlen_gui")
 
 
 def test_minimax_decision_selects_optimal_move():

@@ -3,7 +3,7 @@ import logging
 from unittest.mock import patch, MagicMock
 import pytest
 import pygame
-import pygame_gui
+import tienlen_gui
 import tien_len_full
 import sound
 from conftest import make_view, DummyFont, DummyCardSprite
@@ -22,17 +22,17 @@ def test_on_resize_rebuilds_sprites():
     surf_large = pygame.Surface((650, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
             with patch.object(
-                pygame_gui, "load_card_images"
+                tienlen_gui, "load_card_images"
             ) as load_images, patch.object(
-                pygame_gui,
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
             ):
-                view = pygame_gui.GameView(300, 200)
+                view = tienlen_gui.GameView(300, 200)
                 view.update_hand_sprites()
                 start_width = view.card_width
                 first = next(iter(view.hand_sprites))
@@ -54,18 +54,18 @@ def test_toggle_fullscreen_sets_flags_and_rescales():
     surf = pygame.Surface((300, 200))
     set_mode = MagicMock(return_value=surf)
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
             with patch.object(
-                pygame_gui, "load_card_images"
+                tienlen_gui, "load_card_images"
             ) as load_images, patch.object(
-                pygame_gui,
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
             ):
                 with patch("pygame.display.toggle_fullscreen"):
-                    view = pygame_gui.GameView(300, 200)
+                    view = tienlen_gui.GameView(300, 200)
                     load_images.reset_mock()
                     set_mode.reset_mock()
 
@@ -92,7 +92,7 @@ def test_action_buttons_created_and_clickable():
 
     btn = view.action_buttons[0]
     btn.callback = MagicMock()
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.handle_mouse(btn.rect.center)
     btn.callback.assert_called_once()
 
@@ -101,7 +101,7 @@ def test_undo_button_disabled_when_no_snapshot():
     view, _ = make_view()
     undo = next(b for b in view.action_buttons if b.text == "Undo")
     undo.callback = MagicMock()
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.game.snapshots = ["s1"]
     view.handle_mouse(undo.rect.center)
     undo.callback.assert_not_called()
@@ -113,7 +113,7 @@ def test_undo_button_disabled_when_no_snapshot():
 def test_undo_button_triggers_game_undo_last():
     view, _ = make_view()
     undo_btn = next(b for b in view.action_buttons if b.text == "Undo")
-    view.state = pygame_gui.GameState.PLAYING
+    view.state = tienlen_gui.GameState.PLAYING
     view.game.snapshots.append("s2")
     with patch.object(
         view.game, "undo_last", return_value=True
@@ -134,7 +134,7 @@ def test_on_resize_clamps_score_pos():
     view, _ = make_view()
     with patch(
         "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
-    ), patch.object(pygame_gui, "load_card_images"), patch.object(
+    ), patch.object(tienlen_gui, "load_card_images"), patch.object(
         view, "update_hand_sprites"
     ), patch.object(view, "_create_action_buttons"), patch.object(
         view, "_position_score_button"
@@ -162,7 +162,7 @@ def test_apply_options_updates_game_and_audio():
     with patch.object(sound, "set_volume") as sv, patch.object(
         view.game, "set_ai_level"
     ) as sal, patch.object(view.game, "set_personality") as sp, patch.object(
-        pygame_gui, "_mixer_ready", return_value=True
+        tienlen_gui, "_mixer_ready", return_value=True
     ), patch.object(
         view, "update_hand_sprites"
     ), patch(
@@ -173,7 +173,7 @@ def test_apply_options_updates_game_and_audio():
         "pygame.mixer.music.unpause"
     ) as unpause:
         view.apply_options()
-    assert view.table_color == pygame_gui.TABLE_THEMES["navy"]
+    assert view.table_color == tienlen_gui.TABLE_THEMES["navy"]
     assert p0.name == "Alice"
     sal.assert_called_with("Hard")
     sp.assert_called_with("aggressive")
@@ -187,12 +187,12 @@ def test_apply_options_updates_game_and_audio():
 
 def test_toggle_fullscreen_flag_toggles():
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
-            with patch.object(pygame_gui, "load_card_images"):
+            with patch.object(tienlen_gui, "load_card_images"):
                 with patch("pygame.display.toggle_fullscreen"):
-                    view = pygame_gui.GameView(100, 100)
+                    view = tienlen_gui.GameView(100, 100)
                     start = view.fullscreen
                     view.toggle_fullscreen()
                     assert view.fullscreen != start
@@ -204,7 +204,7 @@ def test_on_resize_updates_screen_size():
     view, _ = make_view()
     with patch(
         "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
-    ) as sm, patch.object(pygame_gui, "load_card_images"), patch.object(
+    ) as sm, patch.object(tienlen_gui, "load_card_images"), patch.object(
         view, "update_hand_sprites"
     ) as uh, patch.object(
         view, "_create_action_buttons"
@@ -223,15 +223,15 @@ def test_on_resize_repositions_layout():
     surf_large = pygame.Surface((600, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
-            with patch.object(pygame_gui, "load_card_images"), patch.object(
-                pygame_gui,
+            with patch.object(tienlen_gui, "load_card_images"), patch.object(
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
             ):
-                view = pygame_gui.GameView(300, 200)
+                view = tienlen_gui.GameView(300, 200)
                 pos_small = view._player_pos(0)
                 btn_small_x = [b.rect.x for b in view.action_buttons]
                 btn_small_y = [b.rect.y for b in view.action_buttons]
@@ -276,24 +276,24 @@ def test_resize_keeps_sprites_within_margins():
     surf_large = pygame.Surface((600, 600))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
-            with patch.object(pygame_gui, "load_card_images"), patch.object(
-                pygame_gui,
+            with patch.object(tienlen_gui, "load_card_images"), patch.object(
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, int(w * 1.4))),
             ), patch.object(
-                pygame_gui,
+                tienlen_gui,
                 "get_card_back",
                 side_effect=lambda name, w=1: pygame.Surface((w, int(w * 1.4))),
             ):
-                view = pygame_gui.GameView(300, 200)
+                view = tienlen_gui.GameView(300, 200)
                 view.on_resize(600, 600)
 
                 w, h = view.screen.get_size()
                 card_w = view.card_width
-                margin_h = pygame_gui.horizontal_margin(card_w)
+                margin_h = tienlen_gui.horizontal_margin(card_w)
                 margin_v = min(60, max(40, int(card_w * 0.75)))
 
                 hand = view.hand_sprites.sprites()
@@ -323,21 +323,21 @@ def test_vertical_spacing_changes_on_resize():
     surf_large = pygame.Surface((600, 600))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
             with patch.object(
-                pygame_gui, "load_card_images"
+                tienlen_gui, "load_card_images"
             ), patch.object(
-                pygame_gui,
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, int(w * 1.4))),
             ), patch.object(
-                pygame_gui,
+                tienlen_gui,
                 "get_card_back",
                 side_effect=lambda name, w=1: pygame.Surface((w, int(w * 1.4))),
             ):
-                view = pygame_gui.GameView(300, 200)
+                view = tienlen_gui.GameView(300, 200)
                 left_small = view.ai_sprites[1].sprites()
                 spacing_small = (
                     left_small[1].rect.centery - left_small[0].rect.centery
@@ -358,25 +358,25 @@ def test_overlay_instances_created():
     view, _ = make_view()
     with patch("pygame.display.update"), patch("pygame.event.pump"):
         view.show_menu()
-        assert isinstance(view.overlay, pygame_gui.MainMenuOverlay)
+        assert isinstance(view.overlay, tienlen_gui.MainMenuOverlay)
         view.show_in_game_menu()
-        assert isinstance(view.overlay, pygame_gui.InGameMenuOverlay)
+        assert isinstance(view.overlay, tienlen_gui.InGameMenuOverlay)
         view.show_settings()
-        assert isinstance(view.overlay, pygame_gui.SettingsOverlay)
+        assert isinstance(view.overlay, tienlen_gui.SettingsOverlay)
         view.show_game_settings()
-        assert isinstance(view.overlay, pygame_gui.GameSettingsOverlay)
+        assert isinstance(view.overlay, tienlen_gui.GameSettingsOverlay)
         view.show_graphics()
-        assert isinstance(view.overlay, pygame_gui.GraphicsOverlay)
+        assert isinstance(view.overlay, tienlen_gui.GraphicsOverlay)
         view.show_audio()
-        assert isinstance(view.overlay, pygame_gui.AudioOverlay)
-        pygame_gui.GameView.show_rules(view)
-        assert isinstance(view.overlay, pygame_gui.RulesOverlay)
+        assert isinstance(view.overlay, tienlen_gui.AudioOverlay)
+        tienlen_gui.GameView.show_rules(view)
+        assert isinstance(view.overlay, tienlen_gui.RulesOverlay)
         view.show_how_to_play()
-        assert isinstance(view.overlay, pygame_gui.HowToPlayOverlay)
+        assert isinstance(view.overlay, tienlen_gui.HowToPlayOverlay)
         view.show_tutorial()
-        assert isinstance(view.overlay, pygame_gui.TutorialOverlay)
+        assert isinstance(view.overlay, tienlen_gui.TutorialOverlay)
         view.show_game_over("P1")
-        assert isinstance(view.overlay, pygame_gui.GameOverOverlay)
+        assert isinstance(view.overlay, tienlen_gui.GameOverOverlay)
         with patch.object(view, "_save_options"), patch.object(view, "ai_turns"):
             view.close_overlay()
     assert view.overlay is None
@@ -402,8 +402,8 @@ def test_draw_frame_with_overlay():
         "pygame.display.update"
     ) as flip, patch("pygame.Surface", return_value=overlay_surface), patch.object(
         view.score_button, "draw"
-    ), patch("pygame_gui.view.draw_nine_patch"):
-        pygame_gui.GameView._draw_frame(view)
+    ), patch("tienlen_gui.view.draw_nine_patch"):
+        tienlen_gui.GameView._draw_frame(view)
     blit.assert_any_call(overlay_surface, (0, 0))
     flip.assert_called_once()
     pygame.quit()
@@ -448,7 +448,7 @@ def test_play_selected_triggers_glow():
         patch.object(sound, "play"),
     ):
         view.play_selected()
-    glow.assert_called_once_with([sprite], pygame_gui.PLAYER_COLORS[0])
+    glow.assert_called_once_with([sprite], tienlen_gui.PLAYER_COLORS[0])
     assert "glow" in [c.args[0] for c in start.call_args_list]
     pygame.quit()
 
@@ -470,7 +470,7 @@ def test_play_selected_triggers_bomb_reveal():
         patch.object(view, "_bomb_reveal", return_value="boom") as reveal,
         patch.object(view, "_start_animation") as start,
         patch.object(sound, "play"),
-        patch("pygame_gui.view.detect_combo", return_value="bomb"),
+        patch("tienlen_gui.view.detect_combo", return_value="bomb"),
     ):
         view.play_selected()
     reveal.assert_called_once_with()
@@ -584,11 +584,11 @@ def test_ai_turns_triggers_glow_on_play():
         patch.object(view, "_animate_glow", return_value="glow") as glow,
         patch.object(view, "_start_animation") as _,
         patch.object(sound, "play"),
-        patch.object(pygame_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
+        patch.object(tienlen_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
     ):
         view.ai_turns()
     glow.assert_called_once()
-    assert glow.call_args.args[1] == pygame_gui.PLAYER_COLORS[1]
+    assert glow.call_args.args[1] == tienlen_gui.PLAYER_COLORS[1]
     pygame.quit()
 
 
@@ -608,8 +608,8 @@ def test_ai_turns_triggers_bomb_reveal():
         patch.object(view, "_bomb_reveal", return_value="boom") as reveal,
         patch.object(view, "_start_animation") as start,
         patch.object(sound, "play"),
-        patch.object(pygame_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
-        patch("pygame_gui.view.detect_combo", return_value="bomb"),
+        patch.object(tienlen_gui, "get_card_image", return_value=pygame.Surface((1, 1))),
+        patch("tienlen_gui.view.detect_combo", return_value="bomb"),
     ):
         view.ai_turns()
     reveal.assert_called_once_with()
@@ -647,7 +647,7 @@ def test_draw_scoreboard_midtop_and_line_count():
     view.screen = MagicMock()
     view.screen.get_size.return_value = (200, 100)
     font = RecordingFont()
-    with patch("pygame_gui.view.get_font", return_value=font):
+    with patch("tienlen_gui.view.get_font", return_value=font):
         view.draw_scoreboard()
     surf, rect = view.screen.blit.call_args[0]
     assert rect.midtop == (100, 5)
@@ -662,11 +662,11 @@ def test_draw_game_log_highlights_latest():
     view.scoreboard_rect = pygame.Rect(90, 5, 20, 10)
     view.game.history = [(0, f"line{i}") for i in range(5)]
     font = RecordingFont()
-    with patch("pygame_gui.view.get_font", return_value=font):
+    with patch("tienlen_gui.view.get_font", return_value=font):
         view.draw_game_log()
     surf, rect = view.screen.blit.call_args[0]
     assert rect.topleft == (
-        view.scoreboard_rect.right + pygame_gui.LABEL_PAD,
+        view.scoreboard_rect.right + tienlen_gui.LABEL_PAD,
         view.scoreboard_rect.top,
     )
     assert len(font.calls) == 4
@@ -771,7 +771,7 @@ def test_draw_players_displays_trick_linearly():
     view.draw_center_pile()
     calls = [c for c in view.screen.blit.call_args_list if c.args[0] in (surf1, surf2)]
     card_w = view.card_width
-    start_rel, overlap = pygame_gui.calc_start_and_overlap(
+    start_rel, overlap = tienlen_gui.calc_start_and_overlap(
         200, len(view.current_trick), card_w, 25, card_w - 5
     )
     spacing = card_w - overlap
@@ -791,7 +791,7 @@ def test_draw_center_pile_uses_shadow_helper():
     view.screen.get_size.return_value = (100, 100)
     view.pile_y = 40
     view.game.pile.append((view.game.players[0], []))
-    with patch.object(pygame_gui.view, "draw_surface_shadow") as shadow:
+    with patch.object(tienlen_gui.view, "draw_surface_shadow") as shadow:
         view.draw_center_pile()
         shadow.assert_called_once()
     pygame.quit()
@@ -801,9 +801,9 @@ def test_calc_hand_layout_wraps_start_and_spacing():
     width = 200
     card_w = 50
     count = 3
-    start, spacing = pygame_gui.calc_hand_layout(width, card_w, count)
-    margin = pygame_gui.horizontal_margin(card_w)
-    start_rel, overlap = pygame_gui.calc_start_and_overlap(
+    start, spacing = tienlen_gui.calc_hand_layout(width, card_w, count)
+    margin = tienlen_gui.horizontal_margin(card_w)
+    start_rel, overlap = tienlen_gui.calc_start_and_overlap(
         width - 2 * margin,
         count,
         card_w,
@@ -817,17 +817,17 @@ def test_calc_hand_layout_wraps_start_and_spacing():
 @pytest.mark.parametrize(
     "cls, args",
     [
-        (pygame_gui.ProfileOverlay, ()),
-        (pygame_gui.MainMenuOverlay, ()),
-        (pygame_gui.InGameMenuOverlay, ()),
-        (pygame_gui.SettingsOverlay, ()),
-        (pygame_gui.GameSettingsOverlay, ()),
-        (pygame_gui.GraphicsOverlay, ()),
-        (pygame_gui.AudioOverlay, ()),
-        (pygame_gui.RulesOverlay, (lambda: None,)),
-        (pygame_gui.HowToPlayOverlay, (lambda: None,)),
-        (pygame_gui.TutorialOverlay, (lambda: None,)),
-        (pygame_gui.SavePromptOverlay, (lambda: None, "Quit")),
+        (tienlen_gui.ProfileOverlay, ()),
+        (tienlen_gui.MainMenuOverlay, ()),
+        (tienlen_gui.InGameMenuOverlay, ()),
+        (tienlen_gui.SettingsOverlay, ()),
+        (tienlen_gui.GameSettingsOverlay, ()),
+        (tienlen_gui.GraphicsOverlay, ()),
+        (tienlen_gui.AudioOverlay, ()),
+        (tienlen_gui.RulesOverlay, (lambda: None,)),
+        (tienlen_gui.HowToPlayOverlay, (lambda: None,)),
+        (tienlen_gui.TutorialOverlay, (lambda: None,)),
+        (tienlen_gui.SavePromptOverlay, (lambda: None, "Quit")),
     ],
 )
 def test_overlay_keyboard_navigation(cls, args):
@@ -861,7 +861,7 @@ def test_overlay_keyboard_navigation(cls, args):
 
 def test_in_game_menu_buttons():
     view, _ = make_view()
-    overlay = pygame_gui.InGameMenuOverlay(view)
+    overlay = tienlen_gui.InGameMenuOverlay(view)
     texts = [b.text for b in overlay.buttons]
     cbs = [b.callback for b in overlay.buttons]
     assert texts == [
@@ -925,7 +925,7 @@ def test_on_resize_calls_overlay_resize():
     view.overlay = overlay
     with patch(
         "pygame.display.set_mode", return_value=pygame.Surface((1, 1))
-    ), patch.object(pygame_gui, "load_card_images"), patch.object(
+    ), patch.object(tienlen_gui, "load_card_images"), patch.object(
         view, "update_hand_sprites"
     ), patch.object(
         view, "_create_action_buttons"
@@ -948,11 +948,11 @@ def test_on_resize_recreates_font():
         return DummyFont()
 
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("pygame_gui.view.get_font", side_effect=fake_font), patch(
-            "pygame_gui.helpers.get_font", side_effect=fake_font
+        with patch("tienlen_gui.view.get_font", side_effect=fake_font), patch(
+            "tienlen_gui.helpers.get_font", side_effect=fake_font
         ):
-            with patch.object(pygame_gui, "load_card_images"):
-                view = pygame_gui.GameView(100, 100)
+            with patch.object(tienlen_gui, "load_card_images"):
+                view = tienlen_gui.GameView(100, 100)
                 first = sizes[-1]
                 sizes.clear()
                 with patch.object(view, "update_hand_sprites"), patch.object(
@@ -979,12 +979,12 @@ def test_overlay_font_changes_after_resize():
 
     surf = pygame.Surface((100, 100))
     with patch("pygame.display.set_mode", return_value=surf):
-        with patch("pygame_gui.view.get_font", side_effect=fake_font), patch(
-            "pygame_gui.helpers.get_font", side_effect=fake_font
+        with patch("tienlen_gui.view.get_font", side_effect=fake_font), patch(
+            "tienlen_gui.helpers.get_font", side_effect=fake_font
         ):
-            with patch.object(pygame_gui, "load_card_images"):
-                view = pygame_gui.GameView(100, 100)
-                overlay = pygame_gui.SavePromptOverlay(view, lambda: None, "Quit")
+            with patch.object(tienlen_gui, "load_card_images"):
+                view = tienlen_gui.GameView(100, 100)
+                overlay = tienlen_gui.SavePromptOverlay(view, lambda: None, "Quit")
                 overlay.draw(surf)
                 before = sizes[-1]
                 sizes.clear()
@@ -1021,15 +1021,15 @@ def test_overlay_buttons_reposition_after_resize(show_fn, args):
     surf_large = pygame.Surface((600, 400))
     set_mode = MagicMock(side_effect=[surf_small, surf_large])
     with patch("pygame.display.set_mode", set_mode):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
         ):
-            with patch.object(pygame_gui, "load_card_images"), patch.object(
-                pygame_gui,
+            with patch.object(tienlen_gui, "load_card_images"), patch.object(
+                tienlen_gui,
                 "get_card_image",
                 side_effect=lambda c, w: pygame.Surface((w, 1)),
             ), patch("pygame.display.update"):
-                view = pygame_gui.GameView(300, 200)
+                view = tienlen_gui.GameView(300, 200)
                 getattr(view, show_fn)(*args)
                 before = [b.rect.topleft for b in view.overlay.buttons]
 
@@ -1043,7 +1043,7 @@ def test_overlay_buttons_reposition_after_resize(show_fn, args):
 
 def test_options_persist_across_sessions(tmp_path):
     opt = tmp_path / "opts.json"
-    with patch.object(pygame_gui, "OPTIONS_FILE", opt):
+    with patch.object(tienlen_gui, "OPTIONS_FILE", opt):
         view, _ = make_view()
         view.card_color = "blue"
         view.colorblind_mode = True
@@ -1075,7 +1075,7 @@ def test_options_persist_across_sessions(tmp_path):
 def test_rules_overlay_toggles_update_state():
     view, _ = make_view()
     with patch("pygame.display.update"):
-        pygame_gui.GameView.show_rules(view)
+        tienlen_gui.GameView.show_rules(view)
     overlay = view.overlay
     attrs = [
         "rule_flip_suit_rank",
@@ -1090,7 +1090,7 @@ def test_rules_overlay_toggles_update_state():
 
 def test_save_prompt_overlay_buttons():
     view, _ = make_view()
-    overlay = pygame_gui.SavePromptOverlay(view, view.quit_game, "Quit")
+    overlay = tienlen_gui.SavePromptOverlay(view, view.quit_game, "Quit")
     texts = [b.text for b in overlay.buttons]
     assert texts == [
         "Save and Quit",
@@ -1101,7 +1101,7 @@ def test_save_prompt_overlay_buttons():
 
 def test_profile_overlay_select_updates_name():
     view, _ = make_view()
-    overlay = pygame_gui.ProfileOverlay(view)
+    overlay = tienlen_gui.ProfileOverlay(view)
     with patch.object(view, "show_menu") as sm:
         overlay.select(next(iter(view.win_counts)))
         sm.assert_called_once()
@@ -1110,7 +1110,7 @@ def test_profile_overlay_select_updates_name():
 
 def test_profile_overlay_new_profile_added():
     view, _ = make_view()
-    overlay = pygame_gui.ProfileOverlay(view)
+    overlay = tienlen_gui.ProfileOverlay(view)
     existing = set(view.win_counts)
     with patch.object(view, "show_menu"):
         overlay.new_profile()
@@ -1148,11 +1148,11 @@ def test_handle_score_event_not_draggable():
 def test_close_overlay_restores_state_and_ai():
     view, _ = make_view()
     view.overlay = MagicMock()
-    view.state = pygame_gui.GameState.SETTINGS
+    view.state = tienlen_gui.GameState.SETTINGS
     with patch.object(view, "_save_options") as save, patch.object(view, "ai_turns") as ai:
         view.close_overlay()
     assert view.overlay is None
-    assert view.state == pygame_gui.GameState.PLAYING
+    assert view.state == tienlen_gui.GameState.PLAYING
     save.assert_called_once()
     ai.assert_called_once()
     pygame.quit()
@@ -1161,7 +1161,7 @@ def test_close_overlay_restores_state_and_ai():
 def test_save_game_warning_on_oserror(tmp_path, caplog):
     view, _ = make_view()
     save_path = tmp_path / "save.json"
-    with patch.object(pygame_gui, "SAVE_FILE", save_path):
+    with patch.object(tienlen_gui, "SAVE_FILE", save_path):
         with patch("builtins.open", side_effect=OSError("nope")):
             before = view.game.to_dict()
             with caplog.at_level(logging.WARNING):
@@ -1174,7 +1174,7 @@ def test_save_game_warning_on_oserror(tmp_path, caplog):
 def test_load_game_warning_on_oserror(tmp_path, caplog):
     view, _ = make_view()
     load_path = tmp_path / "save.json"
-    with patch.object(pygame_gui, "SAVE_FILE", load_path):
+    with patch.object(tienlen_gui, "SAVE_FILE", load_path):
         with patch("pathlib.Path.exists", return_value=True), patch(
             "builtins.open", side_effect=OSError("nope")
         ):

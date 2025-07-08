@@ -83,15 +83,15 @@ else:  # pragma: no cover - pygame missing
 
 
 if pygame:
-    import pygame_gui  # noqa: E402
+    import tienlen_gui  # noqa: E402
 else:  # pragma: no cover - pygame missing
-    pygame_gui = None
+    tienlen_gui = None
 
 
 def make_view(width=1, height=1, clock=None):
     """Create a ``GameView`` instance with common patches applied."""
 
-    if not pygame or not pygame_gui:
+    if not pygame or not tienlen_gui:
         pytest.skip("pygame not available")
 
     pygame.init()
@@ -99,15 +99,15 @@ def make_view(width=1, height=1, clock=None):
     pygame.display.init()
     if pygame.display.get_surface() is None:
         pygame.display.set_mode((width, height))
-    pygame_gui.clear_font_cache()
+    tienlen_gui.clear_font_cache()
     clk = clock or DummyClock()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
-        with patch("pygame_gui.view.get_font", return_value=DummyFont()), patch(
-            "pygame_gui.helpers.get_font", return_value=DummyFont()
-        ), patch.object(pygame_gui, "load_card_images"), patch(
+        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
+            "tienlen_gui.helpers.get_font", return_value=DummyFont()
+        ), patch.object(tienlen_gui, "load_card_images"), patch(
             "pygame.time.Clock", return_value=clk
         ):
-            view = pygame_gui.GameView(width, height)
+            view = tienlen_gui.GameView(width, height)
             # Ensure deterministic turn order for tests
             view.game.current_idx = 0
             view.game.start_idx = 0
