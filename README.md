@@ -75,6 +75,8 @@ are handled automatically.
   enabled from the main menu.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 - Optional player avatars loaded from `assets/avatars/`.
+- Per-player HUD panels show remaining cards, the last move and whose turn it is.
+- Enable **Developer Mode** from the Options menu or press **F3** to reveal AI hands and move evaluations in these panels.
 - A small scoreboard at the top centre lists each player's remaining card count
   and ranking in a 14&nbsp;pt font.
 - A game log beside the scoreboard records the last four actions using a 12&nbsp;pt
