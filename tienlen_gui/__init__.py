@@ -56,6 +56,7 @@ from .overlays import (
     GameOverOverlay,
 )
 from .view import GameView, main
+from .hud import HUDPanel
 
 __all__ = [
     'TABLE_THEMES', 'PLAYER_COLORS', 'HAND_SPACING', 'HORIZONTAL_MARGIN',
@@ -71,5 +72,6 @@ __all__ = [
     'InGameMenuOverlay', 'SettingsOverlay', 'GameSettingsOverlay', 'GraphicsOverlay',
     'AudioOverlay', 'RulesOverlay', 'HowToPlayOverlay', 'TutorialOverlay', 'SavePromptOverlay',
     'ProfileOverlay', 'GameOverOverlay', 'GameView', 'main',
+    'HUDPanel',
     'SHADOW_OFFSET', 'SHADOW_BLUR', 'SHADOW_ALPHA'
 ]
