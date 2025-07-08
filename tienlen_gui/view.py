@@ -59,6 +59,7 @@ from .overlays import (
 )
 from .animations import AnimationMixin
 from .anim_manager import AnimationManager
+from .hud import HUDPanel
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,7 @@ class GameView(AnimationMixin):
         self._background_needs_redraw = True
         self._layout_zones()
         self._load_avatars()
+        self._create_huds()
         # Shared panel background for HUD and overlays
         self.panel_image = self.menu_background
         # Load sound effects and background music
@@ -446,6 +448,10 @@ class GameView(AnimationMixin):
                         break
                     except Exception:
                         continue
+
+    def _create_huds(self) -> None:
+        """Create HUD panels for all players."""
+        self.huds = [HUDPanel(self, i) for i in range(len(self.game.players))]
 
     def _avatar_for(self, player: "Player") -> pygame.Surface:
         """Return avatar image or a placeholder with player initials."""
@@ -827,6 +833,7 @@ class GameView(AnimationMixin):
         self._update_table_surface()
         self.game.players[0].name = self.player_name
         self._load_avatars()
+        self._create_huds()
         self.game.players[0].sort_hand(self.sort_mode, self.game.flip_suit_rank)
         self.game.set_ai_level(self.ai_level)
         self.game.set_personality(self.ai_personality)
@@ -881,6 +888,7 @@ class GameView(AnimationMixin):
         self._update_table_surface()
         self._layout_zones()
         self.update_hand_sprites()
+        self._create_huds()
         self._create_action_buttons()
         self._position_score_button()
         self._clamp_score_pos()
@@ -1199,6 +1207,7 @@ class GameView(AnimationMixin):
             self.ai_sprites[2].add(sprite, layer=i)
 
         self.update_play_button_state()
+        self._create_huds()
 
     def draw_players(self) -> List[pygame.Rect]:
         """Draw all players and their current hands and return dirty rects."""
@@ -1206,9 +1215,6 @@ class GameView(AnimationMixin):
         dirty: List[pygame.Rect] = []
 
         card_w = self.card_width
-        sprites = self.hand_sprites.sprites()
-        card_h = sprites[0].rect.height if sprites else int(card_w * 1.4)
-        spacing = min(40, card_w)
 
         # Sync sprite rects with their vector positions
         self.hand_sprites.update()
@@ -1262,29 +1268,9 @@ class GameView(AnimationMixin):
                 pygame.draw.rect(self.screen, color, sp.rect, width=3)
                 dirty.append(sp.rect)
 
-        # Player labels and avatars
-        for idx, p in enumerate(self.game.players):
-            x, y = self._player_pos(idx)
-            txt = p.name
-            color = (255, 255, 0) if idx == self.game.current_idx else (255, 255, 255)
-            panel = self._hud_box([txt], text_color=color, padding=3, bg_image=self.panel_image)
-            avatar = self._avatar_for(p)
-            aw, ah = avatar.get_size()
-            pw, ph = panel.get_size()
-            combined = pygame.Surface((aw + LABEL_PAD + pw, max(ah, ph)), pygame.SRCALPHA)
-            combined.blit(avatar, (0, (combined.get_height() - ah) // 2))
-            combined.blit(panel, (aw + LABEL_PAD, (combined.get_height() - ph) // 2))
-            panel = combined
-            offset = card_h // 2 + spacing // 2 + LABEL_PAD * 2
-            if idx == 0:
-                rect = panel.get_rect(midbottom=(x, y - offset))
-            elif idx == 1:
-                rect = panel.get_rect(midtop=(x, y + offset))
-            elif idx == 2:
-                rect = panel.get_rect(midleft=(x + offset, y))
-            else:
-                rect = panel.get_rect(midright=(x - offset, y))
-            dirty.append(self.screen.blit(panel, rect))
+        # HUD panels for AI players
+        for hud in getattr(self, "huds", []):
+            dirty.append(hud.draw(self.screen))
 
         dirty.extend(self.draw_center_pile())
 
