@@ -173,6 +173,8 @@ class GameView(AnimationMixin):
         self.rule_flip_suit_rank = False
         self.rule_no_2s = True
         self.score_visible = True
+        self.developer_mode = False
+        self.ai_debug_info: Dict[int, tuple[str, Optional[float]]] = {}
         self.score_pos: Tuple[int, int] = (10, 10)
         self.score_rect = pygame.Rect(self.score_pos, (0, 0))
         self.scoreboard_rect = pygame.Rect(0, 0, 0, 0)
@@ -211,6 +213,7 @@ class GameView(AnimationMixin):
             "rule_flip_suit_rank", self.rule_flip_suit_rank
         )
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
+        self.developer_mode = opts.get("developer_mode", self.developer_mode)
         self.score_visible = opts.get("score_visible", self.score_visible)
         self.score_pos = tuple(opts.get("score_pos", list(self.score_pos)))
         win_data = opts.get("win_counts", {})
@@ -800,6 +803,7 @@ class GameView(AnimationMixin):
             "show_rules_option": self.show_rules_option,
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
+            "developer_mode": self.developer_mode,
             "fullscreen": self.fullscreen,
             "fps_limit": self.fps_limit,
             "score_visible": self.score_visible,
@@ -1004,6 +1008,9 @@ class GameView(AnimationMixin):
             self.show_settings()
         elif key == pygame.K_F11:
             self.toggle_fullscreen()
+        elif key == pygame.K_F3:
+            self.developer_mode = not self.developer_mode
+            self._create_huds()
 
     # Game actions ----------------------------------------------------
     def play_selected(self):
@@ -1078,8 +1085,18 @@ class GameView(AnimationMixin):
             self._start_animation(
                 self._animate_thinking(self.game.current_idx)
             )
-            p = self.game.players[self.game.current_idx]
+            idx = self.game.current_idx
+            p = self.game.players[idx]
             cards = self.game.ai_play(self.game.current_combo)
+            move_type = "pass"
+            score_val: Optional[float] = None
+            if cards:
+                move_type = detect_combo(cards, self.game.allow_2_in_sequence)
+                try:
+                    score_val = sum(self.game.score_move(p, cards, self.game.current_combo))
+                except Exception:
+                    score_val = None
+            self.ai_debug_info[idx] = (move_type, score_val)
             ok, _ = self.game.is_valid(p, cards, self.game.current_combo)
             if not ok:
                 cards = []

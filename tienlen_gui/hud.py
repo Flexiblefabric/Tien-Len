@@ -46,13 +46,48 @@ class HUDPanel:
         status = self._status()
         if status:
             lines.append(status)
+
+        info = self.view.ai_debug_info.get(self.idx)
+        if self.view.developer_mode and info and not self.player.is_human:
+            move, score = info
+            lines.append(f"Move: {move}")
+            if score is not None:
+                lines.append(f"Score: {score:.2f}")
+
         panel = self.view._hud_box(lines, padding=5, bg_image=self.view.panel_image)
         avatar = self.view._avatar_for(self.player)
         aw, ah = avatar.get_size()
         pw, ph = panel.get_size()
-        surf = pygame.Surface((aw + LABEL_PAD + pw, max(ah, ph)), pygame.SRCALPHA)
-        surf.blit(avatar, (0, (surf.get_height() - ah) // 2))
-        surf.blit(panel, (aw + LABEL_PAD, (surf.get_height() - ph) // 2))
+
+        hand_imgs: list[pygame.Surface] = []
+        hand_w = 0
+        card_h = 0
+        if self.view.developer_mode and not self.player.is_human:
+            card_w = max(20, self.view.card_width // 3)
+            card_h = int(card_w * 1.4)
+            spacing = int(card_w * 0.4)
+            import tienlen_gui
+
+            for card in self.player.hand:
+                img = tienlen_gui.get_card_image(card, card_w)
+                if img is not None:
+                    hand_imgs.append(img)
+            if hand_imgs:
+                hand_w = card_w + spacing * (len(hand_imgs) - 1)
+
+        width = aw + LABEL_PAD + pw + (LABEL_PAD + hand_w if hand_w else 0)
+        height = max(ah, ph, card_h)
+        surf = pygame.Surface((width, height), pygame.SRCALPHA)
+        surf.blit(avatar, (0, (height - ah) // 2))
+        surf.blit(panel, (aw + LABEL_PAD, (height - ph) // 2))
+
+        if hand_imgs:
+            x = aw + LABEL_PAD + pw + LABEL_PAD
+            y = (height - card_h) // 2
+            spacing = int(card_w * 0.4)
+            for i, img in enumerate(hand_imgs):
+                surf.blit(img, (x + i * spacing, y))
+
         return surf
 
     def draw(self, surface: pygame.Surface) -> pygame.Rect:
