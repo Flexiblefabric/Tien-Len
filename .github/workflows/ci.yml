@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -35,9 +35,15 @@ jobs:
           flake8
       - name: Run coverage
         run: |
-          coverage run -m pytest --maxfail=1 --disable-warnings -q
+          coverage run -m pytest --disable-warnings -q
           coverage xml
+          coverage html
           coverage report -m
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-html
+          path: htmlcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
