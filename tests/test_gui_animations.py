@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 import pytest
 import pygame
-import pygame_gui
+import tienlen_gui
 import tien_len_full
 from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
 
@@ -18,15 +18,15 @@ def test_card_sprite_draw_shadow_blits():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "pygame_gui.view.get_font", return_value=DummyFont()
+    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "tienlen_gui.view.get_font", return_value=DummyFont()
     ):
         with patch.object(
-            pygame_gui,
+            tienlen_gui,
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
     surf = MagicMock()
     sprite.draw_shadow(surf)
     assert surf.blit.call_count > 0
@@ -39,7 +39,7 @@ def test_button_draw_uses_nine_patch():
     pygame.display.init()
     rect = pygame.Rect(0, 0, 10, 10)
     surf = pygame.Surface((20, 20))
-    btn = pygame_gui.overlays.Button(
+    btn = tienlen_gui.overlays.Button(
         "Play",
         rect,
         lambda: None,
@@ -50,7 +50,7 @@ def test_button_draw_uses_nine_patch():
             "pressed_image": pygame.Surface((5, 5)),
         },
     )
-    with patch.object(pygame_gui.overlays, "draw_nine_patch") as nine, patch(
+    with patch.object(tienlen_gui.overlays, "draw_nine_patch") as nine, patch(
         "pygame.draw.rect"
     ) as rect_draw:
         btn.draw(surf)
@@ -63,16 +63,16 @@ def test_card_sprite_draw_shadow_uses_default_constants():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "pygame_gui.view.get_font", return_value=DummyFont()
+    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "tienlen_gui.view.get_font", return_value=DummyFont()
     ):
         with patch.object(
-            pygame_gui,
+            tienlen_gui,
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
-    from pygame_gui import helpers as h
+            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+    from tienlen_gui import helpers as h
     h._SHADOW_CACHE.clear()
     base = MagicMock()
     shadow = MagicMock()
@@ -95,20 +95,20 @@ def test_draw_shadow_cache_cleared_on_size_change():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    from pygame_gui import helpers as h
+    from tienlen_gui import helpers as h
 
     h._SHADOW_CACHE.clear()
     h._SHADOW_SIZE = None
 
-    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "pygame_gui.view.get_font", return_value=DummyFont()
+    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "tienlen_gui.view.get_font", return_value=DummyFont()
     ):
         with patch.object(
-            pygame_gui,
+            tienlen_gui,
             "get_card_image",
             return_value=pygame.Surface((2, 3), pygame.SRCALPHA),
         ):
-            sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 2)
+            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 2)
 
     surf = pygame.Surface((10, 10))
     sprite.draw_shadow(surf)
@@ -119,7 +119,7 @@ def test_draw_shadow_cache_cleared_on_size_change():
     h._BASE_IMAGES.clear()
     h._BASE_IMAGES["dummy"] = pygame.Surface((10, 14))
     with patch.object(Path, "glob", return_value=[]):
-        pygame_gui.load_card_images(5)
+        tienlen_gui.load_card_images(5)
 
     assert not h._SHADOW_CACHE
     pygame.quit()
@@ -132,7 +132,7 @@ def test_draw_surface_shadow_blits():
     target = MagicMock()
     img = pygame.Surface((1, 1), pygame.SRCALPHA)
     rect = img.get_rect()
-    pygame_gui.draw_surface_shadow(target, img, rect)
+    tienlen_gui.draw_surface_shadow(target, img, rect)
     assert target.blit.call_count > 0
     pygame.quit()
 
@@ -146,8 +146,8 @@ def test_draw_surface_shadow_uses_default_constants():
     rect = img.get_rect()
     shadow = MagicMock()
     with patch("pygame.Surface", return_value=shadow):
-        pygame_gui.draw_surface_shadow(target, img, rect)
-    from pygame_gui import helpers as h
+        tienlen_gui.draw_surface_shadow(target, img, rect)
+    from tienlen_gui import helpers as h
     shadow.set_alpha.assert_called_once_with(h.SHADOW_ALPHA)
     expected = (h.SHADOW_BLUR * 2 + 1) ** 2
     assert target.blit.call_count == expected
@@ -165,7 +165,7 @@ def test_draw_glow_blits():
     pygame.display.init()
     target = MagicMock()
     rect = pygame.Rect(0, 0, 2, 2)
-    pygame_gui.draw_glow(target, rect, (255, 0, 0), radius=1, alpha=10)
+    tienlen_gui.draw_glow(target, rect, (255, 0, 0), radius=1, alpha=10)
     assert target.blit.call_count > 0
     pygame.quit()
 
@@ -174,7 +174,7 @@ def test_draw_glow_uses_cache(monkeypatch):
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    from pygame_gui import helpers as h
+    from tienlen_gui import helpers as h
 
     h._GLOW_CACHE.clear()
 
@@ -190,9 +190,9 @@ def test_draw_glow_uses_cache(monkeypatch):
 
     target = pygame.Surface((10, 10))
     rect = pygame.Rect(0, 0, 2, 2)
-    pygame_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
+    tienlen_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
     first = calls
-    pygame_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
+    tienlen_gui.draw_glow(target, rect, (1, 2, 3), radius=1, alpha=10)
     assert calls == first
 
     key = (rect.size, (1, 2, 3), 1, 10)
@@ -202,15 +202,15 @@ def test_draw_glow_uses_cache(monkeypatch):
 
 def test_draw_players_uses_draw_shadow():
     view, _ = make_view()
-    with patch("pygame_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "pygame_gui.view.get_font", return_value=DummyFont()
+    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
+        "tienlen_gui.view.get_font", return_value=DummyFont()
     ):
         with patch.object(
-            pygame_gui,
+            tienlen_gui,
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = pygame_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
     view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with patch.object(sprite, "draw_shadow") as ds:
         view.draw_players()
@@ -244,8 +244,8 @@ def test_draw_players_labels_use_padding():
     card_w = view.card_width
     card_h = int(card_w * 1.4)
     spacing = min(40, card_w)
-    pad_v = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD * 2
-    pad_h = card_h // 2 + spacing // 2 + pygame_gui.LABEL_PAD * 2
+    pad_v = card_h // 2 + spacing // 2 + tienlen_gui.LABEL_PAD * 2
+    pad_h = card_h // 2 + spacing // 2 + tienlen_gui.LABEL_PAD * 2
 
     assert calls[0].args[1].midbottom == (100, 150 - pad_v)
     assert calls[1].args[1].midtop == (100, 50 + pad_v)
@@ -275,12 +275,12 @@ def test_draw_players_highlights_active_zone():
     view.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
     zone = pygame.Rect(0, 0, 10, 10)
     with patch.object(view, "_player_zone_rect", return_value=zone), patch.object(
-        pygame_gui.view, "draw_glow"
+        tienlen_gui.view, "draw_glow"
     ) as glow:
         view.game.current_idx = 2
         view.draw_players()
     assert glow.call_count == 1
-    glow.assert_called_with(view.screen, zone, pygame_gui.ZONE_HIGHLIGHT)
+    glow.assert_called_with(view.screen, zone, tienlen_gui.ZONE_HIGHLIGHT)
 
 
 def test_animate_sprites_moves_to_destination():
@@ -305,7 +305,7 @@ def test_animate_back_moves_to_destination():
     view, clock = make_view()
     view.screen = MagicMock()
     img = pygame.Surface((1, 1))
-    with patch.object(pygame_gui.animations, "get_card_back", return_value=img):
+    with patch.object(tienlen_gui.animations, "get_card_back", return_value=img):
         with patch("pygame.event.pump"), patch("pygame.display.update"):
             gen = view._animate_back((0, 0), (10, 5), duration=4 / 60)
             next(gen)
@@ -328,7 +328,7 @@ def test_animate_flip_moves_to_destination():
     view.screen = MagicMock()
     sprite = DummyCardSprite()
     with patch.object(
-        pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))
+        tienlen_gui, "get_card_back", return_value=pygame.Surface((1, 1))
     ), patch("pygame.event.pump"), patch("pygame.display.update"):
         gen = view._animate_flip([sprite], (10, 5), duration=4 / 60)
         next(gen)
@@ -350,7 +350,7 @@ def test_animate_glow_draws_glow():
     view, _ = make_view()
     view.screen = MagicMock()
     sprite = DummyCardSprite()
-    with patch.object(pygame_gui.animations, "draw_glow") as glow, patch(
+    with patch.object(tienlen_gui.animations, "draw_glow") as glow, patch(
         "pygame.event.pump"
     ), patch("pygame.display.update"):
         gen = view._animate_glow([sprite], (1, 2, 3), duration=2 / 60)
@@ -425,19 +425,19 @@ def test_animate_pass_text_draws_panel():
 
 def test_state_methods_update_state():
     view, _ = make_view()
-    assert view.state == pygame_gui.GameState.MENU
+    assert view.state == tienlen_gui.GameState.MENU
     with patch("pygame.display.update"):
         with patch.object(view, "ai_turns"):
             view.close_overlay()
-        assert view.state == pygame_gui.GameState.PLAYING
+        assert view.state == tienlen_gui.GameState.PLAYING
         view.show_in_game_menu()
-        assert view.state == pygame_gui.GameState.SETTINGS
+        assert view.state == tienlen_gui.GameState.SETTINGS
         view.show_settings()
-        assert view.state == pygame_gui.GameState.SETTINGS
+        assert view.state == tienlen_gui.GameState.SETTINGS
         view.show_menu()
-        assert view.state == pygame_gui.GameState.MENU
+        assert view.state == tienlen_gui.GameState.MENU
         view.show_game_over("X")
-        assert view.state == pygame_gui.GameState.GAME_OVER
+        assert view.state == tienlen_gui.GameState.GAME_OVER
     pygame.quit()
 
 
@@ -464,7 +464,7 @@ def test_animate_sprites_speed():
 
 def test_animate_back_speed():
     view, clock = make_view()
-    with patch.object(pygame_gui, "get_card_back", return_value=pygame.Surface((1, 1))):
+    with patch.object(tienlen_gui, "get_card_back", return_value=pygame.Surface((1, 1))):
         with patch("pygame.event.pump"), patch("pygame.display.update"):
             view.animation_speed = 0.5
             gen = view._animate_back((0, 0), (1, 1), duration=10 / 60)
@@ -534,23 +534,23 @@ def test_animate_deal_moves_cards():
 
 def test_state_transitions():
     view, _ = make_view()
-    assert view.state == pygame_gui.GameState.MENU
+    assert view.state == tienlen_gui.GameState.MENU
     with patch.object(view, "ai_turns"):
         view.close_overlay()
-    assert view.state == pygame_gui.GameState.PLAYING
+    assert view.state == tienlen_gui.GameState.PLAYING
 
     view.show_settings()
-    assert view.state == pygame_gui.GameState.SETTINGS
+    assert view.state == tienlen_gui.GameState.SETTINGS
     with patch.object(view, "ai_turns"):
         view.handle_key(pygame.K_ESCAPE)
-    assert view.state == pygame_gui.GameState.PLAYING
+    assert view.state == tienlen_gui.GameState.PLAYING
 
     view.show_game_over("P1")
-    assert view.state == pygame_gui.GameState.GAME_OVER
+    assert view.state == tienlen_gui.GameState.GAME_OVER
     with patch.object(view, "ai_turns") as mock:
         view.handle_key(pygame.K_ESCAPE)
         mock.assert_not_called()
-    assert view.state == pygame_gui.GameState.GAME_OVER
+    assert view.state == tienlen_gui.GameState.GAME_OVER
     pygame.quit()
 
 

@@ -373,9 +373,9 @@ class CardSprite(pygame.sprite.Sprite):
     def __init__(self, card: Card, pos: Tuple[int, int], width: int = 80) -> None:
         super().__init__()
         # Import at runtime to allow tests to patch the public helper
-        import pygame_gui
+        import tienlen_gui
 
-        img = pygame_gui.get_card_image(card, width)
+        img = tienlen_gui.get_card_image(card, width)
         if img is None:
             # Render a text fallback
             font = get_font(20)
@@ -494,9 +494,9 @@ class CardBackSprite(pygame.sprite.Sprite):
     ) -> None:
         super().__init__()
         # Import at runtime so tests can patch the function via the package
-        import pygame_gui
+        import tienlen_gui
 
-        img = pygame_gui.get_card_back(name, width)
+        img = tienlen_gui.get_card_back(name, width)
         if img is None:
             font = get_font(20)
             img = font.render("[]", True, (0, 0, 0), (255, 255, 255))

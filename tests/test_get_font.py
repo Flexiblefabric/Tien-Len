@@ -1,6 +1,6 @@
 import pytest
 import pygame
-import pygame_gui
+import tienlen_gui
 from pathlib import Path
 
 pytest.importorskip("pygame")
@@ -17,8 +17,8 @@ def test_get_font_initializes_pygame_font(monkeypatch):
 
     monkeypatch.setattr(pygame.font, "init", fake_init)
 
-    pygame_gui.clear_font_cache()
-    font = pygame_gui.get_font(12)
+    tienlen_gui.clear_font_cache()
+    font = tienlen_gui.get_font(12)
 
     assert calls == [True]
     assert isinstance(font, pygame.font.Font)
@@ -26,9 +26,9 @@ def test_get_font_initializes_pygame_font(monkeypatch):
 
 def test_get_font_reinitializes_after_quit(monkeypatch):
     pygame.font.init()
-    pygame_gui.clear_font_cache()
+    tienlen_gui.clear_font_cache()
 
-    first = pygame_gui.get_font(12)
+    first = tienlen_gui.get_font(12)
     pygame.font.quit()
 
     calls = []
@@ -40,7 +40,7 @@ def test_get_font_reinitializes_after_quit(monkeypatch):
 
     monkeypatch.setattr(pygame.font, "init", fake_init)
 
-    second = pygame_gui.get_font(12)
+    second = tienlen_gui.get_font(12)
 
     assert calls == [True]
     assert second is not first
@@ -56,10 +56,10 @@ def test_get_font_falls_back_to_sysfont_when_missing(monkeypatch):
         return orig_sysfont(name, size)
 
     monkeypatch.setattr(pygame.font, "SysFont", fake_sysfont)
-    monkeypatch.setattr(pygame_gui.helpers, "FONT_FILE", Path("nonexistent.ttf"))
+    monkeypatch.setattr(tienlen_gui.helpers, "FONT_FILE", Path("nonexistent.ttf"))
 
-    pygame_gui.clear_font_cache()
-    font = pygame_gui.get_font(12)
+    tienlen_gui.clear_font_cache()
+    font = tienlen_gui.get_font(12)
 
     assert sysfont_calls == [True]
     assert isinstance(font, pygame.font.Font)

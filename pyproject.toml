@@ -11,7 +11,7 @@ requires-python = ">=3.8"
 dependencies = ["pillow", "pygame-ce"]
 
 [project.gui-scripts]
-tien-len = "pygame_gui:main"
+tien-len = "tienlen_gui:main"
 
 [project.scripts]
 tien-len-cli = "tien_len_full:main"
@@ -23,7 +23,7 @@ py-modules = [
 ]
 packages = [
     "assets",
-    "pygame_gui",
+    "tienlen_gui",
 ]
 include-package-data = true
 
