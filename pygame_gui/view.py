@@ -1053,7 +1053,7 @@ class GameView(AnimationMixin):
         """Undo the most recent move and refresh the display."""
         before = list(self.game.pile)
         if self.game.undo_last():
-            removed = before[len(self.game.pile) :]
+            removed = before[len(self.game.pile):]
             self.selected.clear()
             self.update_hand_sprites()
             for player, cards in removed:
@@ -1093,7 +1093,7 @@ class GameView(AnimationMixin):
                 start_pos = self._player_pos(self.game.current_idx)
                 glow_sprites = [
                     types.SimpleNamespace(rect=img.get_rect(center=dest))
-                    for _, img in self.current_trick[-len(cards) :]
+                    for _, img in self.current_trick[-len(cards):]
                 ]
 
                 def seq():

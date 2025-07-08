@@ -158,7 +158,7 @@ class Deck:
         """Deal ``n`` hands as evenly as possible."""
 
         size = len(self.cards) // n
-        return [self.cards[i * size : (i + 1) * size] for i in range(n)]
+        return [self.cards[i * size:(i + 1) * size] for i in range(n)]
 
 # ---------------------------------------------------------------------------
 # Combination detection helpers
