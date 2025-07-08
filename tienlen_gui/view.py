@@ -19,8 +19,6 @@ from .helpers import (
     LABEL_PAD,
     BUTTON_HEIGHT,
     ZONE_GUTTER,
-    AVATAR_DIR,
-    AVATAR_SIZE,
     ASSETS_DIR,
     SAVE_FILE,
     ZONE_BG,
@@ -36,7 +34,6 @@ from .helpers import (
     CardBackSprite,
     draw_surface_shadow,
     draw_glow,
-    draw_nine_patch,
     draw_tiled,
     load_button_images,
     get_font,
@@ -59,12 +56,13 @@ from .overlays import (
 )
 from .animations import AnimationMixin
 from .anim_manager import AnimationManager
-from .hud import HUDPanel
+from .hud import HUDPanel, HUDMixin
+from .overlay_manager import OverlayMixin
 
 logger = logging.getLogger(__name__)
 
 
-class GameView(AnimationMixin):
+class GameView(AnimationMixin, HUDMixin, OverlayMixin):
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
 
     def __init__(self, width: int = 1024, height: int = 768) -> None:
@@ -359,117 +357,6 @@ class GameView(AnimationMixin):
         bottom = max(sp.rect.bottom for sp in sprites)
         return pygame.Rect(left, top, right - left, bottom - top)
 
-    def _hud_box(
-        self,
-        lines: list[str],
-        text_color: Tuple[int, int, int] = (255, 255, 255),
-        padding: int = 5,
-        bg_color: Tuple[int, int, int, int] = (0, 0, 0, 150),
-        bg_image: Optional[pygame.Surface] = None,
-    ) -> pygame.Surface:
-        """Return a surface with ``lines`` rendered on a semi-transparent box."""
-        line_height = getattr(self.font, "get_linesize", lambda: 20)()
-        imgs = [self.font.render(line, True, text_color) for line in lines]
-        if imgs:
-            width = max(int(img.get_width()) for img in imgs) + 2 * padding
-        else:
-            width = 0
-        height = line_height * len(imgs) + 2 * padding
-        panel = pygame.Surface((max(1, width), max(1, height)), pygame.SRCALPHA)
-        if bg_image:
-            draw_nine_patch(panel, bg_image, panel.get_rect())
-        else:
-            panel.fill(bg_color)
-        y = padding
-        for img in imgs:
-            panel.blit(img, (padding, y))
-            y += line_height
-        return panel
-
-    def draw_scoreboard(self) -> pygame.Rect:
-        """Display remaining cards and ranking at the top centre."""
-        font = get_font(14)
-        old = self.font
-        self.font = font
-        counts = sorted((len(p.hand), p.name) for p in self.game.players)
-        ranking = {name: i + 1 for i, (_, name) in enumerate(counts)}
-        lines = [
-            f"{p.name}: {len(p.hand)} (#{ranking[p.name]})" for p in self.game.players
-        ]
-        panel = self._hud_box(lines, padding=5, bg_image=self.panel_tile)
-        self.font = old
-        w, _ = self.screen.get_size()
-        rect = panel.get_rect(midtop=(w // 2, 5))
-        self.scoreboard_rect = rect
-        self.screen.blit(panel, rect.topleft)
-        return rect
-
-    def draw_game_log(self) -> pygame.Rect:
-        """Render the latest history entries beside the scoreboard."""
-        font = get_font(12)
-        lines = [txt for _, txt in self.game.history[-4:]]
-        line_height = font.get_linesize()
-        if lines:
-            width = max(font.size(line)[0] for line in lines) + 10
-        else:
-            width = 0
-        height = line_height * len(lines) + 10
-        panel = pygame.Surface((max(1, width), max(1, height)), pygame.SRCALPHA)
-        if self.panel_tile:
-            draw_tiled(panel, self.panel_tile, panel.get_rect())
-        else:
-            panel.fill((0, 0, 0, 150))
-        y = 5
-        for i, line in enumerate(lines):
-            color = (255, 255, 0) if i == len(lines) - 1 else (255, 255, 255)
-            img = font.render(line, True, color)
-            panel.blit(img, (5, y))
-            y += line_height
-        rect = panel.get_rect(
-            topleft=(self.scoreboard_rect.right + LABEL_PAD, self.scoreboard_rect.top)
-        )
-        self.log_rect = rect
-        self.screen.blit(panel, rect.topleft)
-        return rect
-
-    def _load_avatars(self) -> None:
-        """Load avatar images for all players if available."""
-        self.avatars.clear()
-        for p in self.game.players:
-            base = p.name.lower().replace(" ", "_")
-            candidates = []
-            if not getattr(p, "is_human", False):
-                candidates.append(base + "_icon.png")
-            candidates.append(base + ".png")
-            for name in candidates:
-                path = AVATAR_DIR / name
-                if path.exists():
-                    try:
-                        img = pygame.image.load(str(path)).convert_alpha()
-                        img = pygame.transform.smoothscale(img, (AVATAR_SIZE, AVATAR_SIZE))
-                        self.avatars[p.name] = img
-                        break
-                    except Exception:
-                        continue
-
-    def _create_huds(self) -> None:
-        """Create HUD panels for all players."""
-        self.huds = [HUDPanel(self, i) for i in range(len(self.game.players))]
-
-    def _avatar_for(self, player: "Player") -> pygame.Surface:
-        """Return avatar image or a placeholder with player initials."""
-        img = self.avatars.get(player.name)
-        if img:
-            return img
-        initials = "".join(part[0] for part in player.name.split())[:2].upper()
-        surf = pygame.Surface((AVATAR_SIZE, AVATAR_SIZE), pygame.SRCALPHA)
-        pygame.draw.circle(surf, (80, 80, 80), (AVATAR_SIZE // 2, AVATAR_SIZE // 2), AVATAR_SIZE // 2)
-        font = get_font(20)
-        text = font.render(initials, True, (255, 255, 255))
-        rect = text.get_rect(center=(AVATAR_SIZE // 2, AVATAR_SIZE // 2))
-        surf.blit(text, rect)
-        self.avatars[player.name] = surf
-        return surf
 
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
@@ -580,63 +467,7 @@ class GameView(AnimationMixin):
         self.score_visible = not self.score_visible
         self._save_options()
 
-    def _activate_overlay(self, overlay: Overlay, state: GameState) -> None:
-        """Switch to ``overlay`` using a brief transition."""
-        old = self.overlay
-        if old is not overlay:
-            self._start_animation(self._transition_overlay(old, overlay))
-        self.overlay = overlay
-        self.state = state
 
-    # Overlay helpers -------------------------------------------------
-    def show_menu(self) -> None:
-        self._activate_overlay(MainMenuOverlay(self), GameState.MENU)
-
-    def show_profile_select(self) -> None:
-        self._activate_overlay(ProfileOverlay(self), GameState.MENU)
-
-    def show_in_game_menu(self) -> None:
-        self._activate_overlay(InGameMenuOverlay(self), GameState.SETTINGS)
-
-    def show_settings(self) -> None:
-        self._activate_overlay(SettingsOverlay(self), GameState.SETTINGS)
-
-    def show_game_settings(self) -> None:
-        self._activate_overlay(GameSettingsOverlay(self), GameState.SETTINGS)
-
-    # Legacy name kept for backwards compatibility
-    def show_options(self) -> None:
-        self.show_game_settings()
-
-    def show_graphics(self) -> None:
-        self._activate_overlay(GraphicsOverlay(self), GameState.SETTINGS)
-
-    def show_audio(self) -> None:
-        self._activate_overlay(AudioOverlay(self), GameState.SETTINGS)
-
-    def show_rules(self, from_menu: bool = False) -> None:
-        back_cb = self.show_menu if from_menu else self.show_game_settings
-        self._activate_overlay(RulesOverlay(self, back_cb), GameState.SETTINGS)
-
-    def show_how_to_play(self, from_menu: bool = False) -> None:
-        back_cb = self.show_menu if from_menu else self.show_settings
-        self._activate_overlay(HowToPlayOverlay(self, back_cb), GameState.SETTINGS)
-
-    def show_tutorial(self, from_menu: bool = False) -> None:
-        back_cb = self.show_menu if from_menu else self.show_settings
-        self._activate_overlay(TutorialOverlay(self, back_cb), GameState.SETTINGS)
-
-    def confirm_quit(self) -> None:
-        self._activate_overlay(
-            SavePromptOverlay(self, self.quit_game, "Quit"),
-            GameState.SETTINGS,
-        )
-
-    def confirm_return_to_menu(self) -> None:
-        self._activate_overlay(
-            SavePromptOverlay(self, self.show_menu, "Return"),
-            GameState.SETTINGS,
-        )
 
     def save_game(self) -> None:
         try:
@@ -865,10 +696,6 @@ class GameView(AnimationMixin):
         if hasattr(self, "hand_sprites"):
             self._create_action_buttons()
 
-    def show_game_over(self, winner: str) -> None:
-        sound.play("win")
-        self.win_counts[winner] = self.win_counts.get(winner, 0) + 1
-        self._activate_overlay(GameOverOverlay(self, winner), GameState.GAME_OVER)
 
     def set_ai_level(self, level: str) -> None:
         self.ai_level = level
