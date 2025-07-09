@@ -825,7 +825,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         event = pygame.event.Event(pygame.KEYDOWN, {"key": key})
         if self._dispatch_overlay_event(event):
             return
-        if key == pygame.K_RETURN:
+        if key == pygame.K_ESCAPE and self.state == GameState.PLAYING:
+            self.show_in_game_menu()
+        elif key == pygame.K_RETURN:
             self.play_selected()
         elif key == pygame.K_SPACE:
             self.pass_turn()
