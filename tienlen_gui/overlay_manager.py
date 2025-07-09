@@ -27,7 +27,11 @@ class OverlayMixin:
         """Switch to ``overlay`` using a brief transition."""
         old = self.overlay
         if old is not overlay:
-            self._start_animation(self._transition_overlay(old, overlay))
+            slide = (
+                old is not None
+                and {self.state, state} == {GameState.MENU, GameState.SETTINGS}
+            )
+            self._start_animation(self._transition_overlay(old, overlay, slide=slide))
         self.overlay = overlay
         self.state = state
 
