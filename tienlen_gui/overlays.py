@@ -139,6 +139,18 @@ class Overlay:
             elif event.button == 1:
                 self.back()
 
+    def _button_size(self) -> tuple[int, int]:
+        """Return (width, height) for buttons based on screen size."""
+        w, _ = self.view.screen.get_size()
+        width = max(int(w * 0.35), 150)
+        height = max(width // 5, 30)
+        return width, height
+
+    def _spacing(self) -> int:
+        """Vertical spacing between buttons."""
+        _, h = self._button_size()
+        return h + 10
+
 
 class MainMenuOverlay(Overlay):
     """Initial game menu."""
@@ -153,47 +165,49 @@ class MainMenuOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 - 120
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 2.4)
         self.buttons = [
             Button(
                 "New Game",
-                pygame.Rect(bx, by, 200, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self.view.restart_game,
                 font,
                 **load_button_images("button_new_game", alt=True),
             ),
             Button(
                 "Load Game",
-                pygame.Rect(bx, by + 50, 200, 40),
+                pygame.Rect(bx, by + spacing, bw, bh),
                 self.view.load_game,
                 font,
                 **load_button_images("button_load_game"),
             ),
             Button(
                 "Switch Profile",
-                pygame.Rect(bx, by + 100, 200, 40),
+                pygame.Rect(bx, by + spacing * 2, bw, bh),
                 self.view.show_profile_select,
                 font,
                 **load_button_images("button_switch_profile"),
             ),
             Button(
                 "Settings",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + spacing * 3, bw, bh),
                 self.view.show_settings,
                 font,
                 **load_button_images("button_settings"),
             ),
             Button(
                 "How to Play",
-                pygame.Rect(bx, by + 200, 200, 40),
+                pygame.Rect(bx, by + spacing * 4, bw, bh),
                 lambda: self.view.show_how_to_play(from_menu=True),
                 font,
                 **load_button_images("button_how_to_play"),
             ),
             Button(
                 "Quit",
-                pygame.Rect(bx, by + 250, 200, 40),
+                pygame.Rect(bx, by + spacing * 5, bw, bh),
                 self.view.quit_game,
                 font,
                 **load_button_images("button_quit"),
@@ -216,43 +230,45 @@ class InGameMenuOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 - 150
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 3)
         self.buttons = [
             Button(
                 "Resume Game",
-                pygame.Rect(bx, by, 200, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self.view.close_overlay,
                 font,
             ),
             Button(
                 "Save Game",
-                pygame.Rect(bx, by + 50, 200, 40),
+                pygame.Rect(bx, by + spacing, bw, bh),
                 self.view.save_game,
                 font,
             ),
             Button(
                 "Load Game",
-                pygame.Rect(bx, by + 100, 200, 40),
+                pygame.Rect(bx, by + spacing * 2, bw, bh),
                 self.view.load_game,
                 font,
                 **load_button_images("button_load_game"),
             ),
             Button(
                 "Game Settings",
-                pygame.Rect(bx, by + 150, 200, 40),
+                pygame.Rect(bx, by + spacing * 3, bw, bh),
                 self.view.show_settings,
                 font,
             ),
             Button(
                 "Return to Main Menu",
-                pygame.Rect(bx, by + 200, 200, 40),
+                pygame.Rect(bx, by + spacing * 4, bw, bh),
                 self.view.confirm_return_to_menu,
                 font,
             ),
             Button(
                 "Quit Game",
-                pygame.Rect(bx, by + 250, 200, 40),
+                pygame.Rect(bx, by + spacing * 5, bw, bh),
                 self.view.confirm_quit,
                 font,
                 **load_button_images("button_quit"),
@@ -275,33 +291,35 @@ class SettingsOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
-        by = h // 2 - 120
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 2.4)
         self.buttons = [
             Button(
                 "Game Settings",
-                pygame.Rect(bx, by, 240, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self.view.show_game_settings,
                 font,
             ),
             Button(
                 "Graphics",
-                pygame.Rect(bx, by + 50, 240, 40),
+                pygame.Rect(bx, by + spacing, bw, bh),
                 self.view.show_graphics,
                 font,
             ),
             Button(
-                "Audio", pygame.Rect(bx, by + 100, 240, 40), self.view.show_audio, font
+                "Audio", pygame.Rect(bx, by + spacing * 2, bw, bh), self.view.show_audio, font
             ),
             Button(
                 "Game Tutorial",
-                pygame.Rect(bx, by + 150, 240, 40),
+                pygame.Rect(bx, by + spacing * 3, bw, bh),
                 lambda: self.view.show_tutorial(from_menu=False),
                 font,
             ),
             Button(
                 "Back",
-                pygame.Rect(bx, by + 200, 240, 40),
+                pygame.Rect(bx, by + spacing * 4, bw, bh),
                 self.view.close_overlay,
                 font,
                 **load_button_images("button_back"),
@@ -320,8 +338,10 @@ class GameSettingsOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
-        by = h // 2 - 220
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 4.4)
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(b: Button) -> Callable[[], None]:
@@ -345,7 +365,7 @@ class GameSettingsOverlay(Overlay):
                 text = "On" if text else "Off"
             btn = Button(
                 f"{label}: {text}",
-                pygame.Rect(bx, by + offset, 240, 40),
+                pygame.Rect(bx, by + offset, bw, bh),
                 lambda: None,
                 font,
             )
@@ -354,27 +374,27 @@ class GameSettingsOverlay(Overlay):
 
         make_button(0, "ai_level", ["Easy", "Normal", "Hard", "Expert", "Master"], "AI Level")
         make_button(
-            50,
+            spacing,
             "ai_personality",
             ["balanced", "aggressive", "defensive", "random"],
             "Personality",
         )
-        make_button(100, "ai_lookahead", [False, True], "Lookahead")
-        make_button(150, "ai_depth", [1, 2, 3], "AI Depth")
-        make_button(200, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
-        make_button(250, "sort_mode", ["rank", "suit"], "Sort Mode")
-        make_button(300, "developer_mode", [False, True], "Dev Mode")
+        make_button(spacing * 2, "ai_lookahead", [False, True], "Lookahead")
+        make_button(spacing * 3, "ai_depth", [1, 2, 3], "AI Depth")
+        make_button(spacing * 4, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
+        make_button(spacing * 5, "sort_mode", ["rank", "suit"], "Sort Mode")
+        make_button(spacing * 6, "developer_mode", [False, True], "Dev Mode")
         self.buttons.append(
             Button(
                 "House Rules",
-                pygame.Rect(bx, by + 350, 240, 40),
+                pygame.Rect(bx, by + spacing * 7, bw, bh),
                 lambda: self.view.show_rules(from_menu=False),
                 font,
             )
         )
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + 400, 240, 40),
+            pygame.Rect(bx, by + spacing * 8, bw, bh),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),
@@ -393,8 +413,10 @@ class GraphicsOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
-        by = h // 2 - 120
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 2.4)
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(btn: Button) -> Callable[[], None]:
@@ -424,7 +446,7 @@ class GraphicsOverlay(Overlay):
             text = getattr(self.view, attr)
             btn = Button(
                 f"{label}: {text}",
-                pygame.Rect(bx, by + offset, 240, 40),
+                pygame.Rect(bx, by + offset, bw, bh),
                 lambda: None,
                 font,
             )
@@ -432,22 +454,22 @@ class GraphicsOverlay(Overlay):
             self.buttons.append(btn)
 
         make_button(0, "table_color_name", make_color, "Table Color")
-        make_button(50, "card_color", make_card_color, "Card Back")
-        make_button(100, "table_texture_name", make_table_tex, "Table Tex")
-        make_button(150, "colorblind_mode", [False, True], "Colorblind")
-        make_button(200, "fullscreen", [False, True], "Fullscreen")
-        make_button(250, "fps_limit", [30, 60, 120], "FPS Limit")
+        make_button(spacing, "card_color", make_card_color, "Card Back")
+        make_button(spacing * 2, "table_texture_name", make_table_tex, "Table Tex")
+        make_button(spacing * 3, "colorblind_mode", [False, True], "Colorblind")
+        make_button(spacing * 4, "fullscreen", [False, True], "Fullscreen")
+        make_button(spacing * 5, "fps_limit", [30, 60, 120], "FPS Limit")
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + 300, 240, 40),
+            pygame.Rect(bx, by + spacing * 6, bw, bh),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),
         )
         self.buttons.append(btn)
 
-        self.table_preview_rect = pygame.Rect(bx + 250, by, 60, 40)
-        self.back_preview_rect = pygame.Rect(bx + 250, by + 50, 40, 60)
+        self.table_preview_rect = pygame.Rect(bx + bw + 10, by, 60, 40)
+        self.back_preview_rect = pygame.Rect(bx + bw + 10, by + spacing, 40, 60)
 
     def draw(self, surface: pygame.Surface) -> None:
         super().draw(surface)
@@ -476,8 +498,10 @@ class AudioOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
-        by = h // 2 - 120
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 2.4)
 
         def cycle(attr: str, options: List, label: str) -> Callable[[], None]:
             def callback(btn: Button) -> Callable[[], None]:
@@ -501,7 +525,7 @@ class AudioOverlay(Overlay):
                 text = "On" if text else "Off"
             btn = Button(
                 f"{label}: {text}",
-                pygame.Rect(bx, by + offset, 240, 40),
+                pygame.Rect(bx, by + offset, bw, bh),
                 lambda: None,
                 font,
             )
@@ -509,13 +533,18 @@ class AudioOverlay(Overlay):
             self.buttons.append(btn)
 
         make_button(0, "sound_enabled", [True, False], "Sound")
-        make_button(50, "music_enabled", [True, False], "Music")
-        make_button(100, "fx_volume", [0.5, 0.75, 1.0], "FX Vol")
-        make_button(150, "music_volume", [0.5, 0.75, 1.0], "Music Vol")
-        make_button(200, "music_track", list_music_tracks() or [self.view.music_track], "Track")
+        make_button(spacing, "music_enabled", [True, False], "Music")
+        make_button(spacing * 2, "fx_volume", [0.5, 0.75, 1.0], "FX Vol")
+        make_button(spacing * 3, "music_volume", [0.5, 0.75, 1.0], "Music Vol")
+        make_button(
+            spacing * 4,
+            "music_track",
+            list_music_tracks() or [self.view.music_track],
+            "Track",
+        )
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + 250, 240, 40),
+            pygame.Rect(bx, by + spacing * 5, bw, bh),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),
@@ -536,8 +565,10 @@ class RulesOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
-        by = h // 2 - 150
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 - int(spacing * 3)
 
         def toggle(attr: str, label: str) -> Callable[[Button], Callable[[], None]]:
             def cb(btn: Button) -> Callable[[], None]:
@@ -557,17 +588,17 @@ class RulesOverlay(Overlay):
             state = getattr(self.view, attr)
             text = f"{label}: {'On' if state else 'Off'}"
             btn = Button(
-                text, pygame.Rect(bx, by + offset, 240, 40), lambda: None, font
+                text, pygame.Rect(bx, by + offset, bw, bh), lambda: None, font
             )
             btn.callback = toggle(attr, label)(btn)
             self.buttons.append(btn)
 
         make_button(0, "rule_flip_suit_rank", "Flip Suit Rank")
-        make_button(50, "rule_no_2s", "No 2s in straights")
+        make_button(spacing, "rule_no_2s", "No 2s in straights")
         self.buttons.append(
             Button(
                 "Back",
-                pygame.Rect(bx, by + 100, 240, 40),
+                pygame.Rect(bx, by + spacing * 2, bw, bh),
                 self.back_callback,
                 font,
                 **load_button_images("button_back"),
@@ -588,12 +619,14 @@ class HowToPlayOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 + 60
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 + int(spacing * -1.2)
         self.buttons = [
             Button(
                 "Back",
-                pygame.Rect(bx, by, 200, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self.back_callback,
                 font,
                 **load_button_images("button_back"),
@@ -630,12 +663,14 @@ class TutorialOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 + 60
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 + int(spacing * -1.2)
         self.buttons = [
             Button(
                 "Back",
-                pygame.Rect(bx, by, 200, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self.back_callback,
                 font,
                 **load_button_images("button_back"),
@@ -676,24 +711,26 @@ class SavePromptOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 120
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
         by = h // 2
         self.buttons = [
             Button(
                 f"Save and {self.label}",
-                pygame.Rect(bx, by, 240, 40),
+                pygame.Rect(bx, by, bw, bh),
                 self._save_then_action,
                 font,
             ),
             Button(
                 f"{self.label} Without Saving",
-                pygame.Rect(bx, by + 50, 240, 40),
+                pygame.Rect(bx, by + spacing, bw, bh),
                 self.action,
                 font,
             ),
             Button(
                 "Cancel",
-                pygame.Rect(bx, by + 100, 240, 40),
+                pygame.Rect(bx, by + spacing * 2, bw, bh),
                 self.view.close_overlay,
                 font,
             ),
@@ -730,12 +767,14 @@ class ProfileOverlay(Overlay):
         w, h = self.view.screen.get_size()
         font = self.view.font
         names = list(self.view.win_counts.keys())
-        bx = w // 2 - 100
-        start_y = h // 2 - (len(names) + 1) * 25
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        start_y = h // 2 - int((len(names) + 1) * spacing / 2)
         self.buttons = [
             Button(
                 name,
-                pygame.Rect(bx, start_y + i * 50, 200, 40),
+                pygame.Rect(bx, start_y + i * spacing, bw, bh),
                 lambda n=name: self.select(n),
                 font,
             )
@@ -744,7 +783,7 @@ class ProfileOverlay(Overlay):
         self.buttons.append(
             Button(
                 "New Profile",
-                pygame.Rect(bx, start_y + len(names) * 50, 200, 40),
+                pygame.Rect(bx, start_y + len(names) * spacing, bw, bh),
                 self.new_profile,
                 font,
             )
@@ -780,15 +819,17 @@ class GameOverOverlay(Overlay):
     def _layout(self) -> None:
         w, h = self.view.screen.get_size()
         font = self.view.font
-        bx = w // 2 - 100
-        by = h // 2 + 40
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        by = h // 2 + int(spacing * -0.8)
         self.buttons = [
             Button(
-                "Play Again", pygame.Rect(bx, by, 200, 40), self.view.restart_game, font
+                "Play Again", pygame.Rect(bx, by, bw, bh), self.view.restart_game, font
             ),
             Button(
                 "Quit",
-                pygame.Rect(bx, by + 50, 200, 40),
+                pygame.Rect(bx, by + spacing, bw, bh),
                 self.view.quit_game,
                 font,
                 **load_button_images("button_quit"),
