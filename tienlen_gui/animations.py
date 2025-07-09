@@ -409,7 +409,15 @@ class AnimationMixin:
         while True:
             progress = tween.update(dt)
             if slide:
-                pass
+                fs = from_surf.copy()
+                ts = to_surf.copy()
+                overlay = pygame.Surface((w, h), pygame.SRCALPHA)
+                fs_rect = fs.get_rect()
+                ts_rect = ts.get_rect()
+                fs_rect.x = int(-w * progress)
+                ts_rect.x = int(w * (1 - progress))
+                overlay.blit(fs, fs_rect)
+                overlay.blit(ts, ts_rect)
             else:
                 fs = from_surf.copy()
                 fs.set_alpha(int(255 * (1 - progress)))
