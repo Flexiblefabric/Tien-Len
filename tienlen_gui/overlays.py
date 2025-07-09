@@ -3,6 +3,8 @@ from __future__ import annotations
 import pygame
 from typing import List, Callable, Optional, TYPE_CHECKING
 
+import sound
+
 from .helpers import (
     list_card_back_colors,
     list_table_textures,
@@ -80,6 +82,7 @@ class Button:
             and event.type == pygame.MOUSEBUTTONDOWN
             and self.rect.collidepoint(event.pos)
         ):
+            sound.play("click")
             self.callback()
 
 
