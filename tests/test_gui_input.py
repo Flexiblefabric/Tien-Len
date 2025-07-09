@@ -31,6 +31,10 @@ def test_handle_key_shortcuts():
     with patch.object(view, "show_settings") as show_settings:
         view.handle_key(pygame.K_o)
         show_settings.assert_called_once()
+
+    with patch.object(view, "show_in_game_menu") as show_in_game_menu:
+        view.handle_key(pygame.K_ESCAPE)
+        show_in_game_menu.assert_called_once()
     pygame.quit()
 
 
