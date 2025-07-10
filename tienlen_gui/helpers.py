@@ -351,7 +351,7 @@ def get_card_back(name: str = "card_back", width: int = 80) -> Optional[pygame.S
     return _CARD_CACHE[key]
 
 
-def get_card_image(card: Card, width: int) -> pygame.Surface:
+def get_card_image(card: Card, width: int) -> Optional[pygame.Surface]:
     key = _image_key(card)
     if (key, width) not in _CARD_CACHE:
         base = _BASE_IMAGES.get(key)
