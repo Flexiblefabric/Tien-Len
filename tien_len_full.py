@@ -819,7 +819,10 @@ class Game:
     def _clone(self) -> "Game":
         """Return a deep copy of the current game state."""
 
-        g = Game()
+        g = Game(
+            allow_2_in_sequence=self.allow_2_in_sequence,
+            flip_suit_rank=self.flip_suit_rank,
+        )
         g.from_dict(self.to_dict())
         g.ai_level = self.ai_level
         g.ai_difficulty = self.ai_difficulty
