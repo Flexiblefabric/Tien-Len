@@ -105,3 +105,32 @@ def test_generate_moves_calls_is_valid_for_long_sequence():
         moves = game.generate_valid_moves(ai, None)
         assert any(len(m) == 5 for m in moves)
         assert any(len(args[1]) == 5 for args, _ in mock_valid.call_args_list)
+
+def test_generate_valid_moves_matches_naive():
+    game = Game()
+    ai = game.players[1]
+    ai.hand = [
+        Card('Spades', '7'),
+        Card('Hearts', '7'),
+        Card('Diamonds', '7'),
+        Card('Clubs', '7'),
+        Card('Spades', '8'),
+        Card('Spades', '9'),
+    ]
+    game.current_idx = 1
+
+    def naive(player, current):
+        from itertools import combinations
+
+        all_moves = []
+        for n in range(1, len(player.hand) + 1):
+            for combo in combinations(player.hand, n):
+                move = list(combo)
+                ok, _ = game.is_valid(player, move, current)
+                if ok:
+                    all_moves.append(move)
+        return all_moves
+
+    expected = {frozenset(m) for m in naive(ai, None)}
+    result = {frozenset(m) for m in game.generate_valid_moves(ai, None)}
+    assert expected == result

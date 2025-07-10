@@ -24,7 +24,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import sound
 from collections import Counter
-from itertools import combinations
+from itertools import combinations, product
 from typing import Optional
 
 # ---------------------------------------------------------------------------
@@ -540,13 +540,63 @@ class Game:
     def generate_valid_moves(self, player, current):
         """Return every playable move for ``player`` given ``current``."""
 
-        moves = []
-        for n in range(1, len(player.hand) + 1):
-            for combo_cards in combinations(player.hand, n):
-                lst = list(combo_cards)
+        moves: list[list[Card]] = []
+
+        # Singles ---------------------------------------------------------
+        for card in player.hand:
+            ok, _ = self.is_valid(player, [card], current)
+            if ok:
+                moves.append([card])
+
+        # Group cards by rank for pairs/triples/bombs --------------------
+        rank_map: dict[str, list[Card]] = {}
+        for card in player.hand:
+            rank_map.setdefault(card.rank, []).append(card)
+
+        for cards in rank_map.values():
+            if len(cards) >= 2:
+                for combo_cards in combinations(cards, 2):
+                    lst = list(combo_cards)
+                    ok, _ = self.is_valid(player, lst, current)
+                    if ok:
+                        moves.append(lst)
+            if len(cards) >= 3:
+                for combo_cards in combinations(cards, 3):
+                    lst = list(combo_cards)
+                    ok, _ = self.is_valid(player, lst, current)
+                    if ok:
+                        moves.append(lst)
+            if len(cards) == 4:
+                lst = list(cards)
                 ok, _ = self.is_valid(player, lst, current)
                 if ok:
                     moves.append(lst)
+
+        # Sequences ------------------------------------------------------
+        index_map: dict[int, list[Card]] = {}
+        for card in player.hand:
+            idx = RANKS.index(card.rank)
+            index_map.setdefault(idx, []).append(card)
+
+        sorted_indices = sorted(index_map.keys())
+        for i, start in enumerate(sorted_indices):
+            seq = [start]
+            for j in range(i + 1, len(sorted_indices)):
+                if sorted_indices[j] == seq[-1] + 1:
+                    seq.append(sorted_indices[j])
+                    if len(seq) >= 3:
+                        if not self.allow_2_in_sequence and any(
+                            RANKS[idx] == "2" for idx in seq
+                        ):
+                            continue
+                        for combo_cards in product(*(index_map[k] for k in seq)):
+                            lst = list(combo_cards)
+                            ok, _ = self.is_valid(player, lst, current)
+                            if ok:
+                                moves.append(lst)
+                else:
+                    break
+
         return moves
 
     def score_move(self, player, move, current, lookahead=True):

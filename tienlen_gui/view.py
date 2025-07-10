@@ -5,6 +5,8 @@ import logging
 import os
 from pathlib import Path
 from typing import Dict, Tuple, List, Optional
+import gc
+import tracemalloc
 
 import pygame
 import types
@@ -1219,7 +1221,17 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
                 manager.update(dt)
 
             self._draw_frame()
+        pygame.event.clear()
+        gc.collect()
+        try:
+            pygame.display.quit()
+            pygame.font.quit()
+            pygame.mixer.quit()
+        except Exception:
+            pass
         pygame.quit()
+        if tracemalloc.is_tracing():
+            tracemalloc.clear_traces()
 
 
 def main() -> None:
