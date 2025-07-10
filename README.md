@@ -106,8 +106,8 @@ All of these preferences persist between sessions via the `options.json`
 file.
 
 Displaying card images requires the **Pillow** library, which is
-included in `requirements.txt`. Install dependencies (including Pillow
-for image support) with:
+included in `requirements.txt`. That file pins compatible versions of
+all dependencies. Install them (including Pillow for image support) with:
 
 ```bash
 pip install -r requirements.txt
@@ -161,7 +161,7 @@ disable sound explicitly. Place additional `.mp3` files in
 
 ## Running tests
 
-Install requirements first:
+Install the pinned requirements first:
 
 ```bash
 pip install -r requirements.txt
