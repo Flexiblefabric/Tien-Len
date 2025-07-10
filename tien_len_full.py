@@ -535,6 +535,7 @@ class Game:
                             self.opening_card_str(),
                             self.opening_card_str(),
                         )
+                continue
 
     # AI helper functions
     def generate_valid_moves(self, player, current):
