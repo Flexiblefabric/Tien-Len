@@ -63,7 +63,6 @@ from .overlay_manager import OverlayMixin
 
 logger = logging.getLogger(__name__)
 
-
 class GameView(AnimationMixin, HUDMixin, OverlayMixin):
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
 
@@ -359,7 +358,6 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         bottom = max(sp.rect.bottom for sp in sprites)
         return pygame.Rect(left, top, right - left, bottom - top)
 
-
     def _calc_card_width(self, win_width: int) -> int:
         """Determine card width based on window width."""
         return max(30, win_width // 13)
@@ -468,8 +466,6 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         """Toggle visibility of the score panel and save."""
         self.score_visible = not self.score_visible
         self._save_options()
-
-
 
     def save_game(self) -> None:
         try:
@@ -697,7 +693,6 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
                 pygame.mixer.music.pause()
         if hasattr(self, "hand_sprites"):
             self._create_action_buttons()
-
 
     def set_ai_level(self, level: str) -> None:
         self.ai_level = level
@@ -1061,8 +1056,6 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         """Draw all players and their current hands and return dirty rects."""
 
         dirty: List[pygame.Rect] = []
-
-        card_w = self.card_width
 
         # Sync sprite rects with their vector positions
         self.hand_sprites.update()
