@@ -4,11 +4,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Union
 import warnings
+import os
 
 try:
     import pygame
-    pygame.mixer.init()
-    _ENABLED = True
+    if os.environ.get('SDL_AUDIODRIVER') != 'dummy':
+        pygame.mixer.init()
+        _ENABLED = True
+    else:
+        _ENABLED = False
 except Exception:  # pragma: no cover - if mixer init fails
     pygame = None
     _ENABLED = False
