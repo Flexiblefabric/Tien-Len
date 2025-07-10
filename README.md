@@ -7,7 +7,7 @@ Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
 interface implemented in the `tienlen_gui` package and can be launched
 with `python -m tienlen_gui`.
 
-This project requires **Python 3.8** or later.
+This project requires **Python 3.10** or later.
 
 ## Installation
 
