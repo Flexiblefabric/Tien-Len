@@ -7,7 +7,7 @@ name = "tien-len"
 version = "0.1.0"
 description = "Tiến Lên card game with CLI and Pygame GUI"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "pillow>=10,<12",
     "pygame-ce>=2.5,<3",
