@@ -52,7 +52,11 @@ def test_hud_highlight_switches_on_turn_change():
     hud2 = tienlen_gui.HUDPanel(view, 2)
 
     panel = pygame.Surface((1, 1))
-    with patch.object(hud1, "_create_surface", return_value=panel), patch.object(hud2, "_create_surface", return_value=panel), patch("tienlen_gui.hud.draw_glow") as glow:
+    with (
+        patch.object(hud1, "_create_surface", return_value=panel),
+        patch.object(hud2, "_create_surface", return_value=panel),
+        patch("tienlen_gui.hud.draw_glow") as glow,
+    ):
         view.game.current_idx = 1
         hud1.draw(surf)
         hud2.draw(surf)

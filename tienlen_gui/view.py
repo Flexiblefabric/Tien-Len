@@ -11,7 +11,7 @@ import tracemalloc
 import pygame
 import types
 
-from tien_len_full import Game, detect_combo, Player
+from tien_len_full import Game, detect_combo
 import sound
 
 from .helpers import (
@@ -40,20 +40,7 @@ from .helpers import (
     load_button_images,
     get_font,
 )
-from .overlays import (
-    Button,
-    Overlay,
-    MainMenuOverlay,
-    InGameMenuOverlay,
-    SettingsOverlay,
-    GameSettingsOverlay,
-    GraphicsOverlay,
-    AudioOverlay,
-    RulesOverlay,
-    HowToPlayOverlay,
-    TutorialOverlay,
-    SavePromptOverlay,
-)
+from .overlays import Button, Overlay
 from .animations import AnimationMixin
 from .anim_manager import AnimationManager
 from .hud import HUDMixin

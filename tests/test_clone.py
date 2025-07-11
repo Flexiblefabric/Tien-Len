@@ -9,4 +9,3 @@ def test_clone_preserves_rule_settings():
     block = len(RANKS)
     suits = [clone.deck.cards[i * block].suit for i in range(len(SUITS))]
     assert suits == list(reversed(SUITS))
-
