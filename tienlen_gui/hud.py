@@ -109,6 +109,7 @@ class HUDPanel:
         surface.blit(panel, rect)
         return rect
 
+
 class HUDMixin:
     """Mixin providing HUD rendering helpers for :class:`GameView`."""
 
@@ -196,7 +197,7 @@ class HUDMixin:
 
     def _load_avatars(self) -> None:
         """Load avatar images for all players if available."""
-        from .helpers import AVATAR_DIR, AVATAR_SIZE, get_font
+        from .helpers import AVATAR_DIR, AVATAR_SIZE
 
         self.avatars.clear()
         for p in self.game.players:

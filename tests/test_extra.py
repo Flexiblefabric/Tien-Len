@@ -106,6 +106,7 @@ def test_generate_moves_calls_is_valid_for_long_sequence():
         assert any(len(m) == 5 for m in moves)
         assert any(len(args[1]) == 5 for args, _ in mock_valid.call_args_list)
 
+
 def test_generate_valid_moves_matches_naive():
     game = Game()
     ai = game.players[1]
