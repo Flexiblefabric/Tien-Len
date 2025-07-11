@@ -53,15 +53,14 @@ from .overlays import (
     HowToPlayOverlay,
     TutorialOverlay,
     SavePromptOverlay,
-    ProfileOverlay,
-    GameOverOverlay,
 )
 from .animations import AnimationMixin
 from .anim_manager import AnimationManager
-from .hud import HUDPanel, HUDMixin
+from .hud import HUDMixin
 from .overlay_manager import OverlayMixin
 
 logger = logging.getLogger(__name__)
+
 
 class GameView(AnimationMixin, HUDMixin, OverlayMixin):
     TABLE_COLOR = TABLE_THEMES["darkgreen"]
