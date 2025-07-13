@@ -412,7 +412,13 @@ class Game:
 
         # Otherwise combos must match type and length and be higher in rank
         if combo == prev and len(cards) == len(current):
-            if max(RANKS.index(c.rank) for c in cards) > max(RANKS.index(c.rank) for c in current):
+            new_val = max(
+                (RANKS.index(c.rank), self.suit_index(c.suit)) for c in cards
+            )
+            cur_val = max(
+                (RANKS.index(c.rank), self.suit_index(c.suit)) for c in current
+            )
+            if new_val > cur_val:
                 return True, ''
 
         return False, 'Does not beat current'
