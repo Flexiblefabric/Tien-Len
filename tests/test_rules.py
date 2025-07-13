@@ -148,3 +148,25 @@ def test_flip_suit_rank_sorting_and_deck_order():
     block = len(tl.RANKS)
     suits = [deck.cards[i * block].suit for i in range(len(tl.SUITS))]
     assert suits == list(reversed(tl.SUITS))
+
+
+def test_is_valid_suit_tie_breaker():
+    game = Game()
+    player = game.players[0]
+    game.first_turn = False
+
+    current = [Card('Hearts', '8')]
+    play = [Card('Diamonds', '8')]
+    ok, msg = game.is_valid(player, play, current)
+    assert ok
+
+
+def test_is_valid_sequence_tie_breaker():
+    game = Game()
+    player = game.players[0]
+    game.first_turn = False
+
+    current = make_cards(('Hearts', '3'), ('Spades', '4'), ('Hearts', '5'))
+    play = make_cards(('Spades', '3'), ('Hearts', '4'), ('Diamonds', '5'))
+    ok, msg = game.is_valid(player, play, current)
+    assert ok
