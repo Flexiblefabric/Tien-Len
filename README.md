@@ -4,8 +4,8 @@
 
 This repository contains a simple command line implementation of the
 Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
-interface implemented in the `tienlen_gui` package and can be launched
-with `python -m tienlen_gui`.
+interface implemented in the `tienlen_gui` package.
+Launch it after installation with the `tien-len` command or run `python -m tienlen_gui.view` for development.
 
 This project requires **Python 3.10** or later.
 
@@ -55,7 +55,7 @@ table using sprites and simple animations.
 Start the Pygame interface with:
 
 ```bash
-python -m tienlen_gui
+tien-len  # or `python -m tienlen_gui.view`
 ```
 
 Select cards by clicking them and then press **Play Selected**. Press
@@ -124,9 +124,6 @@ text buttons. The repository ships with the required files (stored in
 - `red_joker.png` and `black_joker.png` for jokers (optional)
 - 52 images named like `ace_of_spades.png` or `10_of_hearts.png`
 
-Run the Pygame GUI from the project root so it can locate `assets/`. If any
-images are missing, the program will fall back to text and print a list
-of missing files.
 
 Additional assets can be organised in subdirectories:
 
@@ -146,6 +143,18 @@ silently skips all audio. Set the environment variable
 `SDL_AUDIODRIVER=dummy` (or any invalid driver) before launching to
 disable sound explicitly. Place additional `.mp3` files in
 `assets/music/` to make them selectable as background tracks.
+
+## Building a standalone executable
+
+The repository provides a `build_exe.sh` script that wraps PyInstaller. Run it from the project root after installing PyInstaller:
+
+```bash
+pip install pyinstaller
+./build_exe.sh
+```
+
+The executable along with its assets will appear in the `dist/` directory.
+
 
 
 ## TODO
@@ -190,7 +199,7 @@ game logic:
 ```bash
 python -m pdb tien_len_full.py
 # or for the graphical version
-python -m pdb -m tienlen_gui
+python -m pdb -m tienlen_gui.view
 ```
 
 If the optional `pgdb` package is installed, it may be used in the same
