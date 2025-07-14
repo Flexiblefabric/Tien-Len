@@ -231,6 +231,9 @@ class Player:
         self.name = name
         self.hand: list[Card] = []
         self.is_human = is_human
+        # Optional AI customisations that override global settings when set
+        self.ai_level: Optional[str] = None
+        self.ai_personality: Optional[str] = None
 
     def sort_hand(self, mode: str = "rank", flip_suit_rank: bool = False) -> None:
         """Sort the player's hand.
@@ -336,6 +339,40 @@ class Game:
             "balanced": 0.0,
         }
         self.bluff_chance = mapping.get(self.ai_personality, 0.0)
+
+    # ------------------------------------------------------------------
+    # Per-player AI configuration helpers
+    # ------------------------------------------------------------------
+    def _ai_level_for(self, player: Player) -> str:
+        """Return the effective AI level for ``player``."""
+
+        return player.ai_level or self.ai_level
+
+    def _ai_personality_for(self, player: Player) -> str:
+        """Return the effective AI personality for ``player``."""
+
+        return player.ai_personality or self.ai_personality
+
+    def set_player_ai_level(self, player_id, level: str) -> None:
+        """Set the AI level for a specific player."""
+
+        player = self._resolve_player(player_id)
+        player.ai_level = level
+
+    def set_player_personality(self, player_id, name: str) -> None:
+        """Set the AI personality for a specific player."""
+
+        player = self._resolve_player(player_id)
+        player.ai_personality = name.lower() if name else None
+
+    def _resolve_player(self, player_id) -> Player:
+        """Return the :class:`Player` indicated by ``player_id``."""
+
+        if isinstance(player_id, Player):
+            return player_id
+        if isinstance(player_id, int):
+            return self.players[player_id]
+        return next(p for p in self.players if p.name == player_id)
 
     def setup(self):
         """Shuffle, deal and determine the starting player."""
@@ -614,9 +651,17 @@ class Game:
         rank_val = max(RANKS.index(c.rank) for c in move)
         remaining = [c for c in player.hand if c not in move]
         finish = 1 if not remaining else 0
-        diff = getattr(self, "ai_difficulty", 1.0)
+        level = self._ai_level_for(player)
+        mapping = {
+            "Easy": 0.5,
+            "Normal": 1.0,
+            "Hard": 2.0,
+            "Expert": 3.0,
+            "Master": 4.0,
+        }
+        diff = mapping.get(level, 1.0)
         low_cards = 0
-        if self.ai_level == "Hard":
+        if level == "Hard":
             low_cards = -sum(RANKS.index(c.rank) for c in remaining)
             if getattr(self, "ai_lookahead", False) and lookahead:
                 temp = Player(player.name)
@@ -630,10 +675,11 @@ class Game:
                     look = sum(self.score_move(temp, best, move, False)) / 10.0
                     low_cards += look
 
+        personality = self._ai_personality_for(player)
         rank_weight = 1.0
-        if getattr(self, "ai_personality", "balanced") == "aggressive":
+        if personality == "aggressive":
             rank_weight = 1.5
-        elif getattr(self, "ai_personality", "balanced") == "defensive":
+        elif personality == "defensive":
             rank_weight = 0.5
         return (base, finish * diff, rank_val * diff * rank_weight, low_cards)
 
@@ -706,17 +752,20 @@ class Game:
         if not moves:
             return []
 
-        personality = getattr(self, "ai_personality", "balanced")
+        personality = self._ai_personality_for(p)
         # Skip bluffing when using the "random" personality so tests are
         # deterministic and the AI always makes a play.
         if personality != "random" and random.random() < getattr(self, "bluff_chance", 0.0):
             return []
 
-        if self.ai_level == "Easy" or personality == "random":
+        level = self._ai_level_for(p)
+        if level == "Easy" or personality == "random":
             return random.choice(moves)
 
-        if self.ai_level in {"Expert", "Master"}:
-            return self._minimax_decision(p, self.ai_depth)
+        if level in {"Expert", "Master"}:
+            depth_map = {"Expert": 1, "Master": 2}
+            depth = depth_map.get(level, self.ai_depth)
+            return self._minimax_decision(p, depth)
 
         return max(moves, key=lambda m: self.score_move(p, m, current))
 
@@ -807,6 +856,8 @@ class Game:
                     "name": p.name,
                     "is_human": p.is_human,
                     "hand": [c.to_dict() for c in p.hand],
+                    "ai_level": p.ai_level,
+                    "ai_personality": p.ai_personality,
                 }
                 for p in self.players
             ],
@@ -837,6 +888,8 @@ class Game:
         ]
         for p, dct in zip(self.players, data["players"]):
             p.hand = [Card.from_dict(c) for c in dct.get("hand", [])]
+            p.ai_level = dct.get("ai_level")
+            p.ai_personality = dct.get("ai_personality")
         self.pile = []
         for item in data.get("pile", []):
             idx = item.get("player")

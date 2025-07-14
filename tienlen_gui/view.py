@@ -182,6 +182,8 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         self.ai_personality = opts.get("ai_personality", self.ai_personality)
         self.ai_lookahead = opts.get("ai_lookahead", self.ai_lookahead)
         self.ai_depth = opts.get("ai_depth", self.ai_depth)
+        self.player_ai_levels = opts.get("player_ai_levels", {})
+        self.player_ai_personality = opts.get("player_ai_personality", {})
         self.sound_enabled = opts.get("sound", self.sound_enabled)
         self.music_enabled = opts.get("music", self.music_enabled)
         self.music_volume = opts.get("music_volume", self.music_volume)
@@ -579,6 +581,10 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
                 data["win_counts"] = {
                     str(k): int(v) for k, v in data["win_counts"].items()
                 }
+            if "player_ai_levels" in data and isinstance(data["player_ai_levels"], dict):
+                data["player_ai_levels"] = {str(k): v for k, v in data["player_ai_levels"].items()}
+            if "player_ai_personality" in data and isinstance(data["player_ai_personality"], dict):
+                data["player_ai_personality"] = {str(k): v for k, v in data["player_ai_personality"].items()}
             if "fps_limit" in data:
                 try:
                     data["fps_limit"] = int(data["fps_limit"])
@@ -607,6 +613,16 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
             "ai_personality": self.ai_personality,
             "ai_lookahead": self.ai_lookahead,
             "ai_depth": self.ai_depth,
+            "player_ai_levels": {
+                p.name: p.ai_level
+                for p in self.game.players
+                if p.ai_level is not None
+            },
+            "player_ai_personality": {
+                p.name: p.ai_personality
+                for p in self.game.players
+                if p.ai_personality is not None
+            },
             "sound": self.sound_enabled,
             "music": self.music_enabled,
             "music_volume": self.music_volume,
@@ -658,6 +674,13 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
         self.game.ai_depth = self.ai_depth
+        for pl in self.game.players:
+            lvl = self.player_ai_levels.get(pl.name)
+            if lvl is not None:
+                self.game.set_player_ai_level(pl.name, lvl)
+            per = self.player_ai_personality.get(pl.name)
+            if per is not None:
+                self.game.set_player_personality(pl.name, per)
         self.game.allow_2_in_sequence = not self.rule_no_2s
         self.game.flip_suit_rank = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)
