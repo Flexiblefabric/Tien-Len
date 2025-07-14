@@ -369,6 +369,8 @@ def test_overlay_instances_created():
         assert isinstance(view.overlay, tienlen_gui.GraphicsOverlay)
         view.show_audio()
         assert isinstance(view.overlay, tienlen_gui.AudioOverlay)
+        view.show_ai_setup()
+        assert isinstance(view.overlay, tienlen_gui.AiSetupOverlay)
         tienlen_gui.GameView.show_rules(view)
         assert isinstance(view.overlay, tienlen_gui.RulesOverlay)
         view.show_how_to_play()
@@ -824,6 +826,7 @@ def test_calc_hand_layout_wraps_start_and_spacing():
         (tienlen_gui.GameSettingsOverlay, ()),
         (tienlen_gui.GraphicsOverlay, ()),
         (tienlen_gui.AudioOverlay, ()),
+        (tienlen_gui.AiSetupOverlay, ()),
         (tienlen_gui.RulesOverlay, (lambda: None,)),
         (tienlen_gui.HowToPlayOverlay, (lambda: None,)),
         (tienlen_gui.TutorialOverlay, (lambda: None,)),
@@ -880,6 +883,14 @@ def test_in_game_menu_buttons():
         view.confirm_return_to_menu,
         view.confirm_quit,
     ]
+    pygame.quit()
+
+
+def test_game_settings_overlay_includes_ai_setup():
+    view, _ = make_view()
+    overlay = tienlen_gui.GameSettingsOverlay(view)
+    texts = [b.text for b in overlay.buttons]
+    assert "AI Setup" in texts
     pygame.quit()
 
 
@@ -1009,6 +1020,7 @@ def test_overlay_font_changes_after_resize():
         ("show_game_settings", ()),
         ("show_graphics", ()),
         ("show_audio", ()),
+        ("show_ai_setup", ()),
         ("show_how_to_play", ()),
         ("show_tutorial", ()),
     ],

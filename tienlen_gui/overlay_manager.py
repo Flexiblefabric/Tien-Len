@@ -8,6 +8,7 @@ from .overlays import (
     InGameMenuOverlay,
     SettingsOverlay,
     GameSettingsOverlay,
+    AiSetupOverlay,
     GraphicsOverlay,
     AudioOverlay,
     RulesOverlay,
@@ -49,6 +50,9 @@ class OverlayMixin:
 
     def show_game_settings(self) -> None:
         self._activate_overlay(GameSettingsOverlay(self), GameState.SETTINGS)
+
+    def show_ai_setup(self) -> None:
+        self._activate_overlay(AiSetupOverlay(self), GameState.SETTINGS)
 
     # Legacy name kept for backwards compatibility
     def show_options(self) -> None:
