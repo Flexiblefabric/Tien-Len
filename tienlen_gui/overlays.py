@@ -387,17 +387,24 @@ class GameSettingsOverlay(Overlay):
         make_button(spacing * 4, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
         make_button(spacing * 5, "sort_mode", ["rank", "suit"], "Sort Mode")
         make_button(spacing * 6, "developer_mode", [False, True], "Dev Mode")
+        ai_setup_btn = Button(
+            "AI Setup",
+            pygame.Rect(bx, by + spacing * 7, bw, bh),
+            self.view.show_ai_setup,
+            font,
+        )
+        self.buttons.append(ai_setup_btn)
         self.buttons.append(
             Button(
                 "House Rules",
-                pygame.Rect(bx, by + spacing * 7, bw, bh),
+                pygame.Rect(bx, by + spacing * 8, bw, bh),
                 lambda: self.view.show_rules(from_menu=False),
                 font,
             )
         )
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + spacing * 8, bw, bh),
+            pygame.Rect(bx, by + spacing * 9, bw, bh),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),
@@ -554,6 +561,102 @@ class AudioOverlay(Overlay):
         )
         self.buttons.append(btn)
 
+
+class AiSetupOverlay(Overlay):
+    """Cycle difficulty and personality for each AI opponent."""
+
+    DIFFICULTIES = ["Easy", "Normal", "Hard", "Expert", "Master"]
+    PERSONALITIES = ["balanced", "aggressive", "defensive", "random"]
+
+    def __init__(self, view: "GameView") -> None:
+        super().__init__(view, view.show_game_settings)
+        self._personality_callbacks: dict[Button, Callable[[], None]] = {}
+        self._layout()
+
+    def resize(self) -> None:
+        self._layout()
+
+    def _layout(self) -> None:
+        w, h = self.view.screen.get_size()
+        font = self.view.font
+        bw, bh = self._button_size()
+        spacing = self._spacing()
+        bx = w // 2 - bw // 2
+        ai_players = [p for p in self.view.game.players if not p.is_human]
+        by = h // 2 - int(spacing * (len(ai_players) - 0.2)) // 2
+        self.buttons = []
+        self._personality_callbacks.clear()
+
+        for i, player in enumerate(ai_players):
+            lvl = self.view.player_ai_levels.get(
+                player.name, player.ai_level or self.view.ai_level
+            )
+            per = self.view.player_ai_personality.get(
+                player.name, player.ai_personality or self.view.ai_personality
+            )
+            btn = Button(
+                f"{player.name}: {lvl} / {per}",
+                pygame.Rect(bx, by + i * spacing, bw, bh),
+                lambda p=player, b=None: None,
+                font,
+            )
+            btn.callback = self._make_level_callback(player, btn)
+            self._personality_callbacks[btn] = self._make_personality_callback(
+                player, btn
+            )
+            self.buttons.append(btn)
+
+        back_btn = Button(
+            "Back",
+            pygame.Rect(bx, by + spacing * len(ai_players), bw, bh),
+            self.view.show_game_settings,
+            font,
+            **load_button_images("button_back"),
+        )
+        self.buttons.append(back_btn)
+
+    def _make_level_callback(self, player, btn):
+        def inner() -> None:
+            cur = self.view.player_ai_levels.get(
+                player.name, player.ai_level or self.view.ai_level
+            )
+            idx = self.DIFFICULTIES.index(cur)
+            new = self.DIFFICULTIES[(idx + 1) % len(self.DIFFICULTIES)]
+            self.view.player_ai_levels[player.name] = new
+            self.view.game.set_player_ai_level(player.name, new)
+            per = self.view.player_ai_personality.get(
+                player.name, player.ai_personality or self.view.ai_personality
+            )
+            btn.text = f"{player.name}: {new} / {per}"
+            self.view.apply_options()
+
+        return inner
+
+    def _make_personality_callback(self, player, btn):
+        def inner() -> None:
+            cur = self.view.player_ai_personality.get(
+                player.name, player.ai_personality or self.view.ai_personality
+            )
+            idx = self.PERSONALITIES.index(cur)
+            new = self.PERSONALITIES[(idx + 1) % len(self.PERSONALITIES)]
+            self.view.player_ai_personality[player.name] = new
+            self.view.game.set_player_personality(player.name, new)
+            lvl = self.view.player_ai_levels.get(
+                player.name, player.ai_level or self.view.ai_level
+            )
+            btn.text = f"{player.name}: {lvl} / {new}"
+            self.view.apply_options()
+
+        return inner
+
+    def handle_event(self, event: pygame.event.Event) -> None:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            for i, btn in enumerate(self.buttons[:-1]):
+                if btn.rect.collidepoint(event.pos):
+                    self.focus_idx = i
+                    self._personality_callbacks[btn]()
+                    return
+        super().handle_event(event)
 
 class RulesOverlay(Overlay):
     """Overlay providing toggles for optional house rules."""
