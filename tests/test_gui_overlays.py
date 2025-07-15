@@ -88,13 +88,23 @@ def test_toggle_fullscreen_sets_flags_and_rescales():
 def test_action_buttons_created_and_clickable():
     view, _ = make_view()
     texts = [b.text for b in view.action_buttons]
-    assert texts == ["Play", "Pass", "Undo"]
+    assert texts == ["Play", "Pass", "Hint", "Undo"]
 
     btn = view.action_buttons[0]
     btn.callback = MagicMock()
     view.state = tienlen_gui.GameState.PLAYING
     view.handle_mouse(btn.rect.center)
     btn.callback.assert_called_once()
+
+
+def test_hint_button_selects_cards():
+    view, _ = make_view()
+    hint_cards = [view.game.players[0].hand[0]]
+    with patch.object(view.game, "hint", return_value=hint_cards):
+        hint_btn = next(b for b in view.action_buttons if b.text == "Hint")
+        view.state = tienlen_gui.GameState.PLAYING
+        view.handle_mouse(hint_btn.rect.center)
+    assert all(sp.card in hint_cards for sp in view.selected)
 
 
 def test_undo_button_disabled_when_no_snapshot():
@@ -250,7 +260,7 @@ def test_on_resize_repositions_layout():
                 margin = min(60, max(40, int(card_w * 0.75)))
                 expected_pos = (600 // 2, 400 - margin - card_h // 2)
                 spacing = max(10, card_w // 2)
-                total = 120 * 3 + spacing * 2
+                total = 120 * 4 + spacing * 3
                 start_x = 600 // 2 - total // 2
                 expected_y = view.button_y
                 setting_margin = min(60, max(40, card_w // 3))
@@ -1067,6 +1077,9 @@ def test_options_persist_across_sessions(tmp_path):
         view.music_volume = 0.25
         view.rule_flip_suit_rank = True
         view.rule_no_2s = False
+        view.rule_bomb_override = False
+        view.rule_chain_cutting = True
+        view.rule_bomb_hierarchy = False
         view.fullscreen = True
         view.score_visible = False
         view.score_pos = (30, 40)
@@ -1081,6 +1094,9 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.music_volume == 0.25
     assert new_view.rule_flip_suit_rank is True
     assert new_view.rule_no_2s is False
+    assert new_view.rule_bomb_override is False
+    assert new_view.rule_chain_cutting is True
+    assert new_view.rule_bomb_hierarchy is False
     assert new_view.fullscreen is True
     assert new_view.score_visible is False
     assert new_view.score_pos == (30, 40)
@@ -1115,6 +1131,9 @@ def test_rules_overlay_toggles_update_state():
     attrs = [
         "rule_flip_suit_rank",
         "rule_no_2s",
+        "rule_bomb_override",
+        "rule_chain_cutting",
+        "rule_bomb_hierarchy",
     ]
     for btn, attr in zip(overlay.buttons[:-1], attrs):
         start = getattr(view, attr)

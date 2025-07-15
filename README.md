@@ -74,7 +74,8 @@ are handled automatically.
 - A dedicated *House Rules* screen lets you toggle optional rules.
   The *Flip Suit Rank* rule reverses suit ordering and can only be
   enabled from the main menu.
-- On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
+- On-screen **Play**, **Pass**, **Hint** and **Undo** buttons between your hand and the pile.
+- Click **Hint** to automatically highlight a suggested play.
 - Optional player avatars loaded from `assets/avatars/`.
 - Player profiles with persistent win counts. Select a profile or create a new
   one from the **Switch Profile** button on the main menu. Profile data is
@@ -114,9 +115,9 @@ per-player overrides and hides the setup panel.
 The *House Rules* screen contains optional rule switches:
 
 - **Allow 2 in straights** – permits sequences containing the rank 2.
-- **“Chặt” bomb** – four-of-a-kind bombs can always beat a single 2.
-- **Chain cutting** – lets a higher sequence interrupt an existing one.
-- **Tứ Quý hierarchy** – bombs outrank each other by rank.
+- **Chặt bomb** – bombs can trump any non-bomb hand.
+- **Chain cutting** – longer sequences may interrupt a smaller one.
+- **Tứ Quý hierarchy** – higher ranked bombs beat lower ones.
 - **Flip Suit Rank** – reverses suit order so Hearts outranks Spades.
 
 All of these preferences persist between sessions via the `options.json`

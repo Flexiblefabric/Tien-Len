@@ -264,11 +264,21 @@ class Player:
 class Game:
     """Encapsulates the rules and state of a single game."""
 
-    def __init__(self, allow_2_in_sequence: bool = False, flip_suit_rank: bool = False) -> None:
+    def __init__(
+        self,
+        allow_2_in_sequence: bool = False,
+        flip_suit_rank: bool = False,
+        bomb_override: bool = True,
+        chain_cutting: bool = False,
+        bomb_hierarchy: bool = True,
+    ) -> None:
         """Initialise a new game instance."""
 
         self.allow_2_in_sequence = allow_2_in_sequence
         self.flip_suit_rank = flip_suit_rank
+        self.bomb_override = bomb_override
+        self.chain_cutting = chain_cutting
+        self.bomb_hierarchy = bomb_hierarchy
 
         # Create one human player followed by three AI opponents chosen from a
         # predefined pool of names.
@@ -443,20 +453,45 @@ class Game:
 
         prev = detect_combo(current, self.allow_2_in_sequence)
 
-        # Bombs beat everything except a higher bomb
+        # Bomb behaviour depends on the optional rule toggle
         if combo == 'bomb' and prev != 'bomb':
-            return True, ''
+            if self.bomb_override:
+                return True, ''
+            return False, 'Does not beat current'
 
-        # Otherwise combos must match type and length and be higher in rank
-        if combo == prev and len(cards) == len(current):
-            new_val = max(
-                (RANKS.index(c.rank), self.suit_index(c.suit)) for c in cards
-            )
-            cur_val = max(
-                (RANKS.index(c.rank), self.suit_index(c.suit)) for c in current
-            )
+        # Bomb hierarchy rule when both plays are bombs
+        if combo == prev == 'bomb':
+            if not self.bomb_hierarchy:
+                return False, 'Does not beat current'
+            new_val = max(RANKS.index(c.rank) for c in cards)
+            cur_val = max(RANKS.index(c.rank) for c in current)
             if new_val > cur_val:
                 return True, ''
+            return False, 'Does not beat current'
+
+        # Otherwise combos must match type and length and be higher in rank
+        if combo == prev:
+            if combo == 'sequence' and self.chain_cutting:
+                if len(cards) >= len(current):
+                    new_val = max(
+                        (RANKS.index(c.rank), self.suit_index(c.suit))
+                        for c in cards
+                    )
+                    cur_val = max(
+                        (RANKS.index(c.rank), self.suit_index(c.suit))
+                        for c in current
+                    )
+                    if new_val > cur_val:
+                        return True, ''
+            elif len(cards) == len(current):
+                new_val = max(
+                    (RANKS.index(c.rank), self.suit_index(c.suit)) for c in cards
+                )
+                cur_val = max(
+                    (RANKS.index(c.rank), self.suit_index(c.suit)) for c in current
+                )
+                if new_val > cur_val:
+                    return True, ''
 
         return False, 'Does not beat current'
 
@@ -878,6 +913,11 @@ class Game:
             "history": self.history,
             "current_round": self.current_round,
             "scores": self.scores,
+            "allow_2_in_sequence": self.allow_2_in_sequence,
+            "flip_suit_rank": self.flip_suit_rank,
+            "bomb_override": self.bomb_override,
+            "chain_cutting": self.chain_cutting,
+            "bomb_hierarchy": self.bomb_hierarchy,
         }
 
     def from_dict(self, data: dict) -> None:
@@ -911,6 +951,11 @@ class Game:
         self.scores = data.get("scores", {p.name: 0 for p in self.players})
         self.move_log.clear()
         self.round_states.clear()
+        self.allow_2_in_sequence = data.get("allow_2_in_sequence", self.allow_2_in_sequence)
+        self.flip_suit_rank = data.get("flip_suit_rank", self.flip_suit_rank)
+        self.bomb_override = data.get("bomb_override", self.bomb_override)
+        self.chain_cutting = data.get("chain_cutting", self.chain_cutting)
+        self.bomb_hierarchy = data.get("bomb_hierarchy", self.bomb_hierarchy)
 
     def to_json(self) -> str:
         """Return a JSON string representing the current game state."""
@@ -932,6 +977,9 @@ class Game:
         g = Game(
             allow_2_in_sequence=self.allow_2_in_sequence,
             flip_suit_rank=self.flip_suit_rank,
+            bomb_override=self.bomb_override,
+            chain_cutting=self.chain_cutting,
+            bomb_hierarchy=self.bomb_hierarchy,
         )
         g.from_dict(self.to_dict())
         g.ai_level = self.ai_level

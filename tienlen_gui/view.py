@@ -157,6 +157,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         # Additional house rule toggles
         self.rule_flip_suit_rank = False
         self.rule_no_2s = True
+        self.rule_bomb_override = True
+        self.rule_chain_cutting = False
+        self.rule_bomb_hierarchy = True
         self.score_visible = True
         self.developer_mode = False
         self.use_global_ai_settings = True
@@ -201,6 +204,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
             "rule_flip_suit_rank", self.rule_flip_suit_rank
         )
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
+        self.rule_bomb_override = opts.get("rule_bomb_override", self.rule_bomb_override)
+        self.rule_chain_cutting = opts.get("rule_chain_cutting", self.rule_chain_cutting)
+        self.rule_bomb_hierarchy = opts.get("rule_bomb_hierarchy", self.rule_bomb_hierarchy)
         self.developer_mode = opts.get("developer_mode", self.developer_mode)
         self.use_global_ai_settings = opts.get(
             "use_global_ai_settings", self.use_global_ai_settings
@@ -379,7 +385,7 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         w, h = self.screen.get_size()
         btn_w = 120
         spacing = max(10, self.card_width // 2)
-        total = btn_w * 3 + spacing * 2
+        total = btn_w * 4 + spacing * 3
         start_x = w // 2 - total // 2
 
         y = self.button_y
@@ -390,6 +396,7 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         font = self.font
         play_imgs = load_button_images("button_play")
         pass_imgs = load_button_images("button_pass")
+        hint_imgs = load_button_images("button_hint") if os.path.exists(str(ASSETS_DIR / "button_hint_n.png")) else {}
         undo_imgs = load_button_images("button_undo")
         self.action_buttons = [
             Button(
@@ -407,8 +414,15 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
                 **pass_imgs,
             ),
             Button(
-                "Undo",
+                "Hint",
                 pygame.Rect(start_x + 2 * (btn_w + spacing), y, btn_w, BUTTON_HEIGHT),
+                self.hint_move,
+                font,
+                **hint_imgs,
+            ),
+            Button(
+                "Undo",
+                pygame.Rect(start_x + 3 * (btn_w + spacing), y, btn_w, BUTTON_HEIGHT),
                 self.undo_move,
                 font,
                 **undo_imgs,
@@ -638,6 +652,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
             "show_rules_option": self.show_rules_option,
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
+            "rule_bomb_override": self.rule_bomb_override,
+            "rule_chain_cutting": self.rule_chain_cutting,
+            "rule_bomb_hierarchy": self.rule_bomb_hierarchy,
             "developer_mode": self.developer_mode,
             "use_global_ai_settings": self.use_global_ai_settings,
             "fullscreen": self.fullscreen,
@@ -695,6 +712,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
                     self.game.set_player_personality(pl.name, per)
         self.game.allow_2_in_sequence = not self.rule_no_2s
         self.game.flip_suit_rank = self.rule_flip_suit_rank
+        self.game.bomb_override = self.rule_bomb_override
+        self.game.chain_cutting = self.rule_chain_cutting
+        self.game.bomb_hierarchy = self.rule_bomb_hierarchy
         sound.set_volume(self.fx_volume)
         sound.set_enabled(self.sound_enabled)
         import tienlen_gui
@@ -895,6 +915,21 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         self._start_animation(self._highlight_turn(self.game.current_idx))
         self._start_animation(self._animate_avatar_blink(self.game.current_idx))
         self.ai_turns()
+
+    def hint_move(self) -> None:
+        """Highlight a suggested move from the game logic."""
+        hint = self.game.hint(self.game.current_combo)
+        if not hint:
+            return
+        # Clear current selection
+        for sp in self.selected:
+            sp.selected = False
+        self.selected.clear()
+        for sp in self.hand_sprites.sprites():
+            if isinstance(sp, CardSprite) and sp.card in hint:
+                sp.selected = True
+                self.selected.append(sp)
+        self.update_play_button_state()
 
     def pass_turn(self):
         if self.game.handle_pass():
