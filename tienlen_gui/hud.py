@@ -47,6 +47,12 @@ class HUDPanel:
         if status:
             lines.append(status)
 
+        if not self.player.is_human:
+            lvl = self.view.game._ai_level_for(self.player)
+            per = self.view.game._ai_personality_for(self.player)
+            lines.append(f"Difficulty: {lvl}")
+            lines.append(f"Personality: {per}")
+
         info = self.view.ai_debug_info.get(self.idx)
         if self.view.developer_mode and info and not self.player.is_human:
             move, score = info

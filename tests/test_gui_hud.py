@@ -25,6 +25,8 @@ def test_hud_panel_displays_count_and_last_move():
     lines = hud_box.call_args.args[0]
     assert lines[0] == f"{player.name} ({len(player.hand)})"
     assert lines[1].startswith(player.name)
+    assert any(line.startswith("Difficulty:") for line in lines)
+    assert any(line.startswith("Personality:") for line in lines)
     pygame.quit()
 
 
