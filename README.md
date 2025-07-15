@@ -84,6 +84,14 @@ are handled automatically.
 - A compact score panel showing total wins can be toggled with the **S** button
   in the top-left corner.
 
+### Saving and loading
+
+Press the **Settings** button (or hit **Esc**) during a game to open the in-game
+menu. Here you can **Save Game** to write the current match to
+`~/.tien_len/saved_game.json` – the same directory that stores
+`options.json`. Selecting **Load Game** from this menu restores the last saved
+state so you can resume where you left off.
+
 ### AI personality and lookahead
 
 The **Options** menu exposes additional AI behaviour settings.  The
