@@ -159,14 +159,16 @@ The executable along with its assets will appear in the `dist/` directory.
 
 ## TODO
 
-- Networked multiplayer mode for remote games.
-- Replay system to review finished rounds.
-- Achievements and statistics tracking.
-- More house rules and customisable card sets.
-- Mobile-friendly controls and interface scaling.
-- Animated bomb and combo effects.
-- Online leaderboards for high scores.
-- Hot-seat local multiplayer support.
+See [ROADMAP.md](ROADMAP.md) for status updates.
+
+- Dynamic card spacing and responsive UI scaling.
+- Card fan/arc layout for large hands.
+- Improved AI personalities, lookahead and hint system.
+- Additional house rule toggles and custom card sets.
+- Replay and save/resume systems.
+- Player stats tracking, achievements and online leaderboards.
+- Animated bomb/combo effects with audio and music.
+- Networked and hot-seat multiplayer support.
 
 ## Running tests
 
