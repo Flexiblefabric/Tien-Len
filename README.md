@@ -75,6 +75,9 @@ are handled automatically.
   enabled from the main menu.
 - On-screen **Play**, **Pass** and **Undo** buttons between your hand and the pile.
 - Optional player avatars loaded from `assets/avatars/`.
+- Player profiles with persistent win counts. Select a profile or create a new
+  one from the **Switch Profile** button on the main menu. Profile data is
+  stored alongside other settings in `~/.tien_len/options.json`.
 - Per-player HUD panels show remaining cards, the last move and whose turn it is.
 - Enable **Developer Mode** from the Options menu or press **F3** to reveal AI hands and move evaluations in these panels.
 - A small scoreboard at the top centre lists each player's remaining card count
@@ -82,7 +85,7 @@ are handled automatically.
 - A game log beside the scoreboard records the last four actions using a 12&nbsp;pt
   font and highlights the newest entry.
 - A compact score panel showing total wins can be toggled with the **S** button
-  in the top-left corner.
+  in the top-left corner. The panel tracks wins separately for each profile.
 
 ### AI personality and lookahead
 
