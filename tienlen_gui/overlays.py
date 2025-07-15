@@ -236,7 +236,7 @@ class InGameMenuOverlay(Overlay):
         bw, bh = self._button_size()
         spacing = self._spacing()
         bx = w // 2 - bw // 2
-        by = h // 2 - int(spacing * 3)
+        by = h // 2 - int(spacing * 4)
         self.buttons = [
             Button(
                 "Resume Game",
@@ -712,10 +712,13 @@ class RulesOverlay(Overlay):
 
         make_button(0, "rule_flip_suit_rank", "Flip Suit Rank")
         make_button(spacing, "rule_no_2s", "No 2s in straights")
+        make_button(spacing * 2, "rule_bomb_override", "Chặt bomb")
+        make_button(spacing * 3, "rule_chain_cutting", "Chain cutting")
+        make_button(spacing * 4, "rule_bomb_hierarchy", "Tứ Quý hierarchy")
         self.buttons.append(
             Button(
                 "Back",
-                pygame.Rect(bx, by + spacing * 2, bw, bh),
+                pygame.Rect(bx, by + spacing * 5, bw, bh),
                 self.back_callback,
                 font,
                 **load_button_images("button_back"),

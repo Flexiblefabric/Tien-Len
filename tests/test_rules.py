@@ -71,7 +71,7 @@ def test_player_sort_and_bombs():
 
 
 def test_is_valid_basic_rules():
-    game = Game(flip_suit_rank=False)
+    game = Game(flip_suit_rank=False, bomb_override=True, bomb_hierarchy=True)
     starter = game.players[0]
     game.current_idx = 0
     game.start_idx = 0
