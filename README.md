@@ -103,6 +103,10 @@ The **Options** menu exposes additional AI behaviour settings.  The
 **balanced** and **random** styles, altering how boldly opponents play.
 The *Lookahead* toggle makes the AI consider the next turn before
 committing to a move.
+An additional **Use Global AI** switch enables applying the same
+difficulty and personality to every opponent.  Enabling this clears any
+per-player overrides and removes the per-opponent setup panel from the
+menu.
 
 ### House Rules
 

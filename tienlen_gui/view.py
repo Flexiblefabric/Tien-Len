@@ -159,6 +159,7 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         self.rule_no_2s = True
         self.score_visible = True
         self.developer_mode = False
+        self.use_global_ai_settings = True
         self.ai_debug_info: Dict[int, tuple[str, Optional[float]]] = {}
         self.score_pos: Tuple[int, int] = (10, 10)
         self.score_rect = pygame.Rect(self.score_pos, (0, 0))
@@ -201,6 +202,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         )
         self.rule_no_2s = opts.get("rule_no_2s", self.rule_no_2s)
         self.developer_mode = opts.get("developer_mode", self.developer_mode)
+        self.use_global_ai_settings = opts.get(
+            "use_global_ai_settings", self.use_global_ai_settings
+        )
         self.score_visible = opts.get("score_visible", self.score_visible)
         self.score_pos = tuple(opts.get("score_pos", list(self.score_pos)))
         win_data = opts.get("win_counts", {})
@@ -635,6 +639,7 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
             "rule_flip_suit_rank": self.rule_flip_suit_rank,
             "rule_no_2s": self.rule_no_2s,
             "developer_mode": self.developer_mode,
+            "use_global_ai_settings": self.use_global_ai_settings,
             "fullscreen": self.fullscreen,
             "fps_limit": self.fps_limit,
             "score_visible": self.score_visible,
@@ -674,13 +679,20 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         self.game.set_personality(self.ai_personality)
         self.game.ai_lookahead = self.ai_lookahead
         self.game.ai_depth = self.ai_depth
-        for pl in self.game.players:
-            lvl = self.player_ai_levels.get(pl.name)
-            if lvl is not None:
-                self.game.set_player_ai_level(pl.name, lvl)
-            per = self.player_ai_personality.get(pl.name)
-            if per is not None:
-                self.game.set_player_personality(pl.name, per)
+        if self.use_global_ai_settings:
+            self.player_ai_levels.clear()
+            self.player_ai_personality.clear()
+            for pl in self.game.players:
+                self.game.set_player_ai_level(pl.name, None)
+                self.game.set_player_personality(pl.name, None)
+        else:
+            for pl in self.game.players:
+                lvl = self.player_ai_levels.get(pl.name)
+                if lvl is not None:
+                    self.game.set_player_ai_level(pl.name, lvl)
+                per = self.player_ai_personality.get(pl.name)
+                if per is not None:
+                    self.game.set_player_personality(pl.name, per)
         self.game.allow_2_in_sequence = not self.rule_no_2s
         self.game.flip_suit_rank = self.rule_flip_suit_rank
         sound.set_volume(self.fx_volume)

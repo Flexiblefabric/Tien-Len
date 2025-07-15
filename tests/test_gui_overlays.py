@@ -886,8 +886,12 @@ def test_in_game_menu_buttons():
     pygame.quit()
 
 
-def test_game_settings_overlay_includes_ai_setup():
+def test_game_settings_overlay_ai_setup_toggle():
     view, _ = make_view()
+    overlay = tienlen_gui.GameSettingsOverlay(view)
+    texts = [b.text for b in overlay.buttons]
+    assert "AI Setup" not in texts
+    view.use_global_ai_settings = False
     overlay = tienlen_gui.GameSettingsOverlay(view)
     texts = [b.text for b in overlay.buttons]
     assert "AI Setup" in texts
