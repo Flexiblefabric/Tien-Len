@@ -353,8 +353,14 @@ class GameSettingsOverlay(Overlay):
                     idx = options.index(cur)
                     cur = options[(idx + 1) % len(options)]
                     setattr(self.view, attr, cur)
+                    if attr == "use_global_ai_settings" and cur:
+                        self.view.player_ai_levels.clear()
+                        self.view.player_ai_personality.clear()
                     self.view.apply_options()
-                    b.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
+                    if attr == "use_global_ai_settings":
+                        self._layout()
+                    else:
+                        b.text = f"{label}: {cur if not isinstance(cur, bool) else ('On' if cur else 'Off')}"
 
                 return inner
 
@@ -387,24 +393,29 @@ class GameSettingsOverlay(Overlay):
         make_button(spacing * 4, "animation_speed", [0.5, 1.0, 2.0], "Anim Speed")
         make_button(spacing * 5, "sort_mode", ["rank", "suit"], "Sort Mode")
         make_button(spacing * 6, "developer_mode", [False, True], "Dev Mode")
-        ai_setup_btn = Button(
-            "AI Setup",
-            pygame.Rect(bx, by + spacing * 7, bw, bh),
-            self.view.show_ai_setup,
-            font,
-        )
-        self.buttons.append(ai_setup_btn)
+        make_button(spacing * 7, "use_global_ai_settings", [False, True], "Use Global AI")
+        if not self.view.use_global_ai_settings:
+            ai_setup_btn = Button(
+                "AI Setup",
+                pygame.Rect(bx, by + spacing * 8, bw, bh),
+                self.view.show_ai_setup,
+                font,
+            )
+            self.buttons.append(ai_setup_btn)
+            offset_extra = 1
+        else:
+            offset_extra = 0
         self.buttons.append(
             Button(
                 "House Rules",
-                pygame.Rect(bx, by + spacing * 8, bw, bh),
+                pygame.Rect(bx, by + spacing * (8 + offset_extra), bw, bh),
                 lambda: self.view.show_rules(from_menu=False),
                 font,
             )
         )
         btn = Button(
             "Back",
-            pygame.Rect(bx, by + spacing * 9, bw, bh),
+            pygame.Rect(bx, by + spacing * (9 + offset_extra), bw, bh),
             self.view.show_settings,
             font,
             **load_button_images("button_back"),
