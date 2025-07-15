@@ -102,11 +102,12 @@ The **Options** menu exposes additional AI behaviour settings.  The
 *AI Personality* selector cycles through **aggressive**, **defensive**,
 **balanced** and **random** styles, altering how boldly opponents play.
 The *Lookahead* toggle makes the AI consider the next turn before
-committing to a move.
-An additional **Use Global AI** switch enables applying the same
-difficulty and personality to every opponent.  Enabling this clears any
-per-player overrides and removes the per-opponent setup panel from the
-menu.
+committing to a move. A **Use Global AI** toggle at the bottom of this
+screen decides whether the chosen difficulty and personality apply to
+every opponent. Disabling it reveals an **AI Setup** button that opens a
+panel listing each CPU player so you can configure their difficulty and
+personality individually. Re-enabling the global option clears any
+per-player overrides and hides the setup panel.
 
 ### House Rules
 

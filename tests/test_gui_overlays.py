@@ -1087,6 +1087,25 @@ def test_options_persist_across_sessions(tmp_path):
     assert new_view.win_counts["Player"] == 3
     assert new_view.fps_limit == 30
 
+def test_per_player_ai_settings_persist(tmp_path):
+    opt = tmp_path / "opts.json"
+    with patch.object(tienlen_gui, "OPTIONS_FILE", opt):
+        with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+            view, _ = make_view()
+        view.use_global_ai_settings = False
+        p1 = view.game.players[1].name
+        p2 = view.game.players[2].name
+        view.game.set_player_ai_level(p1, "Hard")
+        view.game.set_player_personality(p2, "aggressive")
+        view._save_options()
+        with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+            new_view, _ = make_view()
+    assert new_view.use_global_ai_settings is False
+    assert new_view.player_ai_levels[p1] == "Hard"
+    assert new_view.player_ai_personality[p2] == "aggressive"
+    assert new_view.game.players[1].name == p1
+    assert new_view.game.players[1].ai_level == "Hard"
+    assert new_view.game.players[2].ai_personality == "aggressive"
 
 def test_rules_overlay_toggles_update_state():
     view, _ = make_view()
