@@ -69,7 +69,8 @@ are handled automatically.
 - Press **F11** to toggle full-screen.
 - Sprites and layout adapt automatically when the window is resized.
 - Press **Enter** or **Space** for the usual shortcuts.
-- Settings and menu overlays are provided.
+- Settings and menu overlays are provided. Press **Esc** to open the menu,
+  **M** for the main menu and **O** for the options screen.
 - A dedicated *House Rules* screen lets you toggle optional rules.
   The *Flip Suit Rank* rule reverses suit ordering and can only be
   enabled from the main menu.
