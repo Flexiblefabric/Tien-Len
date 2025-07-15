@@ -69,3 +69,16 @@ def test_hud_highlight_switches_on_turn_change():
         hud2.draw(surf)
         assert glow.call_count == 1
     pygame.quit()
+
+def test_hud_panel_shows_custom_ai_settings():
+    view, _ = make_view()
+    player = view.game.players[1]
+    view.game.set_player_ai_level(player, "Hard")
+    view.game.set_player_personality(player, "defensive")
+    hud = tienlen_gui.HUDPanel(view, 1)
+    with patch.object(view, "_hud_box", return_value=pygame.Surface((1, 1))) as hud_box:
+        hud._create_surface()
+    lines = hud_box.call_args.args[0]
+    assert f"Difficulty: Hard" in lines
+    assert f"Personality: defensive" in lines
+    pygame.quit()
