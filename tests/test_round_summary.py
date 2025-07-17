@@ -1,5 +1,5 @@
 import logging
-from tien_len_full import Game, Card, logger
+from tienlen import Game, Card, logger
 
 
 def test_summary_round_logs_winner_and_next_starter(caplog):

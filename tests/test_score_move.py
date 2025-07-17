@@ -1,4 +1,4 @@
-from tien_len_full import Game, Card, RANKS
+from tienlen import Game, Card, RANKS
 
 
 def test_score_move_tuple_length_and_low_cards():

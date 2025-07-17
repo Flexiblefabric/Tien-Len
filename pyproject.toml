@@ -11,29 +11,27 @@ requires-python = ">=3.10"
 dependencies = [
     "pillow>=10,<12",
     "pygame-ce>=2.5,<3",
+]
+
+[project.optional-dependencies]
+test = [
     "pytest>=8,<9",
     "coverage>=7,<8",
 ]
+
 
 [project.gui-scripts]
 tien-len = "tienlen_gui:main"
 
 [project.scripts]
-tien-len-cli = "tien_len_full:main"
+tien-len-cli = "tienlen:main"
 
 [tool.setuptools]
-py-modules = [
-    "tien_len_full",
-    "sound",
-]
-packages = [
-    "assets",
-    "tienlen_gui",
-]
+packages = {find = {where = ["src"]}}
 include-package-data = true
 
 [tool.setuptools.package-data]
-assets = ["**/*"]
+tienlen_gui = ["assets/**/*"]
 
 [tool.flake8]
 max-line-length = 120

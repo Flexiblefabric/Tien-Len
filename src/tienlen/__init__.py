@@ -22,7 +22,7 @@ import sys
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
-import sound
+from . import sound
 from collections import Counter
 from itertools import combinations, product
 from typing import Optional

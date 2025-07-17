@@ -1,4 +1,4 @@
-from tien_len_full import main
+from tienlen import main
 
 
 def run_cli(args):
@@ -14,7 +14,7 @@ def test_personality_and_lookahead_flags(monkeypatch):
         captured['lookahead'] = self.ai_lookahead
         captured['depth'] = self.ai_depth
 
-    monkeypatch.setattr('tien_len_full.Game.play', fake_play)
+    monkeypatch.setattr('tienlen.Game.play', fake_play)
     run_cli(['--ai', 'Hard', '--personality', 'aggressive', '--lookahead', '--depth', '2'])
     assert captured == {
         'ai': 'Hard',
@@ -33,7 +33,7 @@ def test_cli_defaults(monkeypatch):
         captured['lookahead'] = self.ai_lookahead
         captured['depth'] = self.ai_depth
 
-    monkeypatch.setattr('tien_len_full.Game.play', fake_play)
+    monkeypatch.setattr('tienlen.Game.play', fake_play)
     run_cli([])
     assert captured == {
         'ai': 'Normal',

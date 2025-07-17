@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 import pygame
 import tienlen_gui
-import tien_len_full
+import tienlen
 from conftest import make_view
 
 pytest.importorskip("PIL")
@@ -15,7 +15,7 @@ os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 def test_hud_panel_displays_count_and_last_move():
     view, _ = make_view()
     player = view.game.players[1]
-    player.hand = [tien_len_full.Card("Spades", "3"), tien_len_full.Card("Hearts", "4")]
+    player.hand = [tienlen.Card("Spades", "3"), tienlen.Card("Hearts", "4")]
     view.game.history.append((0, f"{player.name} plays something"))
     hud = tienlen_gui.HUDPanel(view, 1)
 
@@ -33,7 +33,7 @@ def test_hud_panel_displays_count_and_last_move():
 def test_developer_mode_reveals_ai_hand():
     view, _ = make_view()
     player = view.game.players[1]
-    player.hand = [tien_len_full.Card("Spades", "3"), tien_len_full.Card("Diamonds", "4")]
+    player.hand = [tienlen.Card("Spades", "3"), tienlen.Card("Diamonds", "4")]
     hud = tienlen_gui.HUDPanel(view, 1)
 
     with patch.object(view, "_hud_box", return_value=pygame.Surface((1, 1))):

@@ -1,5 +1,5 @@
 import pytest
-from tien_len_full import Game, Card
+from tienlen import Game, Card
 
 pytest.importorskip("pygame")
 pytest.importorskip("tienlen_gui")

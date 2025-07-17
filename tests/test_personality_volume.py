@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
-import sound
-from tien_len_full import Game, Card
+from tienlen import sound
+from tienlen import Game, Card
 
 
 def test_set_personality_mapping_and_default():

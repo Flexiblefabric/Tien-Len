@@ -11,8 +11,8 @@ import tracemalloc
 import pygame
 import types
 
-from tien_len_full import Game, detect_combo
-import sound
+from tienlen import Game, detect_combo
+from tienlen import sound
 
 from .helpers import (
     TABLE_THEMES,

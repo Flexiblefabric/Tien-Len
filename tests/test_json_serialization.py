@@ -1,6 +1,6 @@
 import json
 from unittest.mock import patch
-from tien_len_full import Game, Card, AI_NAMES
+from tienlen import Game, Card, AI_NAMES
 
 
 def setup_game_state():

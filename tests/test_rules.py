@@ -1,4 +1,4 @@
-from tien_len_full import (
+from tienlen import (
     Card,
     Player,
     Game,
@@ -115,7 +115,7 @@ def test_is_valid_basic_rules():
 
 
 def test_is_valid_first_card_flip_suit():
-    import tien_len_full as tl
+    import tienlen as tl
 
     tl_game = tl.Game(flip_suit_rank=True)
     starter = tl_game.players[0]
@@ -132,7 +132,7 @@ def test_is_valid_first_card_flip_suit():
 
 
 def test_flip_suit_rank_sorting_and_deck_order():
-    import tien_len_full as tl
+    import tienlen as tl
 
     p = tl.Player('Tester')
     p.hand = [tl.Card(s, '3') for s in tl.SUITS]

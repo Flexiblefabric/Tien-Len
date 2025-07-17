@@ -97,7 +97,7 @@ class OverlayMixin:
             self.ai_turns()
 
     def show_game_over(self, winner: str) -> None:
-        import sound
+        from tienlen import sound
 
         sound.play("win")
         self.win_counts[winner] = self.win_counts.get(winner, 0) + 1

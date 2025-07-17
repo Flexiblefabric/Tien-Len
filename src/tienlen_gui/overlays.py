@@ -3,7 +3,7 @@ from __future__ import annotations
 import pygame
 from typing import List, Callable, Optional, TYPE_CHECKING
 
-import sound
+from tienlen import sound
 
 from .helpers import (
     list_card_back_colors,
