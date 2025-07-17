@@ -1253,6 +1253,33 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
             return True
         return False
 
+    # Main loop helpers -------------------------------------------------
+    def handle_input(self) -> None:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.VIDEORESIZE:
+                self.on_resize(event.w, event.h)
+            elif self._handle_score_event(event):
+                continue
+            elif self._dispatch_overlay_event(event):
+                continue
+            else:
+                self._dispatch_game_event(event)
+
+    def update_state(self, dt: float) -> None:
+        for anim in self.animations[:]:
+            try:
+                anim.send(dt)
+            except StopIteration:
+                self.animations.remove(anim)
+
+        for manager in list(self.anim_managers.values()):
+            manager.update(dt)
+
+    def render(self) -> None:
+        self._draw_frame()
+
     def run(self):
         self.update_hand_sprites()
         self._start_animation(self._highlight_turn(self.game.current_idx))
@@ -1264,28 +1291,9 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         while self.running:
             dt = self.clock.tick(self.fps_limit) / 1000.0
             self.dt = dt
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.VIDEORESIZE:
-                    self.on_resize(event.w, event.h)
-                elif self._handle_score_event(event):
-                    continue
-                elif self._dispatch_overlay_event(event):
-                    continue
-                else:
-                    self._dispatch_game_event(event)
-
-            for anim in self.animations[:]:
-                try:
-                    anim.send(dt)
-                except StopIteration:
-                    self.animations.remove(anim)
-
-            for manager in list(self.anim_managers.values()):
-                manager.update(dt)
-
-            self._draw_frame()
+            self.handle_input()
+            self.update_state(dt)
+            self.render()
         pygame.event.clear()
         gc.collect()
         try:
