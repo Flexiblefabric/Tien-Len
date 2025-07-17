@@ -18,6 +18,13 @@ test = [
     "pytest>=8,<9",
     "coverage>=7,<8",
 ]
+dev = [
+    "pre-commit>=3,<4",
+    "black>=24,<25",
+    "isort>=5,<6",
+    "flake8>=6,<7",
+    "mypy>=1,<2",
+]
 
 
 [project.gui-scripts]
@@ -36,5 +43,17 @@ tienlen_gui = ["assets/**/*"]
 [tool.flake8]
 max-line-length = 120
 extend-ignore = ["E203", "W503"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.coverage.run]
+branch = true
+omit = ["tienlen_gui/*.py"]
 
 
