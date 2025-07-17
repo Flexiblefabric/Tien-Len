@@ -484,7 +484,7 @@ class AnimationMixin:
                 if start_delay > 0:
                     tl.wait(start_delay)
 
-                def start_move(sp=sp, dest=dest, group=group):
+                def start_move(sp=sp, dest=dest, group=group, mgr=mgr):
                     group.change_layer(sp, group.get_top_layer() + 1)
                     mgr.tween_position(dest, move_dur, 'smooth')
 
@@ -494,9 +494,11 @@ class AnimationMixin:
                 tl.then(start_move).wait(move_dur).then(reset_layer)
                 mgr.play(tl)
 
-        yield
+        dt = yield
         while any(m.active() for m in managers):
-            yield
+            for m in managers:
+                m.update(dt)
+            dt = yield
 
     def _animate_return(
         self,
