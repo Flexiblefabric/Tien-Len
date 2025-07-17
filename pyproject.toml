@@ -27,11 +27,11 @@ dev = [
 ]
 
 
-[project.gui-scripts]
-tien-len = "tienlen_gui:main"
-
 [project.scripts]
-tien-len-cli = "tienlen:main"
+tien-len = "tienlen.cli:main"
+
+[project.gui-scripts]
+tien-len-gui = "tienlen_gui.app:main"
 
 [tool.setuptools]
 packages = {find = {where = ["src"]}}
