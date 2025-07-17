@@ -1,4 +1,4 @@
-from tien_len_full import Game, SUITS, RANKS
+from tienlen import Game, SUITS, RANKS
 
 
 def test_clone_preserves_rule_settings():

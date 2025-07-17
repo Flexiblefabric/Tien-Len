@@ -2,7 +2,7 @@ import itertools
 import random
 from unittest.mock import patch
 
-from tien_len_full import Game, AI_NAMES
+from tienlen import Game, AI_NAMES
 
 
 def test_simulated_game():

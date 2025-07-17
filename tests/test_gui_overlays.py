@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 import pytest
 import pygame
 import tienlen_gui
-import tien_len_full
-import sound
+import tienlen
+from tienlen import sound
 from conftest import make_view, DummyFont, DummyCardSprite
 
 pytest.importorskip("PIL")
@@ -559,7 +559,7 @@ def test_pass_turn_triggers_pass_animation():
 def test_undo_move_triggers_return_animation():
     view, _ = make_view()
     player = view.game.players[0]
-    card = tien_len_full.Card("Spades", "3")
+    card = tienlen.Card("Spades", "3")
     view.game.pile.append((player, [card]))
     view.game.snapshots.append(view.game.to_json())
 
@@ -584,7 +584,7 @@ def test_undo_move_triggers_return_animation():
 def test_ai_turns_triggers_glow_on_play():
     view, _ = make_view()
     view.game.current_idx = 1
-    card = tien_len_full.Card("Spades", "3")
+    card = tienlen.Card("Spades", "3")
     with (
         patch.object(view.game, "ai_play", return_value=[card]),
         patch.object(view.game, "is_valid", return_value=(True, "")),
@@ -607,7 +607,7 @@ def test_ai_turns_triggers_glow_on_play():
 def test_ai_turns_triggers_bomb_reveal():
     view, _ = make_view()
     view.game.current_idx = 1
-    card = tien_len_full.Card("Spades", "3")
+    card = tienlen.Card("Spades", "3")
     with (
         patch.object(view.game, "ai_play", return_value=[card]),
         patch.object(view.game, "is_valid", return_value=(True, "")),
@@ -630,7 +630,7 @@ def test_ai_turns_triggers_bomb_reveal():
 
 
 def test_draw_score_overlay_positions_panel():
-    with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+    with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
         view, _ = make_view()
     view.screen = MagicMock()
     view.score_pos = (15, 20)
@@ -694,7 +694,7 @@ def test_toggle_score_panel_changes_visibility():
 
 
 def test_show_game_over_updates_win_counts():
-    with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+    with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
         view, _ = make_view()
     with patch.object(sound, "play"), patch("pygame.display.update"):
         view.show_game_over("Player")
@@ -703,10 +703,10 @@ def test_show_game_over_updates_win_counts():
 
 
 def test_restart_game_resets_scores():
-    with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+    with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
         view, _ = make_view()
     view.win_counts["Player"] = 2
-    with patch("random.sample", return_value=tien_len_full.AI_NAMES[1:4]), patch.object(
+    with patch("random.sample", return_value=tienlen.AI_NAMES[1:4]), patch.object(
         view, "close_overlay"
     ):
         view.restart_game()
@@ -716,10 +716,10 @@ def test_restart_game_resets_scores():
 
 
 def test_restart_game_triggers_deal_animation():
-    with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+    with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
         view, _ = make_view()
     with patch.object(view, "close_overlay"), patch(
-        "random.sample", return_value=tien_len_full.AI_NAMES[1:4]
+        "random.sample", return_value=tienlen.AI_NAMES[1:4]
     ), patch.object(view, "_animate_deal", return_value="gen") as deal, patch.object(
         view, "_start_animation"
     ) as start:
@@ -1106,7 +1106,7 @@ def test_options_persist_across_sessions(tmp_path):
 def test_per_player_ai_settings_persist(tmp_path):
     opt = tmp_path / "opts.json"
     with patch.object(tienlen_gui, "OPTIONS_FILE", opt):
-        with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+        with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
             view, _ = make_view()
         view.use_global_ai_settings = False
         p1 = view.game.players[1].name
@@ -1114,7 +1114,7 @@ def test_per_player_ai_settings_persist(tmp_path):
         view.game.set_player_ai_level(p1, "Hard")
         view.game.set_player_personality(p2, "aggressive")
         view._save_options()
-        with patch("random.sample", return_value=tien_len_full.AI_NAMES[:3]):
+        with patch("random.sample", return_value=tienlen.AI_NAMES[:3]):
             new_view, _ = make_view()
     assert new_view.use_global_ai_settings is False
     assert new_view.player_ai_levels[p1] == "Hard"

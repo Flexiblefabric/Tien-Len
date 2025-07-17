@@ -1,4 +1,4 @@
-from tien_len_full import Game, Card
+from tienlen import Game, Card
 
 
 def test_cli_input_retries_on_invalid(monkeypatch):

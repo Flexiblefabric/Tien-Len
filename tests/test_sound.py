@@ -1,7 +1,7 @@
 import types
 from unittest.mock import MagicMock, patch
 
-import sound
+from tienlen import sound
 
 
 def _stub_pygame(mock_sound):

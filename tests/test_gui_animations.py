@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import pygame
 import tienlen_gui
-import tien_len_full
+import tienlen
 from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
 
 pytest.importorskip("PIL")
@@ -26,7 +26,7 @@ def test_card_sprite_draw_shadow_blits():
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+            sprite = tienlen_gui.CardSprite(tienlen.Card("Spades", "3"), (0, 0), 1)
     surf = MagicMock()
     sprite.draw_shadow(surf)
     assert surf.blit.call_count > 0
@@ -71,7 +71,7 @@ def test_card_sprite_draw_shadow_uses_default_constants():
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+            sprite = tienlen_gui.CardSprite(tienlen.Card("Spades", "3"), (0, 0), 1)
     from tienlen_gui import helpers as h
     h._SHADOW_CACHE.clear()
     base = MagicMock()
@@ -108,7 +108,7 @@ def test_draw_shadow_cache_cleared_on_size_change():
             "get_card_image",
             return_value=pygame.Surface((2, 3), pygame.SRCALPHA),
         ):
-            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 2)
+            sprite = tienlen_gui.CardSprite(tienlen.Card("Spades", "3"), (0, 0), 2)
 
     surf = pygame.Surface((10, 10))
     sprite.draw_shadow(surf)
@@ -210,7 +210,7 @@ def test_draw_players_uses_draw_shadow():
             "get_card_image",
             return_value=pygame.Surface((1, 1), pygame.SRCALPHA),
         ):
-            sprite = tienlen_gui.CardSprite(tien_len_full.Card("Spades", "3"), (0, 0), 1)
+            sprite = tienlen_gui.CardSprite(tienlen.Card("Spades", "3"), (0, 0), 1)
     view.hand_sprites = pygame.sprite.LayeredUpdates(sprite)
     with patch.object(sprite, "draw_shadow") as ds:
         view.draw_players()

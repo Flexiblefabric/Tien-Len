@@ -1,4 +1,4 @@
-from tien_len_full import Game, Card, detect_combo
+from tienlen import Game, Card, detect_combo
 
 
 def test_hint_recommends_pair_over_single():

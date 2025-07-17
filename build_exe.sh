@@ -11,5 +11,5 @@ else
 fi
 
 pyinstaller --onefile --windowed --name tien-len \
-  --add-data "assets${SEP}assets" tienlen_gui/view.py
+  --add-data "src/tienlen_gui/assets${SEP}tienlen_gui/assets" src/tienlen_gui/view.py
 

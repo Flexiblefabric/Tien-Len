@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+from importlib.resources import files
 from typing import Dict, Tuple, List, Optional
 from collections import OrderedDict
 from enum import Enum, auto
 
 import pygame
 
-from tien_len_full import Card
+from tienlen import Card
 
 # Path to the installed assets directory
-ASSETS_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent)) / "assets"
+ASSETS_DIR = files(__package__).joinpath("assets")
 # Path to the bundled TTF font shipped with the package
 FONT_FILE = ASSETS_DIR / "fonts" / "DejaVuSans.ttf"
 

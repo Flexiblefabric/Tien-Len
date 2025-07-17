@@ -8,7 +8,7 @@ from .helpers import LABEL_PAD, ZONE_HIGHLIGHT, draw_glow
 
 if TYPE_CHECKING:  # pragma: no cover - used for type hints
     from .view import GameView
-    from tien_len_full import Player
+    from tienlen import Player
 
 
 class HUDPanel:

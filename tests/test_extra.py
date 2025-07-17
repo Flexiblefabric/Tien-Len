@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from tien_len_full import Game, Card
+from tienlen import Game, Card
 
 
 def setup_hand():

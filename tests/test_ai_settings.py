@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import patch
-import tien_len_full
+import tienlen
 
 
 @pytest.mark.parametrize("ident_attr", [1, "name", "obj"])
 def test_set_player_ai_level_accepts_multiple_id_forms(ident_attr):
-    with patch('random.sample', return_value=tien_len_full.AI_NAMES[:3]):
-        game = tien_len_full.Game()
+    with patch('random.sample', return_value=tienlen.AI_NAMES[:3]):
+        game = tienlen.Game()
     player = game.players[1]
     if ident_attr == 1:
         ident = 1
@@ -20,8 +20,8 @@ def test_set_player_ai_level_accepts_multiple_id_forms(ident_attr):
 
 @pytest.mark.parametrize("ident_attr", [1, "name", "obj"])
 def test_set_player_personality_accepts_multiple_id_forms(ident_attr):
-    with patch('random.sample', return_value=tien_len_full.AI_NAMES[:3]):
-        game = tien_len_full.Game()
+    with patch('random.sample', return_value=tienlen.AI_NAMES[:3]):
+        game = tienlen.Game()
     player = game.players[1]
     if ident_attr == 1:
         ident = 1

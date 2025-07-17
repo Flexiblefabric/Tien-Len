@@ -7,13 +7,15 @@ import pytest
 # Add repository root to Python path for tests
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
 # Ensure Pygame can initialise a dummy display if available
 try:  # Pygame is optional for some tests
     import pygame
 except Exception:  # pragma: no cover - pygame may be missing
     pygame = None
 else:
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     pygame.init()
     pygame.font.init()
     pygame.display.init()
@@ -60,9 +62,9 @@ if pygame:
     class DummyCardSprite(DummySprite):
         def __init__(self, pos=(0, 0)):
             super().__init__(pos)
-            import tien_len_full
+            from tienlen import Card
 
-            self.card = tien_len_full.Card("Spades", "3")
+            self.card = Card("Spades", "3")
 else:  # pragma: no cover - pygame missing
     class DummySprite:
         def __init__(self, pos=(0, 0)):
