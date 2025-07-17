@@ -28,6 +28,7 @@ from .helpers import (
     GameState,
     calc_start_and_overlap,
     calc_hand_layout,
+    calc_fan_layout,
     horizontal_margin,
     bottom_margin,
     list_music_tracks,
@@ -47,6 +48,9 @@ from .hud import HUDMixin
 from .overlay_manager import OverlayMixin
 
 logger = logging.getLogger(__name__)
+
+# Number of cards required to switch to a fanned layout for the human player
+FAN_THRESHOLD = 16
 
 
 class GameView(AnimationMixin, HUDMixin, OverlayMixin):
@@ -1042,15 +1046,26 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
 
         # --- Human player at the bottom ---------------------------------
         player = self.game.players[0]
-        start_x, spacing = calc_hand_layout(screen_w, card_w, len(player.hand))
-        y = self.hand_y - card_h // 2
-        for i, card in enumerate(player.hand):
-            sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
-            sprite.pos.y = self.hand_y
-            sprite.update()
-            sprite._layer = i
-            self._manager_for(sprite)
-            self.hand_sprites.add(sprite, layer=i)
+        if len(player.hand) > FAN_THRESHOLD:
+            layout = calc_fan_layout(screen_w, card_w, len(player.hand), self.hand_y, card_w)
+            for i, card in enumerate(player.hand):
+                x, y, angle = layout[i]
+                sprite = CardSprite(card, (x, y - card_h // 2), card_w, rotation=angle)
+                sprite.pos.y = y
+                sprite.update()
+                sprite._layer = i
+                self._manager_for(sprite)
+                self.hand_sprites.add(sprite, layer=i)
+        else:
+            start_x, spacing = calc_hand_layout(screen_w, card_w, len(player.hand))
+            y = self.hand_y - card_h // 2
+            for i, card in enumerate(player.hand):
+                sprite = CardSprite(card, (start_x + i * spacing, y), card_w)
+                sprite.pos.y = self.hand_y
+                sprite.update()
+                sprite._layer = i
+                self._manager_for(sprite)
+                self.hand_sprites.add(sprite, layer=i)
 
         margin_v = bottom_margin(card_w)
 

@@ -177,6 +177,44 @@ def calc_hand_layout(screen_width: int, card_width: int, count: int) -> tuple[in
     return start_rel + margin, spacing
 
 
+def calc_fan_layout(
+    screen_width: int,
+    card_width: int,
+    count: int,
+    base_y: int,
+    amplitude: int | None = None,
+    angle_range: float = 30,
+) -> list[tuple[int, int, float]]:
+    """Return ``[(x, y, angle), ...]`` for a fanned hand.
+
+    ``amplitude`` controls the height of the arc and defaults to ``card_width``.
+    ``angle_range`` specifies the total rotation spread in degrees.
+    """
+
+    if amplitude is None:
+        amplitude = card_width
+
+    start_x, spacing = calc_hand_layout(screen_width, card_width, count)
+    if count > 1:
+        mid = (count - 1) / 2
+        step = angle_range / (count - 1)
+    else:
+        mid = 0
+        step = 0
+
+    layout = []
+    for i in range(count):
+        x = start_x + i * spacing
+        if count > 1:
+            rel = (i - mid) / mid
+            y = base_y - int(amplitude * (1 - rel * rel))
+        else:
+            y = base_y - amplitude
+        angle = (i - mid) * step
+        layout.append((int(x), int(y), angle))
+    return layout
+
+
 # ---------------------------------------------------------------------------
 # Helpers for loading and caching card images
 # ---------------------------------------------------------------------------
@@ -371,7 +409,7 @@ def get_card_image(card: Card, width: int) -> Optional[pygame.Surface]:
 
 
 class CardSprite(pygame.sprite.Sprite):
-    def __init__(self, card: Card, pos: Tuple[int, int], width: int = 80) -> None:
+    def __init__(self, card: Card, pos: Tuple[int, int], width: int = 80, rotation: float = 0.0) -> None:
         super().__init__()
         # Import at runtime to allow tests to patch the public helper
         import tienlen_gui
@@ -391,12 +429,15 @@ class CardSprite(pygame.sprite.Sprite):
         surf.blit(img, (border, border))
 
         self.base_image = surf
+        self.angle = rotation
+        self.scale = 1.0
         self.image = surf.copy()
+        if rotation:
+            self.image = pygame.transform.rotate(self.image, rotation)
         self.rect = self.image.get_rect(topleft=pos)
         self.pos = pygame.math.Vector2(self.rect.center)
         self.card = card
         self.selected = False
-        self.scale = 1.0
 
     def toggle(self) -> None:
         self.selected = not self.selected
@@ -410,13 +451,20 @@ class CardSprite(pygame.sprite.Sprite):
         """Scale the sprite's image about its centre."""
         self.scale = scale
         w, h = self.base_image.get_size()
-        scaled = pygame.transform.smoothscale(
+        img = pygame.transform.smoothscale(
             self.base_image, (int(w * scale), int(h * scale))
         )
+        if self.angle:
+            img = pygame.transform.rotate(img, self.angle)
         center = self.rect.center
-        self.image = scaled
+        self.image = img
         self.rect = self.image.get_rect(center=center)
         self.pos.update(self.rect.center)
+
+    def set_angle(self, angle: float) -> None:
+        """Rotate the sprite about its centre."""
+        self.angle = angle
+        self.set_scale(self.scale)
 
     def set_alpha(self, alpha: int) -> None:
         self.image.set_alpha(alpha)
