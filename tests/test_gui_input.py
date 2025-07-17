@@ -1,15 +1,16 @@
-import os
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import MagicMock, patch
+
 import pygame
+import pytest
+
 import tienlen_gui
-from conftest import make_view, DummySprite, DummyCardSprite
+from conftest import DummyCardSprite, DummySprite, make_view
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
-# Use dummy video driver so no window is opened
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+
+pytestmark = pytest.mark.gui
 
 
 def test_handle_key_shortcuts():
@@ -72,9 +73,11 @@ def test_handle_mouse_selects_rightmost_sprite():
     view.selected = []
     view.state = tienlen_gui.GameState.PLAYING
     view.action_buttons = []
-    with patch.object(view, "update_play_button_state"), patch.object(
-        view, "_highlight_turn"
-    ), patch.object(view, "_animate_avatar_blink"):
+    with (
+        patch.object(view, "update_play_button_state"),
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_animate_avatar_blink"),
+    ):
         view.handle_mouse((5, 5))
     assert right.selected is True
     assert right in view.selected
@@ -114,9 +117,11 @@ def test_handle_mouse_calls_update_play_button_state():
     view.selected = []
     view.state = tienlen_gui.GameState.PLAYING
     view.action_buttons = []
-    with patch.object(view, "update_play_button_state") as upd, patch.object(
-        view, "_highlight_turn"
-    ), patch.object(view, "_animate_avatar_blink"):
+    with (
+        patch.object(view, "update_play_button_state") as upd,
+        patch.object(view, "_highlight_turn"),
+        patch.object(view, "_animate_avatar_blink"),
+    ):
         view.handle_mouse(sprite.rect.center)
         upd.assert_called()
 

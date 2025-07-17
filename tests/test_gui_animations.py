@@ -1,25 +1,27 @@
-import os
 import math
-from unittest.mock import patch, MagicMock
 from pathlib import Path
-import pytest
+from unittest.mock import MagicMock, patch
+
 import pygame
-import tienlen_gui
+import pytest
+
 import tienlen
-from conftest import make_view, DummyFont, DummySprite, DummyCardSprite
+import tienlen_gui
+from conftest import DummyCardSprite, DummyFont, DummySprite, make_view
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+pytestmark = pytest.mark.gui
 
 
 def test_card_sprite_draw_shadow_blits():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "tienlen_gui.view.get_font", return_value=DummyFont()
+    with (
+        patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
+        patch("tienlen_gui.view.get_font", return_value=DummyFont()),
     ):
         with patch.object(
             tienlen_gui,
@@ -50,9 +52,7 @@ def test_button_draw_uses_nine_patch():
             "pressed_image": pygame.Surface((5, 5)),
         },
     )
-    with patch.object(tienlen_gui.overlays, "draw_nine_patch") as nine, patch(
-        "pygame.draw.rect"
-    ) as rect_draw:
+    with patch.object(tienlen_gui.overlays, "draw_nine_patch") as nine, patch("pygame.draw.rect") as rect_draw:
         btn.draw(surf)
     nine.assert_called_once()
     rect_draw.assert_not_called()
@@ -63,8 +63,9 @@ def test_card_sprite_draw_shadow_uses_default_constants():
     pygame.init()
     pygame.font.init()
     pygame.display.init()
-    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "tienlen_gui.view.get_font", return_value=DummyFont()
+    with (
+        patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
+        patch("tienlen_gui.view.get_font", return_value=DummyFont()),
     ):
         with patch.object(
             tienlen_gui,
@@ -73,6 +74,7 @@ def test_card_sprite_draw_shadow_uses_default_constants():
         ):
             sprite = tienlen_gui.CardSprite(tienlen.Card("Spades", "3"), (0, 0), 1)
     from tienlen_gui import helpers as h
+
     h._SHADOW_CACHE.clear()
     base = MagicMock()
     shadow = MagicMock()
@@ -100,8 +102,9 @@ def test_draw_shadow_cache_cleared_on_size_change():
     h._SHADOW_CACHE.clear()
     h._SHADOW_SIZE = None
 
-    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "tienlen_gui.view.get_font", return_value=DummyFont()
+    with (
+        patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
+        patch("tienlen_gui.view.get_font", return_value=DummyFont()),
     ):
         with patch.object(
             tienlen_gui,
@@ -148,6 +151,7 @@ def test_draw_surface_shadow_uses_default_constants():
     with patch("pygame.Surface", return_value=shadow):
         tienlen_gui.draw_surface_shadow(target, img, rect)
     from tienlen_gui import helpers as h
+
     shadow.set_alpha.assert_called_once_with(h.SHADOW_ALPHA)
     expected = (h.SHADOW_BLUR * 2 + 1) ** 2
     assert target.blit.call_count == expected
@@ -202,8 +206,9 @@ def test_draw_glow_uses_cache(monkeypatch):
 
 def test_draw_players_uses_draw_shadow():
     view, _ = make_view()
-    with patch("tienlen_gui.helpers.get_font", return_value=DummyFont()), patch(
-        "tienlen_gui.view.get_font", return_value=DummyFont()
+    with (
+        patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
+        patch("tienlen_gui.view.get_font", return_value=DummyFont()),
     ):
         with patch.object(
             tienlen_gui,
@@ -274,9 +279,10 @@ def test_draw_players_highlights_active_zone():
     view.hand_sprites = pygame.sprite.LayeredUpdates()
     view.ai_sprites = [pygame.sprite.LayeredUpdates() for _ in range(3)]
     zone = pygame.Rect(0, 0, 10, 10)
-    with patch.object(view, "_player_zone_rect", return_value=zone), patch.object(
-        tienlen_gui.view, "draw_glow"
-    ) as glow:
+    with (
+        patch.object(view, "_player_zone_rect", return_value=zone),
+        patch.object(tienlen_gui.view, "draw_glow") as glow,
+    ):
         view.game.current_idx = 2
         view.draw_players()
     assert glow.call_count == 1
@@ -327,9 +333,11 @@ def test_animate_flip_moves_to_destination():
     view, clock = make_view()
     view.screen = MagicMock()
     sprite = DummyCardSprite()
-    with patch.object(
-        tienlen_gui, "get_card_back", return_value=pygame.Surface((1, 1))
-    ), patch("pygame.event.pump"), patch("pygame.display.update"):
+    with (
+        patch.object(tienlen_gui, "get_card_back", return_value=pygame.Surface((1, 1))),
+        patch("pygame.event.pump"),
+        patch("pygame.display.update"),
+    ):
         gen = view._animate_flip([sprite], (10, 5), duration=4 / 60)
         next(gen)
         steps = 0
@@ -350,9 +358,11 @@ def test_animate_glow_draws_glow():
     view, _ = make_view()
     view.screen = MagicMock()
     sprite = DummyCardSprite()
-    with patch.object(tienlen_gui.animations, "draw_glow") as glow, patch(
-        "pygame.event.pump"
-    ), patch("pygame.display.update"):
+    with (
+        patch.object(tienlen_gui.animations, "draw_glow") as glow,
+        patch("pygame.event.pump"),
+        patch("pygame.display.update"),
+    ):
         gen = view._animate_glow([sprite], (1, 2, 3), duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -384,11 +394,13 @@ def test_highlight_turn_draws_at_player_position():
     view.screen = MagicMock()
     view.screen.get_size.return_value = (100, 100)
     overlay_surface = MagicMock()
-    with patch("pygame.Surface", return_value=overlay_surface) as surf_mock, patch(
-        "pygame.event.pump"
-    ), patch("pygame.display.update"), patch("pygame.draw.circle"), patch.object(
-        view, "_player_pos", return_value=(50, 100)
-    ) as pos:
+    with (
+        patch("pygame.Surface", return_value=overlay_surface) as surf_mock,
+        patch("pygame.event.pump"),
+        patch("pygame.display.update"),
+        patch("pygame.draw.circle"),
+        patch.object(view, "_player_pos", return_value=(50, 100)) as pos,
+    ):
         gen = view._highlight_turn(0, duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -408,9 +420,12 @@ def test_animate_pass_text_draws_panel():
     view.screen = MagicMock()
     zone = pygame.Rect(0, 0, 10, 10)
     panel = pygame.Surface((2, 2))
-    with patch.object(view, "_player_zone_rect", return_value=zone) as rect_mock, patch.object(
-        view, "_hud_box", return_value=panel
-    ) as hud, patch("pygame.event.pump"), patch("pygame.display.update"):
+    with (
+        patch.object(view, "_player_zone_rect", return_value=zone) as rect_mock,
+        patch.object(view, "_hud_box", return_value=panel) as hud,
+        patch("pygame.event.pump"),
+        patch("pygame.display.update"),
+    ):
         gen = view._animate_pass_text(1, duration=2 / 60)
         next(gen)
         gen.send(1 / 60)
@@ -504,10 +519,7 @@ def test_animate_deal_moves_cards():
     view, _ = make_view()
     deck = view._pile_center()
     groups = [view.hand_sprites.sprites()] + [g.sprites() for g in view.ai_sprites]
-    dests = [
-        [tuple(map(int, getattr(sp, "pos", sp.rect.center))) for sp in grp]
-        for grp in groups
-    ]
+    dests = [[tuple(map(int, getattr(sp, "pos", sp.rect.center))) for sp in grp] for grp in groups]
     gen = view._animate_deal(duration=1 / 60, delay=0)
     next(gen)
     for grp in groups:

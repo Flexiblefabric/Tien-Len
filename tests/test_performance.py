@@ -1,14 +1,14 @@
-import os
 import time
 from unittest.mock import patch
-import pytest
+
 import pygame
+import pytest
+
 import tienlen_gui
 
 pytest.importorskip("pygame")
 
-# Use dummy video driver so no window is opened
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+pytestmark = pytest.mark.gui
 
 
 class DummyFont:
@@ -38,8 +38,9 @@ def make_view():
     clock = PerfClock()
     tienlen_gui.clear_font_cache()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
-        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
-            "tienlen_gui.helpers.get_font", return_value=DummyFont()
+        with (
+            patch("tienlen_gui.view.get_font", return_value=DummyFont()),
+            patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
         ):
             with patch.object(tienlen_gui, "load_card_images"):
                 with patch("pygame.time.Clock", return_value=clock):
@@ -74,10 +75,13 @@ def test_custom_fps_limit_passed_to_clock():
     view, clock = make_view()
     view.fps_limit = 30
 
-    with patch(
-        "pygame.event.get",
-        return_value=[pygame.event.Event(pygame.QUIT, {})],
-    ), patch("pygame.quit"):
+    with (
+        patch(
+            "pygame.event.get",
+            return_value=[pygame.event.Event(pygame.QUIT, {})],
+        ),
+        patch("pygame.quit"),
+    ):
         view.run()
 
     assert clock.args[0] == 30
