@@ -1,15 +1,16 @@
-import os
 from unittest.mock import patch
-import pytest
+
 import pygame
-import tienlen_gui
+import pytest
+
 import tienlen
+import tienlen_gui
 from conftest import make_view
 
 pytest.importorskip("PIL")
 pytest.importorskip("pygame")
 
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+pytestmark = pytest.mark.gui
 
 
 def test_hud_panel_displays_count_and_last_move():
@@ -70,6 +71,7 @@ def test_hud_highlight_switches_on_turn_change():
         assert glow.call_count == 1
     pygame.quit()
 
+
 def test_hud_panel_shows_custom_ai_settings():
     view, _ = make_view()
     player = view.game.players[1]
@@ -79,6 +81,6 @@ def test_hud_panel_shows_custom_ai_settings():
     with patch.object(view, "_hud_box", return_value=pygame.Surface((1, 1))) as hud_box:
         hud._create_surface()
     lines = hud_box.call_args.args[0]
-    assert f"Difficulty: Hard" in lines
-    assert f"Personality: defensive" in lines
+    assert "Difficulty: Hard" in lines  # noqa: F541
+    assert "Personality: defensive" in lines  # noqa: F541
     pygame.quit()

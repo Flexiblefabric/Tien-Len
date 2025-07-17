@@ -1,9 +1,13 @@
-import pytest
-import pygame
-import tienlen_gui
 from pathlib import Path
 
+import pygame
+import pytest
+
+import tienlen_gui
+
 pytest.importorskip("pygame")
+
+pytestmark = pytest.mark.gui
 
 
 def test_get_font_initializes_pygame_font(monkeypatch):

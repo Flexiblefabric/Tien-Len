@@ -1,14 +1,14 @@
-import os
 import tracemalloc
 from unittest.mock import patch
-import pytest
+
 import pygame
+import pytest
+
 import tienlen_gui
 
 pytest.importorskip("pygame")
 
-# Use dummy video driver so no window is opened
-os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+pytestmark = pytest.mark.gui
 
 
 class DummyFont:
@@ -27,14 +27,17 @@ def make_view():
     pygame.display.init()
     tienlen_gui.clear_font_cache()
     clock = DummyClock()
-    with patch('pygame.display.set_mode', return_value=pygame.Surface((1, 1))):
-        with patch('tienlen_gui.view.get_font', return_value=DummyFont()), patch(
-            'tienlen_gui.helpers.get_font', return_value=DummyFont()
+    with patch("pygame.display.set_mode", return_value=pygame.Surface((1, 1))):
+        with (
+            patch("tienlen_gui.view.get_font", return_value=DummyFont()),
+            patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
         ):
-            with patch.object(tienlen_gui, 'load_card_images'):
-                with patch('pygame.time.Clock', return_value=clock):
-                    with patch.object(tienlen_gui.GameView, '_highlight_turn'), \
-                         patch.object(tienlen_gui.GameView, '_animate_avatar_blink'):
+            with patch.object(tienlen_gui, "load_card_images"):
+                with patch("pygame.time.Clock", return_value=clock):
+                    with (
+                        patch.object(tienlen_gui.GameView, "_highlight_turn"),
+                        patch.object(tienlen_gui.GameView, "_animate_avatar_blink"),
+                    ):
                         view = tienlen_gui.GameView(1, 1)
     # Ensure highlight_turn does not access the display during tests
     view._highlight_turn = lambda *a, **k: None
@@ -54,14 +57,14 @@ def test_run_memory_usage():
             return []
         return [pygame.event.Event(pygame.QUIT, {})]
 
-    with patch('pygame.event.get', side_effect=side_effect), patch('pygame.quit'):
+    with patch("pygame.event.get", side_effect=side_effect), patch("pygame.quit"):
         tracemalloc.start()
         before = tracemalloc.take_snapshot()
         view.run()
         after = tracemalloc.take_snapshot()
         tracemalloc.stop()
 
-    diff = after.compare_to(before, 'filename')
+    diff = after.compare_to(before, "filename")
     total = sum(stat.size_diff for stat in diff)
     assert abs(total) < 60_000
     pygame.quit()

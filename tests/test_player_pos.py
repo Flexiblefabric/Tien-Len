@@ -1,13 +1,13 @@
-import os
 from unittest.mock import patch
-import pytest
+
 import pygame
+import pytest
+
 import tienlen_gui
 
 pytest.importorskip("pygame")
 
-# Use dummy video driver so no window is opened
-os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+pytestmark = pytest.mark.gui
 
 
 class DummyFont:
@@ -21,8 +21,9 @@ def make_view(width=200, height=200):
     pygame.display.init()
     tienlen_gui.clear_font_cache()
     with patch("pygame.display.set_mode", return_value=pygame.Surface((width, height))):
-        with patch("tienlen_gui.view.get_font", return_value=DummyFont()), patch(
-            "tienlen_gui.helpers.get_font", return_value=DummyFont()
+        with (
+            patch("tienlen_gui.view.get_font", return_value=DummyFont()),
+            patch("tienlen_gui.helpers.get_font", return_value=DummyFont()),
         ):
             with patch.object(tienlen_gui, "load_card_images"):
                 view = tienlen_gui.GameView(width, height)
