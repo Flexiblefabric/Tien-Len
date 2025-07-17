@@ -68,6 +68,7 @@ are handled automatically.
 - Animated card dealing at the start of each game.
 - Press **F11** to toggle full-screen.
 - Sprites and layout adapt automatically when the window is resized.
+- Cards shrink slightly with smaller windows to prevent overlap.
 - Press **Enter** or **Space** for the usual shortcuts.
 - Settings and menu overlays are provided. Press **Esc** to open the menu,
   **M** for the main menu and **O** for the options screen.
@@ -102,6 +103,7 @@ state so you can resume where you left off.
 The **Options** menu exposes additional AI behaviour settings.  The
 *AI Personality* selector cycles through **aggressive**, **defensive**,
 **balanced** and **random** styles, altering how boldly opponents play.
+These styles now modify how scoring weights factor rank and finishing position, making each AI behave more distinctly.
 The *Lookahead* toggle makes the AI consider the next turn before
 committing to a move. A **Use Global AI** toggle at the bottom of this
 screen decides whether the chosen difficulty and personality apply to
@@ -179,12 +181,13 @@ The executable along with its assets will appear in the `dist/` directory.
 
 See [ROADMAP.md](ROADMAP.md) for status updates.
 
-- Dynamic card spacing and responsive UI scaling.
+- Dynamic card spacing with responsive scaling implemented.
 - Card fan/arc layout for large hands.
-- Improved AI personalities, lookahead and hint system.
+- Improved AI personalities with distinct scoring; lookahead and hint system.
 - Additional house rule toggles and custom card sets.
 - Replay and save/resume systems.
 - Player stats tracking, achievements and online leaderboards.
+- Rendering performance optimizations with integrated animations.
 - Animated bomb/combo effects with audio and music.
 - Networked and hot-seat multiplayer support.
 

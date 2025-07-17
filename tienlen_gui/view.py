@@ -357,12 +357,13 @@ class GameView(AnimationMixin, HUDMixin, OverlayMixin):
         return pygame.Rect(left, top, right - left, bottom - top)
 
     def _calc_card_width(self, win_width: int) -> int:
-        """Determine card width based on window width."""
-        return max(30, win_width // 13)
+        """Determine card width based on window size."""
+        base = min(win_width, self.window_height) // 12
+        return max(30, base)
 
     def _get_font_size(self) -> int:
         """Return a font size scaled to the current window size."""
-        scale = min(self.window_width, self.window_height) // 20
+        scale = min(self.window_width, self.window_height) // 30
         return max(12, scale)
 
     def _update_table_surface(self) -> None:
