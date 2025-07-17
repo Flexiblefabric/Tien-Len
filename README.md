@@ -182,7 +182,7 @@ The executable along with its assets will appear in the `dist/` directory.
 See [ROADMAP.md](ROADMAP.md) for status updates.
 
 - Dynamic card spacing with responsive scaling implemented.
-- Card fan/arc layout for large hands.
+ - Card fan/arc layout for large hands (in progress).
 - Improved AI personalities with distinct scoring; lookahead and hint system.
 - Additional house rule toggles and custom card sets.
 - Replay and save/resume systems.

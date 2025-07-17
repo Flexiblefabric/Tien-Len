@@ -7,7 +7,7 @@ This condensed roadmap summarises planned features and their current status. For
 | Feature | Status |
 | --- | --- |
 | Dynamic card spacing | 🔄 In Progress |
-| Card fan / arc layout | 🔜 Planned |
+| Card fan / arc layout | 🔄 In Progress |
 | Responsive UI scaling | 🔜 Planned |
 
 ## Game Mechanics & AI
