@@ -108,12 +108,12 @@ BOTTOM_MARGIN = 20
 
 def horizontal_margin(card_width: int) -> int:
     """Return a horizontal margin size based on ``card_width``."""
-    return min(60, max(40, int(card_width * 0.75)))
+    return min(40, max(20, int(card_width * 0.5)))
 
 
 def bottom_margin(card_width: int) -> int:
     """Return the bottom margin below the player's hand."""
-    return min(60, max(40, int(card_width * 0.75)))
+    return min(40, max(20, int(card_width * 0.5)))
 
 
 # Extra padding used when positioning player labels

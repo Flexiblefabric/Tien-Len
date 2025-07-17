@@ -712,11 +712,19 @@ class Game:
 
         personality = self._ai_personality_for(player)
         rank_weight = 1.0
+        finish_weight = 1.0
         if personality == "aggressive":
             rank_weight = 1.5
+            finish_weight = 1.2
         elif personality == "defensive":
-            rank_weight = 0.5
-        return (base, finish * diff, rank_val * diff * rank_weight, low_cards)
+            rank_weight = 0.7
+            finish_weight = 0.8
+        return (
+            base,
+            finish * diff * finish_weight,
+            rank_val * diff * rank_weight,
+            low_cards,
+        )
 
     # ------------------------------------------------------------------
     # Minimax helper used for the Expert AI level
