@@ -228,6 +228,33 @@ python -m pdb -m tienlen_gui.view
 If the optional `pgdb` package is installed, it may be used in the same
 way to get a prettier interface.
 
+## Packaging & Distribution
+
+Build a wheel using the standard `build` module:
+
+```bash
+python -m build
+```
+
+All GUI assets are included under `tienlen_gui/assets` thanks to the
+``package-data`` setting in *pyproject.toml*. Inspect the wheel to verify:
+
+```bash
+unzip -l dist/tien_len-*.whl | grep assets | head
+```
+
+Install the wheel in a clean virtual environment and run both entry
+points:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install dist/tien_len-*.whl
+tien-len --help
+tien-len-gui --help
+```
+
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
