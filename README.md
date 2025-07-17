@@ -9,6 +9,25 @@ Launch it after installation with the `tien-len` command or run `python -m tienl
 
 This project requires **Python 3.10** or later.
 
+## Quick Start
+
+Create a fresh virtual environment and install the project in editable mode:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -e .
+```
+
+Launch the GUI or CLI using the provided entry points:
+
+```bash
+tien-len       # graphical interface
+tien-len-cli   # command line version
+```
+
+The `examples/` directory contains small scripts demonstrating both modes.
+
 ## Installation
 
 Install the project with `pip` to make the Pygame GUI entry point available:
@@ -213,6 +232,37 @@ tests when the dependencies are not available.
 Coverage statistics exclude the GUI module because automated testing of
 its interface is impractical. The `.coveragerc` file lists
 `tienlen_gui/*.py` under the `omit` section.
+
+When running the tests on systems without a display, set the environment
+variables ``SDL_VIDEODRIVER=dummy`` and ``SDL_AUDIODRIVER=dummy`` to
+initialise Pygame in headless mode. The values used by the CI workflow
+and provided in ``conftest.py`` ensure consistent behaviour.
+
+## Project layout
+
+```
+src/           Python packages ``tienlen`` (CLI game logic) and ``tienlen_gui``
+tests/         Unit tests for both modules
+examples/      Small scripts showcasing the CLI and GUI
+```
+
+Assets for the GUI live under ``src/tienlen_gui/assets`` and are included
+when building a wheel.
+
+## Development
+
+Install optional development tools and linters with:
+
+```bash
+pip install -e .[dev,test]
+```
+
+Run `pre-commit` once to set up the git hooks and format the code base:
+
+```bash
+pre-commit install
+pre-commit run --all-files
+```
 
 ## Debugging
 
