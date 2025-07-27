@@ -4,10 +4,18 @@
 
 This repository contains a simple command line implementation of the
 Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
-interface implemented in the `tienlen_gui` package.
-Launch it after installation with the `tien-len` command or run `python -m tienlen_gui.view` for development.
+interface implemented in the `tienlen_gui` package. Launch the GUI after
+installation with the `tien-len` command or run `python -m
+tienlen_gui.view` while developing.
 
 This project requires **Python 3.10** or later.
+
+## Overview
+
+Tiến Lên is a shedding‑type card game popular in Vietnam. Players take
+turns discarding valid combinations until one person empties their hand.
+This repository provides both a terminal version and a Pygame powered
+GUI with simple animations, sound effects and optional house rules.
 
 ## Quick Start
 
@@ -17,6 +25,14 @@ Create a fresh virtual environment and install the project in editable mode:
 python -m venv venv
 source venv/bin/activate
 pip install -e .
+```
+
+Install the pinned runtime libraries from `requirements.txt` (generated
+from [requirements.md](requirements.md)) if you prefer manual
+dependency management:
+
+```bash
+pip install -r requirements.txt
 ```
 
 Launch the GUI or CLI using the provided entry points:
@@ -238,6 +254,13 @@ variables ``SDL_VIDEODRIVER=dummy`` and ``SDL_AUDIODRIVER=dummy`` to
 initialise Pygame in headless mode. The values used by the CI workflow
 and provided in ``conftest.py`` ensure consistent behaviour.
 
+### Continuous integration
+
+All pull requests are validated by the **CI** workflow in
+`.github/workflows/ci.yml`. Tests run on Ubuntu using Python 3.11 and
+3.12 with Pygame configured for headless mode. Coverage results are
+uploaded to Codecov.
+
 ## Project layout
 
 ```
@@ -303,7 +326,9 @@ pip install dist/tien_len-*.whl
 tien-len --help
 tien-len-gui --help
 ```
+## Contributing
 
+Community contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on setting up a development environment, coding standards and the preferred workflow. The project uses **pre-commit** with Black, isort, flake8 and mypy to enforce style consistency.
 
 ## License
 
