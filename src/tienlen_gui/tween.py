@@ -75,7 +75,12 @@ class Timeline:
 
     def update(self, dt: float) -> None:
         """Advance the timeline by ``dt`` seconds."""
+        MAX_STEPS = 1000
+        steps = 0
         while dt > 0 or (dt == 0 and self._current is None and self._steps):
+            if steps >= MAX_STEPS:
+                break
+            steps += 1
             if self._current is None:
                 if not self._steps:
                     break
@@ -92,6 +97,7 @@ class Timeline:
                     self._current = (step, None)
                 else:
                     step()
+                    dt = 0
                     continue
             consumed = self._advance(dt)
             if isinstance(self._current, tuple) and self._current[0].finished:
