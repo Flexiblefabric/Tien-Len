@@ -2,25 +2,57 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
+    branches: [ "*" ]
 
 jobs:
-  build:
+  test:
+    name: tests (py${{ matrix.python-version }} / ubuntu)
     runs-on: ubuntu-latest
-    env:
-      SDL_VIDEODRIVER: dummy
-      SDL_AUDIODRIVER: dummy
+    timeout-minutes: 25
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
+    env:
+      # Hard-force headless Pygame
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: "1"
+      PYTHONFAULTHANDLER: "1"
+      # Make pytest output consistent and informative by default
+      PYTEST_ADDOPTS: "-q --maxfail=1 --durations=25 --color=yes --timeout=120 --timeout-method=thread"
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies and run tests
+          cache: "pip"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install package (editable) + test deps
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .[test]
-          pytest -vv
+          python -m pip install -e ".[test]"
+
+      - name: Show environment
+        run: |
+          python -V
+          python -c "import sys,pygame; print('pygame', pygame.version.ver); print('SDL_VIDEODRIVER', __import__('os').environ.get('SDL_VIDEODRIVER'))"
+
+      # Step-level guard even if pytest-timeout fails to interrupt
+      - name: Run tests
+        run: |
+          timeout 20m python -m pytest
+        shell: bash
+
+      - name: Upload coverage (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: ./.coverage
