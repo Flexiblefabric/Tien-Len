@@ -45,14 +45,38 @@ jobs:
           python -c "import sys,pygame; print('pygame', pygame.version.ver); print('SDL_VIDEODRIVER', __import__('os').environ.get('SDL_VIDEODRIVER'))"
 
       # Step-level guard even if pytest-timeout fails to interrupt
-      - name: Run tests
+      - name: Run tests under coverage
         run: |
-          timeout 20m python -m pytest
+          timeout 20m coverage run -m pytest
         shell: bash
 
-      - name: Upload coverage (artifact)
+      - name: Generate coverage XML & text reports
+        run: |
+          coverage xml
+          coverage report -m || true
+
+      - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}
-          path: ./.coverage
+          path: |
+            ./.coverage
+            ./coverage.xml
+
+      - name: Codecov upload
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests,py${{ matrix.python-version }}
+          name: tien-len-${{ matrix.python-version }}
+          verbose: true
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }} # not needed for public repos
+
+      - name: Append coverage summary to job
+        if: always()
+        run: |
+          echo "### Coverage (py${{ matrix.python-version }})" >> $GITHUB_STEP_SUMMARY
+          coverage report -m >> $GITHUB_STEP_SUMMARY || true
