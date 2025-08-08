@@ -1,4 +1,28 @@
 [run]
 branch = True
+source =
+    tienlen
+    tienlen_gui
 omit =
-    tienlen_gui/*.py
+    */__main__.py
+    */__init__.py
+    */_version.py
+    */build/* 
+    */dist/*
+    */.venv/*
+    */venv/*
+    */site-packages/*
+    tests/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    if __name__ == .__main__.: 
+    raise NotImplementedError
+    @overload
+show_missing = True
+precision = 1
+
+[xml]
+output = coverage.xml
