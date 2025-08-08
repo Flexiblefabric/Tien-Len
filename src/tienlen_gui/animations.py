@@ -500,6 +500,13 @@ class AnimationMixin:
                 m.update(dt)
             dt = yield
 
+        for (group, grp), dest_grp in zip(groups, destinations):
+            for sp, dest in zip(grp, dest_grp):
+                if hasattr(sp, "pos"):
+                    sp.pos.update(dest)
+                else:
+                    sp.rect.center = (int(dest[0]), int(dest[1]))
+
     def _animate_return(
         self,
         player_idx: int,
