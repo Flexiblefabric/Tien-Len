@@ -157,6 +157,16 @@ class Player:
         self.ai_level: Optional[str] = None
         self.ai_personality: Optional[str] = None
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "Player":
+        """Build a player with hand and AI metadata restored."""
+
+        player = cls(data["name"], data.get("is_human", False))
+        player.hand = [Card.from_dict(c) for c in data.get("hand", [])]
+        player.ai_level = data.get("ai_level")
+        player.ai_personality = data.get("ai_personality")
+        return player
+
     def sort_hand(self, mode: str = "rank", flip_suit_rank: bool = False) -> None:
         """Sort the player's hand.
 
@@ -853,13 +863,7 @@ class Game:
     def from_dict(self, data: dict) -> None:
         """Restore game state from ``data`` (a dictionary)."""
 
-        self.players = [
-            Player(d["name"], d.get("is_human", False)) for d in data["players"]
-        ]
-        for p, dct in zip(self.players, data["players"]):
-            p.hand = [Card.from_dict(c) for c in dct.get("hand", [])]
-            p.ai_level = dct.get("ai_level")
-            p.ai_personality = dct.get("ai_personality")
+        self.players = [Player.from_dict(d) for d in data["players"]]
         self.pile = []
         for item in data.get("pile", []):
             idx = item.get("player")
