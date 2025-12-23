@@ -34,6 +34,10 @@ def _init_mixer() -> bool:
         _MIXER_AVAILABLE = False
         return False
 
+    if not hasattr(pygame.mixer, "init"):
+        _MIXER_AVAILABLE = True
+        return True
+
     try:  # pragma: no cover - mixer init is environment-dependent
         pygame.mixer.init()
         _MIXER_AVAILABLE = True
