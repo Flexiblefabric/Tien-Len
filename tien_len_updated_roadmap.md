@@ -1,3 +1,5 @@
+> **Historical document:** This June 2025 roadmap is retained for project history. It has been superseded by [ROADMAP.md](ROADMAP.md) and [docs/CURRENT_STATE_AUDIT.md](docs/CURRENT_STATE_AUDIT.md).
+
 # 🎯 Tiến Lên Game — Integrated Development Roadmap
 
 This roadmap merges the original feature plan with updated insights from the current state analysis and visual roadmap (2025). It is organized by **design areas** for clarity and modular implementation.

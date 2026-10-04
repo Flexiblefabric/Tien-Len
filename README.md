@@ -2,13 +2,13 @@
 [![CI](https://github.com/Flexiblefabric/Tien-Len/actions/workflows/ci.yml/badge.svg)](https://github.com/Flexiblefabric/Tien-Len/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/Flexiblefabric/Tien-Len/branch/main/graph/badge.svg)](https://codecov.io/gh/Flexiblefabric/Tien-Len)
 
-This repository contains a simple command line implementation of the
-Vietnamese card game **Tiến Lên**. It comes with a Pygame graphical
-interface implemented in the `tienlen_gui` package. Launch the GUI after
-installation with the `tien-len` command or run `python -m
-tienlen_gui.view` while developing.
+This repository contains a command line implementation of the Vietnamese
+card game **Tiến Lên** plus a Pygame graphical interface in the
+`tienlen_gui` package. After installation, launch the CLI with `tien-len`
+or the graphical game with `tien-len-gui`. During development, the GUI can
+also be launched with `python -m tienlen_gui.app`.
 
-This project requires **Python 3.10** or later.
+This project requires **Python 3.11** or later.
 
 ## Overview
 
@@ -38,8 +38,8 @@ pip install -r requirements.txt
 Launch the GUI or CLI using the provided entry points:
 
 ```bash
-tien-len       # graphical interface
-tien-len-cli   # command line version
+tien-len       # command line version
+tien-len-gui   # graphical interface
 ```
 
 The `examples/` directory contains small scripts demonstrating both modes.
@@ -58,18 +58,17 @@ For development you can use the editable mode instead:
 pip install -e .
 ```
 
-After installation launch the Pygame GUI with `tien-len` or start the CLI via `tien-len-cli`.
+After installation launch the CLI with `tien-len` or the Pygame GUI with `tien-len-gui`.
 
 ## CLI version
 
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert|Master] \
-                        [--personality aggressive|defensive|balanced|random] \
-                        [--lookahead] [--depth N]
+tien-len [--ai Easy|Normal|Hard|Expert|Master] \
+         [--personality aggressive|defensive|balanced|random] \
+         [--lookahead] [--depth N]
 ```
-After installation the same game can be started with the `tien-len-cli` command.
 
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).
 Use `--personality` to choose how boldly opponents play and `--lookahead`
@@ -90,7 +89,7 @@ table using sprites and simple animations.
 Start the Pygame interface with:
 
 ```bash
-tien-len  # or `python -m tienlen_gui.view`
+tien-len-gui  # or `python -m tienlen_gui.app`
 ```
 
 Select cards by clicking them and then press **Play Selected**. Press
@@ -212,26 +211,21 @@ The executable along with its assets will appear in the `dist/` directory.
 
 
 
-## TODO
+## 1.0 status
 
-See [ROADMAP.md](ROADMAP.md) for status updates.
+The project is now being finished toward a stable single-player 1.0 release.
+The current priority is stability and rules conformance followed by a coherent
+visual/interaction redesign and verified Windows packaging.
 
-- Dynamic card spacing with responsive scaling implemented.
- - Card fan/arc layout for large hands (in progress).
-- Improved AI personalities with distinct scoring; lookahead and hint system.
-- Additional house rule toggles and custom card sets.
-- Replay and save/resume systems.
-- Player stats tracking, achievements and online leaderboards.
-- Rendering performance optimizations with integrated animations.
-- Animated bomb/combo effects with audio and music.
-- Networked and hot-seat multiplayer support.
+See [ROADMAP.md](ROADMAP.md) for the active completion plan and
+[docs/CURRENT_STATE_AUDIT.md](docs/CURRENT_STATE_AUDIT.md) for the current-state audit.
 
 ## Running tests
 
-Install the pinned requirements first:
+Install the project with the test dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[test]"
 ```
 
 Run the test suite with coverage enabled:
@@ -241,13 +235,11 @@ coverage run -m pytest
 coverage xml
 ```
 
-Tests that exercise the graphical interfaces require the optional
-`Pillow` and `pygame` libraries. Pytest will automatically skip these
-tests when the dependencies are not available.
+Tests that exercise the graphical interface require `Pillow` and `pygame-ce`,
+which are normal project dependencies. The GUI tests run headlessly in CI.
 
-Coverage statistics exclude the GUI module because automated testing of
-its interface is impractical. The `.coveragerc` file lists
-`tienlen_gui/*.py` under the `omit` section.
+GUI tests run headlessly under Pygame's dummy video/audio drivers. Coverage
+configuration is being consolidated as part of the 1.0 stabilization work.
 
 When running the tests on systems without a display, set the environment
 variables ``SDL_VIDEODRIVER=dummy`` and ``SDL_AUDIODRIVER=dummy`` to
