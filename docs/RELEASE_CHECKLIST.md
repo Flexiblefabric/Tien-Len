@@ -1,20 +1,46 @@
-# Release Checklist
+# Tiến Lên 1.0 Release Checklist
 
-Use this guide when tagging `v0.1.0` and shipping a Windows executable.
+Use this checklist for the first stable `v1.0.0` release.
+
+## Required gates
+
+- [ ] Default Tiến Lên ruleset is documented.
+- [ ] Required automated tests pass on supported Python versions.
+- [ ] CI is green on the release commit.
+- [ ] Repeated complete-game playtests pass without turn-state or game-over failures.
+- [ ] Visual redesign/QA is signed off at supported window sizes.
+- [ ] Asset provenance and attribution have been reviewed.
+- [ ] Windows packaging has been smoke-tested on a clean environment.
 
 ## Prep
-- [ ] Run `pytest` and ensure all tests pass.
-- [ ] Update version strings (e.g. in `pyproject.toml`) and commit.
-- [ ] Refresh documentation and screenshots/GIFs as needed.
 
-## Tag
-- [ ] Create a git tag: `git tag v0.1.0`.
-- [ ] Push tags: `git push --tags`.
+- [ ] Set project version to `1.0.0`.
+- [ ] Confirm README launch/install instructions match package entry points.
+- [ ] Confirm Python version declarations are consistent.
+- [ ] Confirm save/options locations and schema behavior.
+- [ ] Run the complete test suite.
+- [ ] Run lint/format/type checks required for the release.
+- [ ] Refresh screenshots and player-facing instructions.
 
 ## Build
-- [ ] Build the Windows EXE with PyInstaller: `bash build_exe.sh`.
-- [ ] Upload the executable to the GitHub release.
+
+- [ ] Build the Windows executable from the approved release commit.
+- [ ] Launch the packaged executable on a clean Windows environment.
+- [ ] Start and complete at least one full packaged game.
+- [ ] Verify card, table, avatar, button, font, sound, and music assets.
+- [ ] Verify the game works when audio initialization is unavailable.
+- [ ] Verify save/load after relaunch.
+
+## Tag and release
+
+- [ ] Create tag `v1.0.0`.
+- [ ] Push the tag.
+- [ ] Create the GitHub release from the approved commit.
+- [ ] Attach the verified Windows build.
+- [ ] Publish concise release notes including known limitations.
 
 ## Final
-- [ ] Draft release notes and publish.
-- [ ] Announce the release.
+
+- [ ] Verify the release download launches successfully.
+- [ ] Move deferred features to the post-1.0 backlog.
+- [ ] Record the release commit and build artifact details.
