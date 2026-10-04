@@ -65,9 +65,9 @@ After installation launch the CLI with `tien-len` or the Pygame GUI with `tien-l
 To play in the terminal run:
 
 ```bash
-python3 tien_len_full.py [--ai Easy|Normal|Hard|Expert|Master] \
-                        [--personality aggressive|defensive|balanced|random] \
-                        [--lookahead] [--depth N]
+tien-len [--ai Easy|Normal|Hard|Expert|Master] \
+         [--personality aggressive|defensive|balanced|random] \
+         [--lookahead] [--depth N]
 ```
 
 The optional `--ai` flag selects the AI difficulty (default is `Normal`).
@@ -235,9 +235,8 @@ coverage run -m pytest
 coverage xml
 ```
 
-Tests that exercise the graphical interfaces require the optional
-`Pillow` and `pygame` libraries. Pytest will automatically skip these
-tests when the dependencies are not available.
+Tests that exercise the graphical interface require `Pillow` and `pygame-ce`,
+which are normal project dependencies. The GUI tests run headlessly in CI.
 
 GUI tests run headlessly under Pygame's dummy video/audio drivers. Coverage
 configuration is being consolidated as part of the 1.0 stabilization work.
